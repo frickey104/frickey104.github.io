@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="1〜5マスの駒を、自分の駒と角だけでつなげて置いていく陣取り。市販の「ブロックス」（2人用）が手本。CPU とも対戦できる。">
+<meta name="description" content="1〜5マスの駒を、自分の駒と角だけでつなげて置いていく陣取り。1回だけ相手の駒を消して置ける「消す権利」つき。市販の「ブロックス」（2人用）が手本。">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="frickey の工房">
 <meta property="og:title" content="かどつなぎ">
-<meta property="og:description" content="1〜5マスの駒を、自分の駒と角だけでつなげて置いていく陣取り。市販の「ブロックス」（2人用）が手本。CPU とも対戦できる。">
+<meta property="og:description" content="1〜5マスの駒を、自分の駒と角だけでつなげて置いていく陣取り。1回だけ相手の駒を消して置ける「消す権利」つき。市販の「ブロックス」（2人用）が手本。">
 <meta property="og:url" content="https://frickey104.github.io/kadotsunagi/">
 <meta property="og:image" content="https://frickey104.github.io/img/og-kadotsunagi.jpg">
 <meta name="twitter:card" content="summary_large_image">
@@ -82,6 +82,13 @@ h1 .mk i{display:block;border-radius:2px}
 .cell.pv0{background:var(--beni-soft);box-shadow:inset 0 0 0 2px var(--ok)}
 .cell.pv1{background:var(--ai-soft);box-shadow:inset 0 0 0 2px var(--ok)}
 .cell.pvbad{box-shadow:inset 0 0 0 2px var(--ng)}
+/* 消す権利: 消す駒に選んだマス（薄く・赤い枠）と、直前に消されたマス（×） */
+.cell.rmsel{opacity:.35;box-shadow:inset 0 0 0 2px var(--ng)}
+.cell.gone::before{content:"×";position:absolute;inset:0;display:grid;place-items:center;color:var(--ng);font-weight:700;font-size:.75rem;line-height:1}
+.grid.picking .cell.pick{cursor:crosshair;box-shadow:inset 0 0 0 2px var(--ng)}
+.opt{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--ink);cursor:pointer}
+.opt input{width:18px;height:18px;accent-color:var(--ink);margin:0}
+.btn.erase[aria-pressed="true"]{background:var(--ng);color:#fff;border-color:var(--ng)}
 .ctrl{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .msg{min-height:1.7em;font-size:.95rem;text-align:center;margin:0;font-weight:700}
 .tray{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;background:var(--board);border-radius:12px;padding:8px}
@@ -120,6 +127,7 @@ details summary{cursor:pointer}
     <button id="mCpu2" aria-pressed="false" aria-label="CPU ふつう">CPU 中</button>
     <button id="mCpu3" aria-pressed="false" aria-label="CPU つよい">CPU 強</button>
   </div>
+  <label class="opt"><input type="checkbox" id="optRm" checked> 消す権利（1回だけ、相手の駒を1つ消してから置ける）</label>
 
   <div class="players">
     <div class="pl" id="pl0"><div class="name"><i class="c0"></i><span>紅</span><span class="tag" id="tag0"></span></div><div class="left" id="left0"></div></div>
@@ -133,6 +141,7 @@ details summary{cursor:pointer}
     <button class="btn ghostbtn" id="rot">回す</button>
     <button class="btn ghostbtn" id="flip">裏返す</button>
     <button class="btn" id="place">ここに置く</button>
+    <button class="btn ghostbtn erase" id="erase" aria-pressed="false">相手の駒を消す</button>
   </div>
 
   <div class="trayhead"><span id="trayTitle">手持ちの駒</span><span id="trayCount"></span></div>
@@ -162,13 +171,14 @@ details summary{cursor:pointer}
       <li>置ける場所が無くなったら、その人はパス（自動）。2人とも置けなくなったら終わりです。</li>
       <li>点数: 置けずに残ったマスの数だけ −1点。全部置けたら +15点、最後に置いたのが1マスの駒ならさらに +5点。点数の高い方の勝ち。</li>
       <li>操作: 下の棚から駒を選び、盤をタップすると置く形が出ます（緑は置ける・赤は置けない）。「回す」「裏返す」で向きを変え、同じマスをもう一度タップするか「ここに置く」で確定。灰色の点は、自分の駒の角がつながる場所です。</li>
+      <li><b>消す権利</b>（入れたときだけ）: 1人1回だけ、自分の番に相手の駒を1つ消してから、自分の駒を置けます。「相手の駒を消す」を押して相手の駒をタップし、続けていつもどおり置きます（消すのは置くのと一緒に決まります）。消された駒は手持ちに戻りません（点数は変わりません）。相手の最初の駒は消せません。ふつうに置けなくても、権利が残っていればパスになりません。</li>
       <li>先手は対戦ごとに交代します。</li>
     </ol>
   </section>
 
   <details>
     <summary>自己試験</summary>
-    <p class="note">駒の数と形・向きの数・最初の置き方・角のつながり・辺の接触の禁止・点数・CPU の手が、答えの分かっている例どおりに動くかを確かめます。</p>
+    <p class="note">駒の数と形・向きの数・最初の置き方・角のつながり・辺の接触の禁止・点数・消す権利・CPU の手が、答えの分かっている例どおりに動くかを確かめます。</p>
     <ul id="tests"></ul>
   </details>
 </div>
@@ -197,8 +207,33 @@ const ORIENTS=PIECES.map(p=>{
   for(let f=0;f<2;f++){for(let k=0;k<4;k++){const kk=key(a);if(!seen.has(kk)){seen.add(kk);out.push(a);}a=rot(a);}a=flp(a);}
   return out;
 });
-function newGame(first){return {b:new Int8Array(N*N).fill(-1),left:[PIECES.map(()=>true),PIECES.map(()=>true)],placed:[0,0],last:[-1,-1],turn:first,first,passes:0,over:null,lastCells:[]};}
-function clone(s){return {b:s.b.slice(),left:[s.left[0].slice(),s.left[1].slice()],placed:s.placed.slice(),last:s.last.slice(),turn:s.turn,first:s.first,passes:s.passes,over:s.over,lastCells:s.lastCells};}
+// rule: 「消す権利」（1回だけ、相手の駒を1つ消してから置ける）を使う対戦か
+// id: マスごとに、そこにある駒が pl の何番目か／pl: 置いた駒の記録 {p,i,cells,n（その人の何個目か・0が最初）,alive}
+function newGame(first,rule=false){return {b:new Int8Array(N*N).fill(-1),id:new Int16Array(N*N).fill(-1),pl:[],left:[PIECES.map(()=>true),PIECES.map(()=>true)],placed:[0,0],last:[-1,-1],turn:first,first,passes:0,over:null,lastCells:[],removedCells:[],rule,rm:[rule,rule]};}
+function clone(s){return {b:s.b.slice(),id:s.id.slice(),pl:s.pl.slice(),left:[s.left[0].slice(),s.left[1].slice()],placed:s.placed.slice(),last:s.last.slice(),turn:s.turn,first:s.first,passes:s.passes,over:s.over,lastCells:s.lastCells,removedCells:s.removedCells,rule:s.rule,rm:s.rm.slice()};}
+// p が消せる相手の駒（pl の番号）。相手の最初の駒は消せない
+function removable(s,p){
+  if(!s.rule||!s.rm[p]) return [];
+  const out=[];s.pl.forEach((x,k)=>{if(x.alive&&x.p===1-p&&x.n>0)out.push(k);});return out;
+}
+// 駒を盤から消した形（消された駒は手持ちに戻らない＝置いた扱いのまま）
+function removeFrom(s,k){
+  const t=clone(s),x=s.pl[k];
+  for(const [r,c] of x.cells){t.b[r*N+c]=-1;t.id[r*N+c]=-1;}
+  t.pl[k]={...x,alive:false};
+  return t;
+}
+// 消す権利を使う手: 消したことで空いたマスに置く手（それ以外の場所なら、消さなくても置ける）
+function removalMoves(s,p,limitOne){
+  const out=[];
+  for(const k of removable(s,p)){
+    const freed=new Set(s.pl[k].cells.map(([r,c])=>r*N+c));
+    for(const m of legalMoves(removeFrom(s,k),p)){
+      if(m.cells.some(([r,c])=>freed.has(r*N+c))){out.push({...m,rm:k});if(limitOne) return out;}
+    }
+  }
+  return out;
+}
 const inB=(r,c)=>r>=0&&r<N&&c>=0&&c<N;
 const at=(s,r,c)=>inB(r,c)?s.b[r*N+c]:-2;
 // 置けない理由（置ければ ""）。cells は盤の座標
@@ -246,6 +281,8 @@ function legalMoves(s,p,limitOne){
   return out;
 }
 const canMove=(s,p)=>legalMoves(s,p,true).length>0;
+// 消す権利を使えば置けるときも「置ける」と数える（パスにしない）
+const canMoveAny=(s,p)=>canMove(s,p)||removalMoves(s,p,true).length>0;
 function score(s,p){
   const rest=PIECES.reduce((a,pc,i)=>a+(s.left[p][i]?pc.length:0),0);
   if(rest>0) return -rest;
@@ -254,28 +291,42 @@ function score(s,p){
 // 手番を進める（置けない人は自動でパス）
 function advance(t){
   for(let k=0;k<2;k++){
-    if(canMove(t,t.turn)) return t;
+    if(canMoveAny(t,t.turn)) return t;
     t.turn=1-t.turn;
   }
   const a=score(t,0),b=score(t,1);
   t.over={w:a>b?0:b>a?1:-1,score:[a,b]};
   return t;
 }
-function apply(s,m){
-  const t=clone(s),p=s.turn;
-  for(const [r,c] of m.cells) t.b[r*N+c]=p;
+// 手を盤に置く（手番は進めない）。m.rm があれば、先にその駒を消して権利を使う
+function put(s,m){
+  const p=s.turn;let t;
+  if(m.rm!=null){
+    if(!removable(s,p).includes(m.rm)) throw new Error("この駒は消せません");
+    t=removeFrom(s,m.rm);t.rm[p]=false;t.removedCells=s.pl[m.rm].cells;
+  }else{t=clone(s);t.removedCells=[];}
+  const k=t.pl.length;
+  t.pl.push({p,i:m.i,cells:m.cells,n:t.placed[p],alive:true});
+  for(const [r,c] of m.cells){t.b[r*N+c]=p;t.id[r*N+c]=k;}
   t.left[p][m.i]=false;t.placed[p]++;t.last[p]=m.i;t.lastCells=m.cells;
   t.turn=1-p;
-  return advance(t);
+  return t;
 }
+const apply=(s,m)=>advance(put(s,m));
 
 /* ===== CPU ===== */
+// 消す権利を残していることの値（置いたマス数1つ＝10 と同じ物差し）。CPU は、困ったときか、得が大きいときだけ使う
+const RIGHT_VALUE=30;
 function stateEval(s,me){
   const sq=p=>PIECES.reduce((a,pc,i)=>a+(s.left[p][i]?0:pc.length),0);
-  return (sq(me)-sq(1-me))*10+(corners(s,me).length-corners(s,1-me).length)*2;
+  let v=(sq(me)-sq(1-me))*10+(corners(s,me).length-corners(s,1-me).length)*2;
+  if(s.rule) v+=((s.rm[me]?1:0)-(s.rm[1-me]?1:0))*RIGHT_VALUE;
+  return v;
 }
+// CPU が考える手: ふつうの手と、消す権利を使う手（消して空いたマスに置く手）
+function cpuCandidates(s,me){return legalMoves(s,me).concat(removalMoves(s,me));}
 function greedyScore(s,m,me){
-  const t=clone(s);for(const [r,c] of m.cells) t.b[r*N+c]=me;t.left[me][m.i]=false;t.placed[me]++;
+  const t=put(s,m);
   let v=stateEval(t,me);
   if(s.placed[me]<4){ // 序盤は真ん中へ伸ばす
     const cr=m.cells.reduce((a,x)=>a+Math.abs(x[0]-6.5)+Math.abs(x[1]-6.5),0)/m.cells.length;
@@ -284,7 +335,10 @@ function greedyScore(s,m,me){
   return v;
 }
 function cpuMove(s,level,rnd=Math.random){
-  const me=s.turn,ms=legalMoves(s,me);
+  const me=s.turn,normal=legalMoves(s,me);
+  // やさしい: 権利は置けなくなったときだけ使う
+  if(level===1&&!normal.length){const rs=removalMoves(s,me);return rs.length?rs[(rnd()*rs.length)|0]:null;}
+  const ms=level===1?normal:normal.concat(removalMoves(s,me));
   if(!ms.length) return null;
   if(level===1){
     const big=Math.max(...ms.map(m=>m.cells.length));
@@ -300,7 +354,7 @@ function cpuMove(s,level,rnd=Math.random){
     if(s1.over) v=s1.over.w===me?1e6:-1e6;
     else if(s1.turn===me) v=stateEval(s1,me)+50;
     else{
-      const rep=legalMoves(s1,1-me);let worst=Infinity;
+      const rep=cpuCandidates(s1,1-me);let worst=Infinity;
       // 相手は自分にとっていちばん得な手を打つ
       let bestOpp=-Infinity,pick=null;
       for(const r of rep){const g=greedyScore(s1,r,1-me);if(g>bestOpp){bestOpp=g;pick=r;}}
@@ -338,6 +392,33 @@ function runTests(){
   // CPU どうしで最後まで
   let g=newGame(0),guard=0;while(!g.over&&guard<100){g=apply(g,cpuMove(g,2,()=>.3));guard++;}
   ok("CPU どうしで最後まで進み、点数が出る",!!g.over&&g.over.score.length===2);
+  // 消す権利
+  let q=newGame(0,true);
+  q=apply(q,{i:1,o:0,cells:[[4,4],[4,5]]});      // 紅 1個目
+  q=apply(q,{i:0,o:0,cells:[[9,9]]});            // 藍 1個目
+  q=apply(q,{i:2,o:0,cells:[[5,6],[5,7],[5,8]]});// 紅 2個目
+  q=apply(q,{i:3,o:0,cells:[[8,8],[7,8],[7,7]]});// 藍 2個目
+  ok("権利なしの対戦では消せない",removable(apply(apply(newGame(0),{i:1,o:0,cells:[[4,4],[4,5]]}),{i:0,o:0,cells:[[9,9]]}),0).length===0);
+  ok("相手の最初の駒は消せない（2個目だけ消せる）",JSON.stringify(removable(q,0))==="[3]");
+  const q2=apply(q,{i:4,o:0,cells:[[7,8],[8,8],[9,8],[10,8]],rm:3}); // 紅が藍の2個目を消して、そのマスを含めて…置けるかは問わない（ルールの部分の確認）
+  ok("消した駒のマスは空き、点数は変わらない（手持ちに戻らない）",q2.b[7*N+7]===-1&&!q2.left[1][3]&&score(q2,1)===score(q,1));
+  ok("権利は1回だけ",!q2.rm[0]&&removable(q2,0).length===0&&q2.rm[1]);
+  ok("消した駒は記録から外れる",q2.pl[3].alive===false&&q2.id[7*N+7]===-1);
+  let threw=false;try{put(q,{i:4,o:0,cells:[[0,0]],rm:0});}catch(e){threw=true;}
+  ok("最初の駒を消す手はルールの部分でも止める",threw);
+  // ふつうには置けないが、権利で置けるときはパスにならない
+  const z=newGame(0,true);z.placed=[1,1];
+  z.b.fill(1);z.id.fill(1);z.pl=[{p:0,i:0,cells:[[0,0]],n:0,alive:true},{p:1,i:1,cells:[],n:1,alive:true}];
+  z.b[0]=0;z.id[0]=0;z.b[N+1]=1;   // 紅の駒 (0,0)。(1,1) は藍の駒（pl 1）
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++)if(z.b[r*N+c]===1){z.pl[1].cells.push([r,c]);}
+  z.left[0]=PIECES.map((_,i)=>i===0);z.turn=0;
+  ok("ふつうには置けない形では canMove が偽",!canMove(z,0));
+  ok("権利を使えば置けるので、置ける手として数える",canMoveAny(z,0)&&removalMoves(z,0,true).length===1);
+  const zm=cpuMove(z,2,()=>.3);
+  ok("CPU は困ったとき権利を使う",zm&&zm.rm===1);
+  // 権利ありで CPU どうしで最後まで
+  let h=newGame(0,true),gd=0;while(!h.over&&gd<120){h=apply(h,cpuMove(h,2,()=>.3));gd++;}
+  ok("権利ありでも CPU どうしで最後まで進む",!!h.over);
   return R;
 }
 
@@ -345,6 +426,10 @@ function runTests(){
 const $=id=>document.getElementById(id);
 const NAMES=["紅","藍"],LV=["","やさしい","ふつう","つよい"];
 let mode=0,first=0,g=newGame(0),hist=[],sel=-1,shape=null,pv=null,busy=false;
+// 消す権利の操作: picking＝消す駒を選んでいるところ／rm＝消す駒に選んだ駒（pl の番号）
+let picking=false,rmSel=null;
+const ruleOn=()=>$("optRm").checked;
+const base=()=>rmSel!=null?removeFrom(g,rmSel):g; // 置き場所を調べる盤（消す駒を選んだら、消した盤）
 const cpuSide=()=>mode>0?1:-1;
 const human=()=>mode>0?0:g.turn;
 const myTurn=()=>!g.over&&!busy&&g.turn!==cpuSide();
@@ -364,7 +449,10 @@ function anchorOf(sh){
   return best;
 }
 function placeCells(sh,r,c){const [ar,ac]=anchorOf(sh);return sh.map(([y,x])=>[y-ar+r,x-ac+c]);}
-function updatePv(){if(pv&&shape){pv.cells=placeCells(shape,pv.r,pv.c);pv.err=problem(g,g.turn,pv.cells);}}
+function updatePv(){
+  if(!(pv&&shape)) return;
+  pv.cells=placeCells(shape,pv.r,pv.c);pv.err=problem(base(),g.turn,pv.cells);
+}
 
 function renderTray(){
   const p=human(),tray=$("tray");tray.innerHTML="";
@@ -386,13 +474,19 @@ function renderTray(){
   $("trayCount").textContent=`残り${n}個`;
 }
 function render(){
-  const hints=myTurn()?corners(g,g.turn):[];
+  const b0=base(),hints=myTurn()?corners(b0,g.turn):[];
   const pvSet=new Map();if(pv&&pv.cells&&myTurn())for(const [r,c] of pv.cells)if(inB(r,c))pvSet.set(r*N+c,true);
   const lastSet=new Set(g.lastCells.map(([r,c])=>r*N+c));
+  const goneSet=new Set(g.removedCells.map(([r,c])=>r*N+c));
+  const pickable=picking&&myTurn()?new Set(removable(g,g.turn)):new Set();
+  gridEl.classList.toggle("picking",pickable.size>0);
   cells.forEach((d,k)=>{
-    const r=(k/N)|0,c=k%N,v=g.b[k];
+    const r=(k/N)|0,c=k%N,v=b0.b[k];
     let cls="cell";
-    if(v>=0) cls+=" p"+v;
+    if(rmSel!=null&&g.id[k]===rmSel) cls+=" p"+g.b[k]+" rmsel";
+    else if(v>=0) cls+=" p"+v;
+    if(pickable.has(g.id[k])) cls+=" pick";
+    if(goneSet.has(k)&&v<0&&!pvSet.has(k)) cls+=" gone";
     if(lastSet.has(k)) cls+=" last";
     if(v<0&&((r===START[0][0]&&c===START[0][1]&&g.placed[0]===0)||(r===START[1][0]&&c===START[1][1]&&g.placed[1]===0))) cls+=" start";
     if(pvSet.has(k)) cls+=pv.err?(v<0?" pv"+g.turn:"")+" pvbad":" pv"+g.turn;
@@ -403,37 +497,59 @@ function render(){
     $("pl"+i).classList.toggle("turn",!g.over&&g.turn===i);
     $("tag"+i).textContent=(g.first===i?"先手":"後手")+(cpuSide()===i?"・CPU":"");
     const rest=PIECES.reduce((a,pc,j)=>a+(g.left[i][j]?pc.length:0),0),cnt=g.left[i].filter(Boolean).length;
-    $("left"+i).textContent=`残り ${cnt}個・${rest}マス`;
+    $("left"+i).textContent=`残り ${cnt}個・${rest}マス`+(g.rule?`・消す権利 ${g.rm[i]?"あり":"使った"}`:"");
   }
   $("rot").disabled=$("flip").disabled=!(myTurn()&&sel>=0);
   $("place").disabled=!(myTurn()&&pv&&pv.cells&&!pv.err);
   $("undo").disabled=busy||hist.length===0;
-  $("sub").textContent=mode?`CPU（${LV[mode]}）と対戦`:"2人で対戦";
+  const er=$("erase");er.hidden=!g.rule;
+  er.disabled=!(myTurn()&&removable(g,g.turn).length>0);
+  er.setAttribute("aria-pressed",String(picking||rmSel!=null));
+  er.textContent=rmSel!=null?"消すのをやめる":picking?"やめる（消す駒を選び中）":"相手の駒を消す";
+  $("sub").textContent=(mode?`CPU（${LV[mode]}）と対戦`:"2人で対戦")+(g.rule?"・消す権利あり":"");
   let m;
   if(g.over) m=g.over.w===-1?"引き分け":`${NAMES[g.over.w]}の勝ち！`;
   else if(busy) m="CPU が考えています…";
+  else if(flash) m=flash;
+  else if(picking) m="消す相手の駒をタップしてください（相手の最初の駒は消せません）";
+  else if(rmSel!=null&&sel<0) m="消す駒を選びました。続けて自分の駒を選んで置いてください";
   else if(sel<0) m=`${NAMES[g.turn]}の番です（下の棚から駒を選ぶ）`;
   else if(!pv) m="盤をタップして置く場所を選ぶ";
-  else m=pv.err||"置けます（もう一度タップか「ここに置く」）";
-  if(note&&!g.over&&!busy&&!pv) m=note+" "+m;
+  else m=pv.err||(rmSel!=null?"消して置けます（もう一度タップか「ここに置く」）":"置けます（もう一度タップか「ここに置く」）");
+  if(!g.over&&!busy&&myTurn()&&!picking&&rmSel==null&&!canMove(g,g.turn)&&g.rm[g.turn]) m="ふつうには置けません。消す権利を使えば置けます";
+  if(note&&!g.over&&!busy&&!pv&&!picking&&rmSel==null) m=note+" "+m;
+  flash="";
   $("msg").textContent=m;
   renderTray();showResult();
 }
-let note="";
+let note="",flash="";
 function selectPiece(i){if(!myTurn())return;if(sel===i){sel=-1;shape=null;pv=null;}else{sel=i;shape=norm(PIECES[i]);updatePv();}render();}
 function tapCell(r,c){
-  if(!myTurn()||sel<0)return;
+  if(!myTurn())return;
+  if(picking){
+    const k=g.id[r*N+c];
+    if(removable(g,g.turn).includes(k)){rmSel=k;picking=false;updatePv();}
+    else if(k>=0&&g.pl[k].p===1-g.turn) flash="相手の最初の駒は消せません";
+    else flash="消すのは相手の駒です（相手の色のマスをタップ）";
+    render();return;
+  }
+  if(sel<0)return;
   if(pv&&pv.r===r&&pv.c===c&&!pv.err){commit();return;}
   pv={r,c};updatePv();render();
 }
 function commit(){
   if(!pv||pv.err)return;
   const m={i:sel,cells:pv.cells};
+  if(rmSel!=null) m.rm=rmSel;
   play(m);
 }
+function moveNote(m,before){
+  const used=m.rm!=null?`${NAMES[before]}は消す権利を使った。`:"";
+  return used+((!g.over&&g.turn===before)?`${NAMES[1-before]}は置ける場所が無いのでパス。`:"");
+}
 function play(m){
-  const before=g.turn;hist.push(g);g=apply(g,m);sel=-1;shape=null;pv=null;
-  note=(!g.over&&g.turn===before)?`${NAMES[1-before]}は置ける場所が無いのでパス。`:"";
+  const before=g.turn;hist.push(g);g=apply(g,m);sel=-1;shape=null;pv=null;picking=false;rmSel=null;
+  note=moveNote(m,before);
   render();
   if(!g.over&&g.turn===cpuSide())cpuTurn();
 }
@@ -441,7 +557,7 @@ function cpuTurn(){
   busy=true;render();
   setTimeout(()=>{
     const m=cpuMove(g,mode);busy=false;
-    if(m){const before=g.turn;hist.push(g);g=apply(g,m);note=(!g.over&&g.turn===before)?`${NAMES[1-before]}は置ける場所が無いのでパス。`:"";}
+    if(m){const before=g.turn;hist.push(g);g=apply(g,m);note=moveNote(m,before);}
     render();
     if(!g.over&&g.turn===cpuSide())cpuTurn();
   },420);
@@ -450,10 +566,16 @@ function showResult(){
   const box=$("result");if(!g.over){box.hidden=true;return;}
   box.hidden=false;const [a,b]=g.over.score;
   $("rTitle").textContent=g.over.w===-1?"引き分け":`${NAMES[g.over.w]}の勝ち`;
-  $("share").textContent=`かどつなぎ ${g.over.w===-1?"引き分け":NAMES[g.over.w]+"の勝ち"}${mode?`（CPU ${LV[mode]}）`:""}\n紅 ${a}点・藍 ${b}点`;
+  $("share").textContent=`かどつなぎ ${g.over.w===-1?"引き分け":NAMES[g.over.w]+"の勝ち"}${mode?`（CPU ${LV[mode]}）`:""}${g.rule?"・消す権利あり":""}\n紅 ${a}点・藍 ${b}点`;
   $("copied").textContent="";
 }
-function start(f){first=f;g=newGame(f);hist=[];sel=-1;shape=null;pv=null;busy=false;note="";render();if(g.turn===cpuSide())cpuTurn();}
+function start(f){first=f;g=newGame(f,ruleOn());hist=[];sel=-1;shape=null;pv=null;busy=false;note="";picking=false;rmSel=null;render();if(g.turn===cpuSide())cpuTurn();}
+$("optRm").addEventListener("change",()=>start(first));
+$("erase").addEventListener("click",()=>{
+  if(!myTurn())return;
+  if(rmSel!=null||picking){rmSel=null;picking=false;}else picking=true;
+  updatePv();render();
+});
 function setMode(k){mode=k;["mPvp","mCpu1","mCpu2","mCpu3"].forEach((id,j)=>$(id).setAttribute("aria-pressed",String(j===k)));start(first);}
 ["mPvp","mCpu1","mCpu2","mCpu3"].forEach((id,k)=>$(id).addEventListener("click",()=>setMode(k)));
 $("rot").addEventListener("click",()=>{if(shape){shape=rot(shape);updatePv();render();}});
@@ -464,7 +586,7 @@ $("next").addEventListener("click",()=>start(1-first));
 $("undo").addEventListener("click",()=>{
   if(busy||!hist.length)return;
   g=hist.pop();while(hist.length&&g.turn===cpuSide())g=hist.pop();
-  sel=-1;shape=null;pv=null;note="";render();
+  sel=-1;shape=null;pv=null;note="";picking=false;rmSel=null;render();
   if(!g.over&&g.turn===cpuSide())cpuTurn();
 });
 $("copy").addEventListener("click",()=>{
