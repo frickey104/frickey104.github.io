@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="可動コイル型の VCM で、寸法・磁石・コイルを変えたら推力が何%変わるかを、幅つきで出す。断面図と解説つき。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="frickey の工房">
+<meta property="og:title" content="VCM 効き方計算">
+<meta property="og:description" content="可動コイル型の VCM で、寸法・磁石・コイルを変えたら推力が何%変わるかを、幅つきで出す。断面図と解説つき。">
+<meta property="og:url" content="https://frickey104.github.io/vcm-calc/">
+<meta property="og:image" content="https://frickey104.github.io/img/og-vcm-calc.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+.fk-bar{all:initial;display:flex;align-items:center;justify-content:space-between;gap:12px;box-sizing:border-box;width:100%;min-height:34px;padding:6px max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px));background:#16283c;color:#e9eef4;font:600 13px/1.3 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",sans-serif;position:relative;z-index:2147483647}
+.fk-bar a{all:initial;color:#e9eef4;font:inherit;cursor:pointer;text-decoration:none}
+.fk-bar a:hover,.fk-bar a:focus-visible{text-decoration:underline;outline:none}
+.fk-bar span{all:initial;color:#9fb3c8;font:500 12px/1.3 ui-monospace,Consolas,monospace}
+</style>
+</head>
+<body>
+<nav class="fk-bar" aria-label="作品集"><a href="../">← frickey の工房</a><span>計算シート</span></nav>
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
+<title>VCM 効き方計算</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: engineer's worksheet — figure + inputs left, sticky result right; explanation cards below, all numbers live */
+:root{
+  --bg:#f3f5f4; --paper:#ffffff; --fg:#1b2220; --muted:#5b6662; --line:#d3dad7; --soft:#e8edeb;
+  --north:#c2412a; --south:#2f5f93; --yoke:#7b8580; --coil:#c98a1a; --accent:#0f7a6c;
+  --ok:#1f7a3a; --warn:#a66300; --bad:#b3261e; --chg:#fff3cf; --chg-fg:#6b4b00;
+  --sans:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121816; --paper:#1a211f; --fg:#e3e9e6; --muted:#9aa6a1; --line:#33403c; --soft:#222b28;
+  --north:#e8775f; --south:#79a6dc; --yoke:#8e9994; --coil:#e0aa45; --accent:#4cc3b0;
+  --ok:#5cc47a; --warn:#e5a54a; --bad:#f07b72; --chg:#3a3218; --chg-fg:#f3d88a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121816; --paper:#1a211f; --fg:#e3e9e6; --muted:#9aa6a1; --line:#33403c; --soft:#222b28;
+  --north:#e8775f; --south:#79a6dc; --yoke:#8e9994; --coil:#e0aa45; --accent:#4cc3b0;
+  --ok:#5cc47a; --warn:#e5a54a; --bad:#f07b72; --chg:#3a3218; --chg-fg:#f3d88a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.65;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 56px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+h1{font-size:1.45rem;margin:0;line-height:1.3;text-wrap:balance}
+h2{font-size:1.05rem;margin:0;text-wrap:balance}
+h3{font-size:.95rem;margin:0}
+p{margin:0}
+.lead{color:var(--muted);max-width:62ch}
+.mono,.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:22px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--paper);border:1px solid var(--line);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.label{font-size:.75rem;letter-spacing:.06em;color:var(--muted)}
+/* figure */
+.fig svg{width:100%;height:auto;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+/* inputs */
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{padding:6px 6px;border-bottom:1px solid var(--line);vertical-align:middle;text-align:left}
+th{font-size:.75rem;font-weight:400;color:var(--muted);letter-spacing:.04em}
+td.name{font-size:.88rem}
+td.name .no{display:inline-flex;align-items:center;justify-content:center;width:1.5em;height:1.5em;border-radius:50%;background:var(--soft);font:600 .72rem var(--mono);margin-right:6px}
+td.name .sym{font-family:var(--mono);color:var(--muted);font-size:.78rem;margin-left:4px}
+tr.grp td{font-size:.75rem;color:var(--accent);letter-spacing:.08em;padding-top:12px;border-bottom:none}
+input[type=text]{width:100%;min-width:4.5em;font:inherit;font-family:var(--mono);font-variant-numeric:tabular-nums;padding:5px 7px;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:3px}
+input[type=text]:focus{outline:2px solid var(--accent);outline-offset:1px}
+input.changed{background:var(--chg);color:var(--chg-fg);border-color:var(--warn)}
+input[aria-invalid=true]{border-color:var(--bad);outline-color:var(--bad)}
+.pct{display:block;font:.7rem var(--mono);color:var(--chg-fg);min-height:1em}
+td.unit{font-size:.75rem;color:var(--muted);white-space:nowrap}
+button{font:inherit;font-size:.82rem;padding:5px 10px;border:1px solid var(--line);background:var(--soft);color:var(--fg);border-radius:3px;cursor:pointer}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+/* result */
+.res{position:sticky;top:calc(env(safe-area-inset-top,0px) + 10px)}
+@media (max-width:860px){.res{position:static}}
+.big{font:600 2.1rem/1.1 var(--mono);font-variant-numeric:tabular-nums}
+.big small{font-size:1rem;color:var(--muted);font-weight:400}
+.range-bar svg{width:100%;height:auto;display:block}
+.status{display:inline-block;font-size:.78rem;padding:1px 8px;border-radius:99px;border:1px solid currentColor}
+.s-ok{color:var(--ok)}.s-warn{color:var(--warn)}.s-bad{color:var(--bad)}
+.warns{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.warns li{font-size:.85rem;padding:7px 10px;border-left:3px solid var(--warn);background:var(--soft)}
+.warns li.bad{border-color:var(--bad)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:.88rem}
+.kv dt{color:var(--muted)}.kv dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tornado .row{display:grid;grid-template-columns:7.5em 1fr 6.5em;gap:8px;align-items:center;font-size:.82rem}
+.tornado .bar{height:10px;background:var(--soft);position:relative}
+.tornado .bar i{position:absolute;top:0;bottom:0;background:var(--accent)}
+.tornado .row .num{text-align:right}
+/* explain */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:14px}
+.card{background:var(--paper);border:1px solid var(--line);padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card .step{font:600 .72rem var(--mono);color:var(--accent);letter-spacing:.08em}
+.eq{font-family:var(--mono);font-size:.82rem;background:var(--soft);padding:8px 10px;overflow-x:auto;white-space:nowrap}
+.vals{display:grid;grid-template-columns:auto 1fr 1fr;gap:2px 10px;font-size:.84rem}
+.vals .h{color:var(--muted);font-size:.72rem}
+.vals .v{font-family:var(--mono);font-variant-numeric:tabular-nums}
+details{font-size:.86rem}
+details summary{cursor:pointer;color:var(--accent)}
+.foot{font-size:.8rem;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.err{color:var(--bad);font-size:.85rem}
+a{color:var(--accent)}
+@media (prefers-reduced-motion:no-preference){input,.tornado .bar i{transition:background .15s, width .2s, left .2s}}
+@media (max-width:600px){
+  #inputs tr:not(.grp){display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;padding:8px 0;border-bottom:1px solid var(--line)}
+  #inputs tr:not(.grp) td{border:none;padding:0}
+  #inputs td.name{grid-column:1/-1}
+  #inputs td.unit{display:none}
+  #inputs td[data-l]::before{content:attr(data-l);display:block;font-size:.7rem;color:var(--muted)}
+  #inputs .u-in{display:inline}
+  .tbl thead.inhead{display:none}
+}
+.u-in{display:none;font-size:.75rem;color:var(--muted);margin-left:4px}
+</style>
+
+<style>
+.mbar{display:none}
+@media (max-width:860px){
+  .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:5;gap:10px;align-items:center;justify-content:space-between;
+    background:var(--paper);border-top:1px solid var(--line);
+    padding:8px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+  .mbar .v{font:600 1.05rem var(--mono)}
+  body{padding-bottom:calc(80px + env(safe-area-inset-bottom,0px))}
+}
+.key{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.78rem;color:var(--muted)}
+.key i{display:inline-block;width:14px;height:8px;margin-right:5px;vertical-align:0}
+.calc td.v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.85rem;color:var(--muted)}
+.banner{background:var(--bad);color:var(--paper);padding:8px 12px;font-size:.85rem}
+</style>
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:6px">
+    <h1>VCM 効き方計算</h1>
+    <p class="lead">可動コイル型 VCM（2極のフラット型）で、寸法・磁石・コイルを変えたら推力が何%増減するかを出します。下の断面図の番号と入力欄の番号が対応しています。数値は例として自分で決めた値です。</p>
+    <div id="testBanner" class="banner" hidden></div>
+  </header>
+
+  <div class="grid">
+    <div style="display:flex;flex-direction:column;gap:22px;min-width:0">
+      <section class="panel fig" aria-labelledby="figh">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap">
+          <h2 id="figh">断面図（左右が移動方向 x）</h2>
+          <span class="label">実線＝変更後／破線＝基準・縮尺どおり</span>
+        </div>
+        <div id="fig"></div>
+        <div class="legend">
+          <span style="--c:var(--north)">磁石 N 極</span><span style="--c:var(--south)">磁石 S 極</span>
+          <span style="--c:var(--yoke)">ヨーク</span><span style="--c:var(--coil)">コイルの断面（2辺）</span>
+        </div>
+        <p style="font-size:.84rem;color:var(--muted)">磁束は N 極 → ギャップ（コイルを横切る）→ 上ヨーク → ギャップ → S 極 → 下ヨーク と1周します。奥行き D は紙面に垂直な方向で、コイルの直線部 Lc もその向きに伸びます。コイルの2辺は電流の向き（⊙ 手前へ／⊗ 奥へ）が逆で、上にある磁界の向きも逆なので、力は同じ向き（左右）にそろいます。</p>
+      </section>
+
+      <section class="panel" aria-labelledby="inh">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+          <h2 id="inh">入力（変えたい欄だけ「変更後」を書き換える）</h2>
+          <div class="btns">
+            <button type="button" id="copyBase">変更後を基準に合わせる</button>
+            <button type="button" id="resetAll">例の値に戻す</button>
+          </div>
+        </div>
+        <div class="tbl"><table>
+          <thead class="inhead"><tr><th>項目</th><th>基準</th><th>変更後</th><th>単位</th></tr></thead>
+          <tbody id="inputs"></tbody>
+        </table></div>
+        <div class="tbl calc"><table><tbody id="derived"></tbody></table></div>
+        <div class="tbl"><table>
+          <thead><tr><th>係数の幅</th><th>下限</th><th>上限</th></tr></thead>
+          <tbody>
+            <tr><td class="name">基準の形の漏れ係数 σ<span class="sym">σ</span><br><span style="font-size:.75rem;color:var(--muted)">磁石から出た磁束 ÷ ギャップを通る磁束。典型 1.5〜10（MMPA）、閉じたフラット型は小さめ</span></td>
+              <td><input type="text" inputmode="decimal" id="smin" aria-label="σ 下限"></td><td><input type="text" inputmode="decimal" id="smax" aria-label="σ 上限"></td></tr>
+            <tr><td class="name">起磁力の損失係数 f<span class="sym">f</span><br><span style="font-size:.75rem;color:var(--muted)">継ぎ目・ヨークで失う分の割り増し。典型 1.1〜1.3（MMPA）</span></td>
+              <td><input type="text" inputmode="decimal" id="fmin" aria-label="f 下限"></td><td><input type="text" inputmode="decimal" id="fmax" aria-label="f 上限"></td></tr>
+          </tbody>
+        </table></div>
+        <p id="inerr" class="err" role="alert"></p>
+      </section>
+    </div>
+
+    <aside class="panel res" aria-labelledby="resh" aria-live="polite">
+      <h2 id="resh">結果: 推力の変化（同じ電流）</h2>
+      <div><div class="big" id="mainPct">—</div><div class="label" id="mainSub"></div></div>
+      <div class="range-bar" id="rangeBar"></div>
+      <div class="key"><span><i style="background:var(--accent)"></i>漏れの道が変わらない（考え方 B）</span><span><i style="background:var(--muted)"></i>漏れが比例して変わる（考え方 A）</span></div>
+      <dl class="kv" id="kv"></dl>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <h3>ヨークの飽和（σ・f の幅の中で一番きびしい値）</h3>
+        <dl class="kv" id="yoke"></dl>
+      </div>
+      <ul class="warns" id="warns"></ul>
+      <details>
+        <summary>参考: 推力の値そのもの（σ の幅でこれだけぶれる）</summary>
+        <dl class="kv" id="abs" style="margin-top:6px"></dl>
+      </details>
+    </aside>
+  </div>
+
+  <section class="panel" aria-labelledby="th">
+    <h2 id="th">どの寸法が効くか（基準の設計で、1つずつ +10% したとき）</h2>
+    <p style="font-size:.84rem;color:var(--muted)">上の棒（緑）＝同じ電流での推力、下の棒（橙）＝同じ発熱での推力。棒の長さは σ・f の幅と漏れの2つの考え方を合わせた幅です。</p>
+    <div class="tornado" id="tornado" style="display:flex;flex-direction:column;gap:7px"></div>
+  </section>
+
+  <section aria-labelledby="exh" style="display:flex;flex-direction:column;gap:12px">
+    <h2 id="exh">計算の中身（高校生向けの解説・数値は σ・f の真ん中と考え方 B）</h2>
+    <p style="font-size:.86rem;color:var(--muted);max-width:70ch">磁気回路は電気の回路と同じ形で考えられます。磁石が「電池」、磁束が「電流」、磁気の通りやすさが「抵抗の逆数」です。ギャップを通る道（役に立つ道）と、横に抜ける漏れの道が並んでいます。</p>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section class="panel foot">
+    <details>
+      <summary>使える範囲と前提</summary>
+      <ul style="margin:6px 0 0;padding-left:1.2em">
+        <li>可動コイル型・2極のフラット型・コイルが中立位置にあるときの推力だけ。位置による推力の変化、コイルの電流が作る磁界、温度、渦電流は入っていません。</li>
+        <li>減磁曲線は直線（希土類焼結磁石の室温付近）と置いています。</li>
+        <li>漏れは計算では決まらないので、基準の形の σ を幅で入れ、変更後は2つの考え方で幅をとります。A: 漏れの磁束がギャップの磁束に比例する（σ が変わらない）。B: 漏れの通り道の形は奥行きに比例するだけで、ギャップや極の幅を変えても変わらない。実際はたいてい2つの間か、その近くです。</li>
+        <li>極面とギャップの面積は同じと置き、縁のふくらみは漏れと f に含めます。ヨークの磁気抵抗は飽和していない間は f に含めています。</li>
+        <li>この計算と解析・実測の差を数字で示した資料は見つかっていません。最終確認は解析か実測で行ってください。</li>
+      </ul>
+    </details>
+    <details>
+      <summary>自己試験</summary>
+      <div id="tests" class="mono" style="font-size:.8rem;margin-top:6px"></div>
+    </details>
+    <p>出典: <a href="https://www.duramag.com/wp-content/uploads/MMPA_PMG-88.pdf">MMPA PMG-88</a>（σ・f の典型値・磁気回路法）／<a href="https://product.tdk.com/en/products/magnet/technote/designguide.html">TDK Magnetic Circuit Design Guide</a>（σ・f の定義）。入れた値はこのページの外へ送りません。無保証です。</p>
+  </section>
+</div>
+<div class="mbar" aria-hidden="true"><span class="label">推力の変化</span><span class="v" id="mbarPct">—</span><span id="mbarYoke"></span></div>
+
+<script>
+(function(){
+"use strict";
+const FIELDS=[
+ {g:"磁石"},
+ {k:"Br",name:"残留磁束密度",sym:"Br",unit:"T",def:1.30},
+ {k:"mu",name:"リコイル比透磁率",sym:"μrec",unit:"—",def:1.05},
+ {k:"Wp",no:"①",name:"極の幅（移動方向）",sym:"Wp",unit:"mm",def:1.5},
+ {k:"D",no:"②",name:"奥行き",sym:"D",unit:"mm",def:4.0},
+ {k:"Lm",no:"③",name:"磁石の厚み（着磁方向）",sym:"Lm",unit:"mm",def:0.8},
+ {g:"ギャップとコイル"},
+ {k:"tc",no:"④",name:"コイルの厚み",sym:"tc",unit:"mm",def:0.4},
+ {k:"cl",no:"⑤",name:"すき間（片側）",sym:"cl",unit:"mm",def:0.1,zero:true},
+ {k:"wc",no:"⑥",name:"コイル辺の幅",sym:"wc",unit:"mm",def:0.8},
+ {k:"Lc",no:"⑦",name:"コイルの直線部の長さ",sym:"Lc",unit:"mm",def:5.0},
+ {k:"N",name:"巻数",sym:"N",unit:"回",def:100},
+ {k:"I",name:"電流",sym:"I",unit:"A",def:0.10,zero:true},
+ {g:"ヨーク"},
+ {k:"tb",no:"⑧",name:"下ヨークの厚み",sym:"tb",unit:"mm",def:1.8},
+ {k:"tt",no:"⑨",name:"上ヨークの厚み",sym:"tt",unit:"mm",def:1.8},
+ {k:"Bs",name:"ヨーク材の飽和の目安",sym:"Bs",unit:"T",def:1.5},
+];
+const KEYS=FIELDS.filter(f=>f.k).map(f=>f.k);
+const EX_MOD={tc:0.3}; // example: thinner coil → smaller gap
+const DEF_RANGE={smin:1.5,smax:4,fmin:1.1,fmax:1.3};
+const LS="vcm-eff-v3";
+
+// ---------- model (lengths in mm; permeances normalized by μ0, unit mm) ----------
+// Bg = Br·Pg/(Pg+Pl+Pm), Pg=Am/(f·Lg), Pm=μrec·Am/Lm. With Pl=(σ−1)Pg this is the textbook
+// Bg = Br·Am·Lm/(σ·Ag·Lm+μrec·f·Am·Lg) (Ag=Am).
+function geo(p){ const Am=p.Wp*p.D, Lg=p.tc+2*p.cl, Leff=2*Math.min(p.D,p.Lc);
+  const mlt=2*p.Lc+2*p.Wp+Math.PI*p.wc; // mean turn length (approx.)
+  const acu=p.tc*p.wc; return {Am,Lg,Leff,mlt,acu}; }
+function perm(p,f){ const g=geo(p); return {Pg:g.Am/(f*g.Lg), Pm:p.mu*g.Am/p.Lm}; }
+// leakage permeance for design p, given base design b and base σ. model "A": Pl=(σ−1)Pg(p). "B": Pl fixed shape, scales with depth D.
+function leak(p,b,s,f,model){ const pp=perm(p,f), pb=perm(b,f);
+  return model==="A" ? (s-1)*pp.Pg : (s-1)*pb.Pg*(p.D/b.D); }
+function solve(p,b,s,f,model){ const pp=perm(p,f), Pl=leak(p,b,s,f,model), g=geo(p);
+  const Bg=p.Br*pp.Pg/(pp.Pg+Pl+pp.Pm);
+  const Bd=p.Br*(pp.Pg+Pl)/(pp.Pg+Pl+pp.Pm);
+  const sig=(pp.Pg+Pl)/pp.Pg;
+  const F=Bg*p.N*p.I*g.Leff/1000; // N
+  const Kt=Bg*p.N*g.Leff/1000; // N/A
+  const Ylow=Bd*p.Wp/p.tb, Yup=Bg*p.Wp/p.tt; // lower yoke carries magnet flux, upper carries gap flux
+  const Pc=(pp.Pg+Pl)/pp.Pm*p.mu; // permeance coefficient Bd/(μ0Hd)
+  const heat=Bg*g.Leff*Math.sqrt(g.acu/g.mlt); // ∝ F/√P for same fill factor
+  return {Bg,Bd,sig,F,Kt,Ylow,Yup,Pc,heat};
+}
+function grid(a,b,n){ if(a===b) return [a]; const r=[]; for(let i=0;i<n;i++) r.push(a+(b-a)*i/(n-1)); return r; }
+function compare(b,m,R,key){ // ratio of key(m)/key(b) over σ,f grid for both models
+  const out={A:[Infinity,-Infinity],B:[Infinity,-Infinity]};
+  for(const model of ["A","B"]) for(const s of grid(R.smin,R.smax,9)) for(const f of grid(R.fmin,R.fmax,5)){
+    const r=solve(m,b,s,f,model)[key]/solve(b,b,s,f,model)[key];
+    out[model][0]=Math.min(out[model][0],r); out[model][1]=Math.max(out[model][1],r); }
+  out.lo=Math.min(out.A[0],out.B[0]); out.hi=Math.max(out.A[1],out.B[1]); return out;
+}
+function worst(p,b,R,key,models){ let mx=-Infinity,mn=Infinity; for(const model of (models||["A","B"])) for(const s of [R.smin,R.smax]) for(const f of [R.fmin,R.fmax]){ const v=solve(p,b,s,f,model)[key]; mx=Math.max(mx,v); mn=Math.min(mn,v);} return [mn,mx]; }
+function sensitivity(b,R){ const keys=["Wp","D","Lm","tc","cl","Lc","wc"]; const res=[];
+  for(const k of keys){ const q=Object.assign({},b); q[k]=b[k]===0?0.01:b[k]*1.1;
+    const c=compare(b,q,R,"F"), h=compare(b,q,R,"heat"); res.push({k,lo:c.lo-1,hi:c.hi-1,hlo:h.lo-1,hhi:h.hi-1,mag:Math.max(Math.abs(c.lo-1),Math.abs(c.hi-1))}); }
+  return res.sort((x,y)=>y.mag-x.mag); }
+function validate(p){ const e=[]; for(const f of FIELDS){ if(!f.k) continue; const v=p[f.k]; if(!Number.isFinite(v)||(f.zero?v<0:v<=0)) e.push(f.k);} return e; }
+
+// ---------- tests ----------
+function runTests(){ const b={}; FIELDS.forEach(f=>{if(f.k) b[f.k]=f.def;}); const T=[];
+  const near=(a,c,e=1e-9)=>Math.abs(a-c)<=e*Math.max(1,Math.abs(c)); const ok=(n,c)=>T.push([n,!!c]);
+  // independent textbook form: Bg = Br·Lm/(σ·Lm + μrec·f·Lg) when Ag=Am
+  const Lg=b.tc+2*b.cl; ok("教科書の式と一致（考え方 A・B とも基準では同じ）", near(solve(b,b,2,1.2,"A").Bg, 1.3*0.8/(2*0.8+1.05*1.2*Lg)) && near(solve(b,b,2,1.2,"B").Bg, solve(b,b,2,1.2,"A").Bg));
+  ok("手計算: σ=2,f=1.2,Lg=0.6 で Bg=1.04/2.356 T", near(1.3*0.8/(2*0.8+1.05*1.2*0.6),1.04/2.356));
+  const R={smin:1.5,smax:4,fmin:1.1,fmax:1.3}; const c0=compare(b,b,R,"F"); ok("同じ入力なら変化 0%", near(c0.lo,1)&&near(c0.hi,1));
+  const sc={}; for(const k of KEYS) sc[k]=b[k]; for(const k of ["Wp","D","Lm","tc","cl","wc","Lc"]) sc[k]=b[k]*2;
+  ok("全寸法2倍で Bg 不変（考え方 B）", near(solve(sc,b,3,1.2,"B").Bg, solve(b,b,3,1.2,"B").Bg));
+  ok("ギャップを狭めると、考え方 B の利得は A 以上", compare(b,Object.assign({},b,{tc:0.3}),R,"F").B[0] >= compare(b,Object.assign({},b,{tc:0.3}),R,"F").A[0]-1e-12);
+  ok("極の幅を広げると推力が増える（考え方 B）", solve(Object.assign({},b,{Wp:1.65}),b,3,1.2,"B").F > solve(b,b,3,1.2,"B").F);
+  ok("巻数2倍で推力2倍・同じ発熱の値は不変", near(solve(Object.assign({},b,{N:200}),b,3,1.2,"B").F/solve(b,b,3,1.2,"B").F,2) && near(solve(Object.assign({},b,{N:200}),b,3,1.2,"B").heat, solve(b,b,3,1.2,"B").heat));
+  ok("Bd = Br·Pc/(Pc+μrec)", (()=>{const r=solve(b,b,2,1.2,"A"); return near(r.Bd, 1.3*r.Pc/(r.Pc+1.05));})());
+  ok("σ の再計算: 考え方 A は基準の σ のまま", near(solve(Object.assign({},b,{tc:0.3}),b,2.5,1.2,"A").sig,2.5));
+  ok("不正な入力を見つける", validate(Object.assign({},b,{tc:0,Br:NaN})).length===2);
+  ok("D>Lc なら有効長は Lc で決まる", near(geo(Object.assign({},b,{D:6})).Leff, 2*b.Lc));
+  return T; }
+
+// ---------- state ----------
+let state=load()||fresh();
+function fresh(){ const b={},m={}; FIELDS.forEach(f=>{if(f.k){b[f.k]=String(f.def); m[f.k]=String(EX_MOD[f.k]??f.def);}}); const r={}; for(const k in DEF_RANGE) r[k]=String(DEF_RANGE[k]); return {base:b,mod:m,range:r}; }
+function load(){ try{ const s=JSON.parse(localStorage.getItem(LS)); if(s&&s.base&&s.mod&&s.range) return s; }catch(e){} return null; }
+function save(){ try{ localStorage.setItem(LS,JSON.stringify(state)); }catch(e){} }
+const num=s=>parseFloat(String(s).replace(/,/g,"").trim());
+
+const tb=document.getElementById("inputs");
+FIELDS.forEach(f=>{ const tr=document.createElement("tr");
+  if(f.g){ tr.className="grp"; tr.innerHTML=`<td colspan="4">${f.g}</td>`; tb.appendChild(tr); return; }
+  tr.innerHTML=`<td class="name">${f.no?`<span class="no">${f.no}</span>`:""}${f.name}<span class="sym">${f.sym}</span><span class="u-in">［${f.unit}］</span></td>
+   <td data-l="基準"><input type="text" inputmode="decimal" id="b_${f.k}" aria-label="基準 ${f.name}"></td>
+   <td data-l="変更後"><input type="text" inputmode="decimal" id="m_${f.k}" aria-label="変更後 ${f.name}"><span class="pct" id="p_${f.k}"></span></td>
+   <td class="unit">${f.unit}</td>`; tb.appendChild(tr); });
+function bindAll(){ KEYS.forEach(k=>{ const b=document.getElementById("b_"+k), m=document.getElementById("m_"+k);
+    b.value=state.base[k]; m.value=state.mod[k];
+    b.oninput=()=>{state.base[k]=b.value; update();}; m.oninput=()=>{state.mod[k]=m.value; update();};
+    b.onfocus=m.onfocus=()=>hl(k); b.onblur=m.onblur=()=>hl(null); });
+  ["smin","smax","fmin","fmax"].forEach(k=>{ const e=document.getElementById(k); e.value=state.range[k]; e.oninput=()=>{state.range[k]=e.value; update();}; }); }
+document.getElementById("copyBase").onclick=()=>{ state.mod=Object.assign({},state.base); bindAll(); update(); };
+document.getElementById("resetAll").onclick=()=>{ state=fresh(); bindAll(); update(); };
+
+// ---------- figure ----------
+let hlKey=null,lastB=null,lastM=null; function hl(k){ hlKey=k; if(lastB) drawFig(lastB,lastM); }
+const NS="http://www.w3.org/2000/svg";
+function el(t,a,txt){ const e=document.createElementNS(NS,t); for(const k in a) e.setAttribute(k,a[k]); if(txt!=null) e.textContent=txt; return e; }
+function drawFig(b,m){
+  const host=document.getElementById("fig"); host.innerHTML="";
+  const H0=p=>p.tb+p.Lm+p.tc+2*p.cl+p.tt;
+  const halfW=Math.max(b.Wp,m.Wp)*1.35, H=Math.max(H0(b),H0(m));
+  const padL=halfW*1.0, padR=halfW*0.15, padT=H*0.2, padB=H*0.2;
+  const vbW=2*halfW+padL+padR, vbH=H+padT+padB, u=vbW/100;
+  const svg=el("svg",{viewBox:`${-halfW-padL} ${-padT} ${vbW} ${vbH}`,role:"img"});
+  svg.appendChild(el("title",{},"VCM の断面図"));
+  svg.appendChild(el("desc",{},`変更後: 極の幅 ${m.Wp} mm、磁石の厚み ${m.Lm} mm、コイルの厚み ${m.tc} mm、すき間 ${m.cl} mm、下ヨーク ${m.tb} mm、上ヨーク ${m.tt} mm`));
+  const Y=y=>H-y, g=el("g",{});
+  const on=keys=>hlKey&&keys.includes(hlKey);
+  function draw(p,dashed){
+    const ext=0.35*p.Wp, yb=p.tb, ym=yb+p.Lm, yc=ym+p.cl, yt=yc+p.tc+p.cl;
+    const R=(x,y,w,h,fill,keys)=>{ const a={x,y:Y(y+h),width:w,height:h};
+      if(dashed) Object.assign(a,{fill:"none",stroke:"var(--muted)","stroke-width":u*0.35,"stroke-dasharray":`${u*1.2} ${u*0.8}`});
+      else Object.assign(a,{fill,stroke:on(keys)?"var(--accent)":"none","stroke-width":u*0.8});
+      g.appendChild(el("rect",a)); };
+    R(-p.Wp-ext,0,2*p.Wp+2*ext,p.tb,"var(--yoke)",["tb","Bs"]);
+    R(-p.Wp,yb,p.Wp,p.Lm,"var(--north)",["Wp","Lm","Br","mu"]);
+    R(0,yb,p.Wp,p.Lm,"var(--south)",["Wp","Lm","Br","mu"]);
+    R(-p.Wp-ext,yt,2*p.Wp+2*ext,p.tt,"var(--yoke)",["tt","Bs"]);
+    const cw=Math.min(p.wc,p.Wp*0.95);
+    R(-p.Wp/2-cw/2,yc,cw,p.tc,"var(--coil)",["tc","wc","Lc","N","I"]);
+    R(p.Wp/2-cw/2,yc,cw,p.tc,"var(--coil)",["tc","wc","Lc","N","I"]);
+    if(!dashed){ const fs=u*3.2;
+      g.appendChild(el("text",{x:-p.Wp/2,y:Y(yb+p.Lm/2)+fs*0.35,"text-anchor":"middle","font-size":fs,fill:"#fff","font-weight":"700"},"N"));
+      g.appendChild(el("text",{x:p.Wp/2,y:Y(yb+p.Lm/2)+fs*0.35,"text-anchor":"middle","font-size":fs,fill:"#fff","font-weight":"700"},"S"));
+      g.appendChild(el("text",{x:-p.Wp/2,y:Y(yc+p.tc/2)+fs*0.3,"text-anchor":"middle","font-size":fs*0.8,fill:"var(--fg)"},"⊙"));
+      g.appendChild(el("text",{x:p.Wp/2,y:Y(yc+p.tc/2)+fs*0.3,"text-anchor":"middle","font-size":fs*0.8,fill:"var(--fg)"},"⊗"));
+      const fs2=u*2.6, lx=-p.Wp-ext-u*2;
+      const vd=(y1,y2,label,key)=>{ const col=hlKey===key?"var(--accent)":"var(--fg)";
+        for(const [a1,b1,a2,b2] of [[lx,y1,lx,y2],[lx-u,y1,lx+u,y1],[lx-u,y2,lx+u,y2]]) g.appendChild(el("line",{x1:a1,y1:Y(b1),x2:a2,y2:Y(b2),stroke:col,"stroke-width":u*0.3}));
+        g.appendChild(el("text",{x:lx-u*1.5,y:(Y(y1)+Y(y2))/2+fs2*0.35,"text-anchor":"end","font-size":fs2,fill:col,"font-family":"var(--mono)"},label)); };
+      vd(0,yb,"⑧ tb","tb"); vd(yb,ym,"③ Lm","Lm"); vd(yc,yc+p.tc,"④ tc","tc"); vd(yt,yt+p.tt,"⑨ tt","tt");
+      const col=k=>hlKey===k?"var(--accent)":"var(--fg)";
+      const yy=Y(yt+p.tt)-u*3;
+      g.appendChild(el("line",{x1:-p.Wp,y1:yy,x2:0,y2:yy,stroke:col("Wp"),"stroke-width":u*0.3}));
+      g.appendChild(el("text",{x:-p.Wp/2,y:yy-u,"text-anchor":"middle","font-size":fs2,fill:col("Wp"),"font-family":"var(--mono)"},"① Wp"));
+      g.appendChild(el("text",{x:p.Wp/2,y:Y(yc+p.tc)-u*0.6,"text-anchor":"middle","font-size":fs2*0.8,fill:col("wc"),"font-family":"var(--mono)"},"⑥ wc"));
+      g.appendChild(el("text",{x:p.Wp+ext,y:Y(yc+p.tc/2)+fs2*0.3,"text-anchor":"end","font-size":fs2*0.8,fill:col("cl"),"font-family":"var(--mono)"},"⑤ cl"));
+      g.appendChild(el("text",{x:p.Wp+ext,y:Y(0)+fs2*1.6,"text-anchor":"end","font-size":fs2*0.85,fill:"var(--muted)"},"② D・⑦ Lc は紙面に垂直な奥行き方向"));
+    }
+  }
+  draw(b,true); draw(m,false); svg.appendChild(g); host.appendChild(svg);
+}
+
+// ---------- render ----------
+const pct=r=>{ const v=(r-1)*100; return (v>=0?"+":"")+v.toFixed(1)+"%"; };
+const f3=v=>Number.isFinite(v)?v.toFixed(3):"—";
+const fmtF=n=>!Number.isFinite(n)?"—":(n<1?(n*1000).toPrecision(3)+" mN":n.toPrecision(3)+" N");
+function rangeBar(c){
+  const host=document.getElementById("rangeBar"); host.innerHTML="";
+  const vs=[c.lo,c.hi,1].map(v=>(v-1)*100); let lo=Math.min(...vs),hi=Math.max(...vs); const sp=Math.max(hi-lo,2); lo-=sp*.2; hi+=sp*.2;
+  const W=320,H=60,X=v=>8+(W-16)*((v-lo)/(hi-lo));
+  const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img"}); svg.appendChild(el("title",{},"推力の変化の幅"));
+  svg.appendChild(el("line",{x1:X(0),y1:4,x2:X(0),y2:44,stroke:"var(--muted)","stroke-width":1,"stroke-dasharray":"3 2"}));
+  svg.appendChild(el("text",{x:X(0),y:56,"text-anchor":"middle","font-size":10,fill:"var(--muted)"},"0%"));
+  const seg=(r,y,fill)=>{ const a=(r[0]-1)*100,b=(r[1]-1)*100; svg.appendChild(el("rect",{x:X(a),y,width:Math.max(2,X(b)-X(a)),height:10,fill}));
+    svg.appendChild(el("text",{x:X(a)-3,y:y+8.5,"text-anchor":"end","font-size":9,fill:"var(--fg)"},a.toFixed(1)));
+    svg.appendChild(el("text",{x:X(b)+3,y:y+8.5,"text-anchor":"start","font-size":9,fill:"var(--fg)"},b.toFixed(1))); };
+  seg(c.B,10,"var(--accent)"); seg(c.A,26,"var(--muted)"); host.appendChild(svg);
+}
+const NAMES={Wp:"① 極の幅",D:"② 奥行き",Lm:"③ 磁石の厚み",tc:"④ コイルの厚み",cl:"⑤ すき間",wc:"⑥ コイル辺の幅",Lc:"⑦ 直線部"};
+function update(){
+  save();
+  const b={},m={}; KEYS.forEach(k=>{b[k]=num(state.base[k]); m[k]=num(state.mod[k]);});
+  const R={}; for(const k in state.range) R[k]=num(state.range[k]);
+  const eb=validate(b), em=validate(m);
+  KEYS.forEach(k=>{ const ib=document.getElementById("b_"+k), im=document.getElementById("m_"+k);
+    ib.setAttribute("aria-invalid",eb.includes(k)); im.setAttribute("aria-invalid",em.includes(k));
+    const ch=Number.isFinite(b[k])&&Number.isFinite(m[k])&&Math.abs(m[k]-b[k])>1e-12; im.classList.toggle("changed",ch);
+    document.getElementById("p_"+k).textContent= ch&&b[k]!==0 ? ((m[k]/b[k]-1)*100>=0?"+":"")+((m[k]/b[k]-1)*100).toFixed(0)+"%" : ""; });
+  const msgs=[]; if(eb.length||em.length) msgs.push("赤い欄を直してください（0 より大きい数。すき間と電流は 0 も可）。");
+  if(!(R.smin>=1&&R.smax>=R.smin)) msgs.push("σ は 1 以上で、下限 ≤ 上限にしてください。");
+  if(!(R.fmin>=1&&R.fmax>=R.fmin)) msgs.push("f は 1 以上で、下限 ≤ 上限にしてください。");
+  document.getElementById("inerr").textContent=msgs.join(" ");
+  if(msgs.length){ document.getElementById("mainPct").textContent="—"; document.getElementById("mbarPct").textContent="—"; document.getElementById("mainSub").textContent="入力を直すと計算します"; return; }
+  lastB=b; lastM=m; drawFig(b,m);
+  const gb=geo(b), gm=geo(m);
+  document.getElementById("derived").innerHTML=`<tr><td>ギャップ Lg＝④＋2×⑤</td><td class="v">${gb.Lg.toFixed(2)} → ${gm.Lg.toFixed(2)} mm</td></tr><tr><td>極の面積 Am＝①×②</td><td class="v">${gb.Am.toFixed(2)} → ${gm.Am.toFixed(2)} mm²</td></tr><tr><td>有効長 Leff＝2×min(②,⑦)</td><td class="v">${gb.Leff.toFixed(1)} → ${gm.Leff.toFixed(1)} mm</td></tr>`;
+  // yoke (worst over σ,f,models)
+  const ybl=worst(b,b,R,"Ylow")[1], ybu=worst(b,b,R,"Yup")[1], yml=worst(m,b,R,"Ylow")[1], ymu=worst(m,b,R,"Yup")[1];
+  const satB=Math.max(ybl/b.Bs,ybu/b.Bs), satM=Math.max(yml/m.Bs,ymu/m.Bs);
+  const c=compare(b,m,R,"F"), sm=(R.smin+R.smax)/2, fm=(R.fmin+R.fmax)/2;
+  const mid=solve(m,b,sm,fm,"B").F/solve(b,b,sm,fm,"B").F;
+  const invalid=satM>=1||satB>=1;
+  document.getElementById("mainPct").innerHTML= invalid?`<span class="s-bad">計算対象外</span>`:`${pct(c.lo)} 〜 ${pct(c.hi)}`;
+  document.getElementById("mbarPct").textContent= invalid?"計算対象外":`${pct(c.lo)}〜${pct(c.hi)}`;
+  document.getElementById("mainSub").textContent= invalid?"ヨークが飽和の目安を超えたため、この式では出せません（下の警告）":`σ ${R.smin}〜${R.smax}・f ${R.fmin}〜${R.fmax}・漏れの考え方 A/B の中での幅（真ん中の目安 ${pct(mid)}）`;
+  rangeBar(c);
+  const h=compare(b,m,R,"heat"), kt=compare(b,m,R,"Kt");
+  const smm=worst(m,b,R,"sig",["B"]);
+  document.getElementById("kv").innerHTML=
+    `<dt>同じ発熱での推力の変化</dt><dd>${pct(h.lo)} 〜 ${pct(h.hi)}</dd>`+
+    `<dt>推力定数 Kt の変化</dt><dd>${pct(kt.lo)} 〜 ${pct(kt.hi)}</dd>`+
+    `<dt>変更後の σ（考え方 B）</dt><dd>${smm[0].toFixed(2)} 〜 ${smm[1].toFixed(2)}</dd>`+
+    `<dt>パーミアンス係数 Pc（真ん中）</dt><dd>${solve(b,b,sm,fm,"B").Pc.toFixed(2)} → ${solve(m,b,sm,fm,"B").Pc.toFixed(2)}</dd>`;
+  document.getElementById("mbarYoke").innerHTML= satM>=1?`<span class="status s-bad">ヨーク飽和</span>`:satM>=0.8?`<span class="status s-warn">ヨーク注意</span>`:`<span class="status s-ok">ヨーク OK</span>`;
+  const st=v=>v>=1?`<span class="status s-bad">飽和</span>`:v>=0.8?`<span class="status s-warn">注意</span>`:`<span class="status s-ok">OK</span>`;
+  const needLow=yml*m.tb/(0.8*m.Bs), needUp=ymu*m.tt/(0.8*m.Bs);
+  document.getElementById("yoke").innerHTML=
+    `<dt>基準 下⑧／上⑨</dt><dd>${f3(ybl)} ／ ${f3(ybu)} T ${st(satB)}</dd>`+
+    `<dt>変更後 下⑧／上⑨</dt><dd>${f3(yml)} ／ ${f3(ymu)} T ${st(satM)}</dd>`+
+    `<dt>目安 ${m.Bs} T の8割に収まる厚み</dt><dd>下 ${needLow.toFixed(2)}・上 ${needUp.toFixed(2)} mm 以上</dd>`;
+  // warnings
+  const W=[]; const rl=(x,y)=>x/y;
+  const rg=rl(gm.Lg,gb.Lg); if(Math.abs(rg-1)>=0.2) W.push([`ギャップを ${((rg-1)*100).toFixed(0)}% 変えています。考え方 A と B の差が大きくなります（${rg<1?"狭めると B 側（増える側）":"広げると B 側（減る側）"}に寄ることが多い）。大きく変えるときは解析で確かめるのが確実です。`,""]);
+  if(gm.Lg/m.Wp>0.5) W.push([`ギャップ ÷ 極の幅 = ${(gm.Lg/m.Wp).toFixed(2)}。0.5 を超えると極どうしの間の漏れが大きくなりやすい形です（経験的な目安で、出典はありません）。`,""]);
+  const ar=(m.Wp/m.D)/(b.Wp/b.D); if(Math.abs(ar-1)>=0.3) W.push([`極の縦横比（幅÷奥行き）を ${((ar-1)*100).toFixed(0)}% 変えています。漏れの形が変わり、考え方 B の前提が崩れやすくなります。`,""]);
+  if(Math.abs(rl(m.Lm,b.Lm)-1)>=0.3) W.push([`③ 磁石の厚みを ${((m.Lm/b.Lm-1)*100).toFixed(0)}% 変えています。磁石の側面からの漏れも変わります（どちらの考え方にも入っていません）。`,""]);
+  if(satM>=1) W.push([`変更後のヨークが飽和の目安を超えます。⑧ を ${needLow.toFixed(2)} mm、⑨ を ${needUp.toFixed(2)} mm 以上にすると目安の8割に収まります。`,"bad"]);
+  else if(satM>=0.8) W.push(["変更後のヨークが飽和の目安の8割を超えます。飽和しかけると実際の推力は計算より下がります。",""]);
+  if(satB>=1) W.push(["基準の形のヨークが飽和の目安を超えています。基準そのものがこの計算の範囲外です。","bad"]); else if(satB>=0.8) W.push(["基準の形のヨークがすでに目安の8割を超えています。",""]);
+  if(m.Lc<m.D) W.push(["⑦ 直線部が奥行きより短いので、有効長は直線部で決まっています。",""]);
+  if(m.wc>m.Wp) W.push(["⑥ コイル辺の幅が極の幅より広く、はみ出した部分は反対の極の磁界にかかります（この計算では考えていません）。",""]);
+  document.getElementById("warns").innerHTML=W.map(w=>`<li class="${w[1]}">${w[0]}</li>`).join("");
+  const aB=worst(b,b,R,"F"), aM=worst(m,b,R,"F"), kB=worst(b,b,R,"Kt");
+  document.getElementById("abs").innerHTML=`<dt>基準の推力</dt><dd>${fmtF(aB[0])} 〜 ${fmtF(aB[1])}</dd><dt>変更後の推力</dt><dd>${fmtF(aM[0])} 〜 ${fmtF(aM[1])}</dd><dt>基準の Kt</dt><dd>${(kB[0]*1000).toPrecision(3)} 〜 ${(kB[1]*1000).toPrecision(3)} mN/A</dd><dt>基準の Bg</dt><dd>${f3(worst(b,b,R,"Bg")[0])} 〜 ${f3(worst(b,b,R,"Bg")[1])} T</dd>`;
+  // tornado
+  const sens=sensitivity(b,R); const mx=Math.max(...sens.map(s=>Math.max(Math.abs(s.lo),Math.abs(s.hi),Math.abs(s.hlo),Math.abs(s.hhi))),0.01);
+  document.getElementById("tornado").innerHTML=`<div class="row" style="color:var(--muted)"><span></span><span style="display:flex;justify-content:space-between;font-size:.72rem"><span>減る</span><span>増える</span></span><span></span></div>`+sens.map(s=>{
+    const sc=v=>50+50*v/mx; const x1=Math.min(sc(s.lo),sc(s.hi)), x2=Math.max(sc(s.lo),sc(s.hi));
+    const h1=Math.min(sc(s.hlo),sc(s.hhi)), h2=Math.max(sc(s.hlo),sc(s.hhi));
+    const txt=`${(s.lo*100).toFixed(1)}〜${(s.hi*100).toFixed(1)}%`, htxt=`${(s.hlo*100).toFixed(1)}〜${(s.hhi*100).toFixed(1)}%`;
+    return `<div class="row"><span>${NAMES[s.k]}</span><div style="display:flex;flex-direction:column;gap:3px"><div class="bar"><i style="left:${x1}%;width:${Math.max(0.8,x2-x1)}%"></i><b style="position:absolute;left:50%;top:-3px;bottom:-3px;border-left:1px solid var(--muted)"></b></div><div class="bar"><i style="left:${h1}%;width:${Math.max(0.8,h2-h1)}%;background:var(--coil)"></i><b style="position:absolute;left:50%;top:-3px;bottom:-3px;border-left:1px solid var(--muted)"></b></div></div><span class="num" style="font-size:.72rem;line-height:1.35">${txt}<br><span style="color:var(--muted)">${htxt}</span></span></div>`; }).join("")+
+    `<p style="font-size:.78rem;color:var(--muted);margin:4px 0 0">④⑥ はコイルの断面が増えるので、推力（同じ電流）より「同じ発熱」で見るべき項目です。⑥⑦ は同じ電流では推力にほとんど効かず、発熱（抵抗）に効きます。</p>`;
+  // cards
+  const B0=solve(b,b,sm,fm,"B"), M0=solve(m,b,sm,fm,"B"), pb=perm(b,fm), pm=perm(m,fm), lb=leak(b,b,sm,fm,"B"), lm=leak(m,b,sm,fm,"B");
+  const C=[
+   ["1","磁石（電池）","磁石は磁気を押し出す電池のようなものです。強さが Br。磁石の中にも通りにくさがあり、磁石が薄いほど・μrec が小さいほど通りにくくなります（μrec は通りやすさの係数でほぼ1）。","磁石の中の通りやすさ Pm ＝ μrec × Am ÷ Lm",[["Pm",pb.Pm.toFixed(2),pm.Pm.toFixed(2),"mm"]]],
+   ["2","ギャップ（役に立つ道）","ギャップは空気なので鉄よりずっと通りにくい道です。広い（Lg が大きい）ほど通りにくく、面が広いほど通りやすくなります。継ぎ目などで失う分を f で割り増します。","ギャップの通りやすさ Pg ＝ Am ÷ (f × Lg)",[["Lg",gb.Lg.toFixed(2),gm.Lg.toFixed(2),"mm"],["Pg",pb.Pg.toFixed(2),pm.Pg.toFixed(2),"mm"]]],
+   ["3","漏れ（横に抜ける道）","磁束の一部はギャップを通らず、磁石の横や極の間から直接戻ります。ギャップと並んだ抜け道です。σ＝(役に立つ道＋漏れ)÷役に立つ道。漏れの道の通りやすさは計算では決まらないので、基準の σ を幅で入れ、変更後は「漏れの道の形は変わらない（B）」と「漏れが比例して変わる（A）」の2通りで計算します。","漏れの通りやすさ Pl ＝ (σ−1) × Pg（基準）",[["Pl（B）",lb.toFixed(2),lm.toFixed(2),"mm"],["σ",B0.sig.toFixed(2),M0.sig.toFixed(2),"—"]]],
+   ["4","ギャップの磁束密度 Bg","電池（磁石）に、磁石の中・ギャップ・漏れの道がつながった回路の、ギャップに流れる分です。ギャップの道が通りやすくなるほど、漏れが少ないほど濃くなります。","Bg ＝ Br × Pg ÷ (Pg ＋ Pl ＋ Pm)",[["Bg",f3(B0.Bg),f3(M0.Bg),"T"],["磁石の中 Bd",f3(B0.Bd),f3(M0.Bd),"T"]]],
+   ["5","推力 F","磁界の中の電線に電流を流すと力が出ます（F＝B×I×L、向きはフレミングの左手）。コイルの2辺は電流も磁界も逆向きなので、力は同じ向きにそろい、足し合わさります。","F ＝ Bg × N × I × Leff",[["F",fmtF(B0.F),fmtF(M0.F),""],["変化","",pct(M0.F/B0.F),""]]],
+   ["6","同じ発熱で比べる","巻数を増やすと推力は増えますが、抵抗も増えて熱が出ます。同じ発熱（銅損）で比べると、巻数は効かず、コイルの断面積（④×⑥）と1周の長さが効きます。","F ÷ √発熱 ∝ Bg × Leff × √(④×⑥ ÷ 1周の長さ)",[["1周の長さ（約）",gb.mlt.toFixed(1),gm.mlt.toFixed(1),"mm"],["変化","",pct(M0.heat/B0.heat),""]]],
+   ["7","ヨークの飽和","下ヨークには磁石から出た磁束が全部、上ヨークにはギャップを通った磁束が流れます。ヨークが薄いと鉄がそれ以上通せなくなり（飽和）、通りにくさが急に増えます。この計算はそこまでは扱えないので判定だけします。","下: Bd × Wp ÷ ⑧ ／ 上: Bg × Wp ÷ ⑨",[["下ヨーク",f3(B0.Ylow),f3(M0.Ylow),"T"],["上ヨーク",f3(B0.Yup),f3(M0.Yup),"T"]]],
+  ];
+  document.getElementById("cards").innerHTML=C.map(x=>`<div class="card"><span class="step">STEP ${x[0]}</span><h3>${x[1]}</h3><p style="font-size:.86rem">${x[2]}</p><div class="eq">${x[3]}</div><div class="vals"><span class="h"></span><span class="h">基準</span><span class="h">変更後</span>${x[4].map(r=>`<span>${r[0]}</span><span class="v">${r[1]} ${r[3]}</span><span class="v">${r[2]} ${r[3]}</span>`).join("")}</div></div>`).join("");
+}
+const T=runTests(); const pass=T.filter(t=>t[1]).length;
+document.getElementById("tests").innerHTML=`${pass}/${T.length} 合格<br>`+T.map(t=>(t[1]?"✓ ":"✗ ")+t[0]).join("<br>");
+if(pass<T.length){ const bn=document.getElementById("testBanner"); bn.hidden=false; bn.textContent=`自己試験に ${T.length-pass} 件の不合格があります。結果を信用しないでください（下の「自己試験」）。`; }
+bindAll(); update();
+})();
+</script>
+</body></html>
+</body>
+</html>

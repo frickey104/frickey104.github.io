@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="六角形の盤で、自分の色の辺と辺を石でつないだら勝ち。昔からある公開のゲーム「ヘックス」を作ってみた。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="frickey の工房">
+<meta property="og:title" content="ヘックス">
+<meta property="og:description" content="六角形の盤で、自分の色の辺と辺を石でつないだら勝ち。昔からある公開のゲーム「ヘックス」を作ってみた。">
+<meta property="og:url" content="https://frickey104.github.io/hex/">
+<meta property="og:image" content="https://frickey104.github.io/img/og-hex.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+.fk-bar{all:initial;display:flex;align-items:center;justify-content:space-between;gap:12px;box-sizing:border-box;width:100%;min-height:34px;padding:6px max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px));background:#16283c;color:#e9eef4;font:600 13px/1.3 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",sans-serif;position:relative;z-index:2147483647}
+.fk-bar a{all:initial;color:#e9eef4;font:inherit;cursor:pointer;text-decoration:none}
+.fk-bar a:hover,.fk-bar a:focus-visible{text-decoration:underline;outline:none}
+.fk-bar span{all:initial;color:#9fb3c8;font:500 12px/1.3 ui-monospace,Consolas,monospace}
+</style>
+</head>
+<body>
+<nav class="fk-bar" aria-label="作品集"><a href="../">← frickey の工房</a><span>ボードゲーム・2人 / 試し</span></nav>
+<title>ヘックス</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
+<style>
+/* レイアウト: 縦1列。上に手番、中央にひし形の六角盤（主役・上下の辺は藍、左右の辺は山吹）、下に遊び方・自己試験 */
+:root{
+  --bg:#eef0ea; --panel:#f8f9f5; --ink:#232a24; --muted:#636d64; --line:#cfd5cb;
+  --cell:#dfe3d8; --cell-hi:#cdd3c4; --stroke:#b8bfb2;
+  --ai:#2f4a8a; --kiku:#d39a26; --last:#ffffff;
+  --display:"Dela Gothic One","Hiragino Sans","Yu Gothic",sans-serif;
+  --body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#131713; --panel:#1b211c; --ink:#e4e9e2; --muted:#9aa49a; --line:#2e372f;
+  --cell:#283029; --cell-hi:#344036; --stroke:#3d473e; --ai:#6f8fd6; --kiku:#e2ad45; --last:#131713; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#131713; --panel:#1b211c; --ink:#e4e9e2; --muted:#9aa49a; --line:#2e372f;
+  --cell:#283029; --cell-hi:#344036; --stroke:#3d473e; --ai:#6f8fd6; --kiku:#e2ad45; --last:#131713; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6}
+.wrap{max-width:640px;margin:0 auto;padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--display);font-weight:400;font-size:2rem;line-height:1;margin:0;letter-spacing:.04em}
+h1 small{display:block;font-family:var(--body);font-size:.75rem;color:var(--muted);letter-spacing:.08em;margin-top:6px}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+select,button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+button{cursor:pointer}
+button.primary{background:var(--ai);color:#fff;border-color:var(--ai)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--kiku);outline-offset:2px}
+.status{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.status p{margin:0}
+#msg{font-weight:700;display:flex;align-items:center;gap:8px}
+#sub{color:var(--muted);font-size:.85rem}
+.dot{width:14px;height:14px;border-radius:50%;display:inline-block;flex:none}
+#swap[hidden]{display:none}
+.boardbox{overflow-x:auto}
+svg#board{display:block;width:100%;height:auto;max-width:100%;touch-action:manipulation}
+.hex{fill:var(--cell);stroke:var(--stroke);stroke-width:1.5;cursor:pointer;transition:fill .12s}
+.hex.can:hover{fill:var(--cell-hi)}
+.hex.p0{fill:var(--ai);cursor:default}
+.hex.p1{fill:var(--kiku);cursor:default}
+.hex.path{stroke:var(--ink);stroke-width:3}
+.lastmark{fill:var(--last);pointer-events:none}
+.edge0{fill:var(--ai)} .edge1{fill:var(--kiku)}
+details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+summary{cursor:pointer;font-weight:700}
+details ol{padding-left:1.2em;margin:.5em 0}
+#tests{font-size:.8rem;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>ヘックス<small>自分の色の辺と辺をつなぐ 2人対戦</small></h1>
+    <div class="controls">
+      <select id="mode" aria-label="対戦相手">
+        <option value="2p">2人で（1台）</option>
+        <option value="cpu1">CPU 弱</option>
+        <option value="cpu2" selected>CPU 中</option>
+        <option value="cpu3">CPU 強</option>
+      </select>
+      <select id="size" aria-label="盤の大きさ">
+        <option value="7">7×7</option>
+        <option value="9" selected>9×9</option>
+        <option value="11">11×11</option>
+      </select>
+      <select id="order" aria-label="手番">
+        <option value="first">先手（藍）</option>
+        <option value="second">後手（山吹）</option>
+      </select>
+      <label style="font-size:.85rem;display:flex;gap:4px;align-items:center"><input type="checkbox" id="pie" checked> 入れ替えあり</label>
+      <button class="primary" id="new">はじめる</button>
+    </div>
+  </header>
+
+  <div class="status">
+    <div><p id="msg">　</p><p id="sub">　</p></div>
+    <button id="swap" hidden>入れ替える</button>
+  </div>
+
+  <div class="boardbox"><svg id="board" role="grid" aria-label="盤"></svg></div>
+
+  <details open>
+    <summary>遊び方</summary>
+    <ol>
+      <li>交互に、空いているマスに自分の色の石を1つ置く。置いた石は動かない</li>
+      <li><b>藍は上と下の辺</b>を、<b>山吹は左と右の辺</b>を、自分の石のつながりで結んだら勝ち</li>
+      <li>引き分けは起きない。盤が埋まる前に、必ずどちらかがつながる</li>
+      <li>先手がとても有利なので「入れ替えあり」にすると、後手は1手目の直後に<b>その石を自分のものにする</b>こともできる（盤のななめの線で映した位置に、山吹の石として置き直す）。先手は「取られない程度の手」を考えることになる</li>
+    </ol>
+  </details>
+
+  <details>
+    <summary>自己試験</summary>
+    <div id="tests"></div>
+  </details>
+</div>
+
+<script>
+/* ---- 盤: N×N のひし形。マス i = r*N + c。藍(0)は r=0 と r=N-1、山吹(1)は c=0 と c=N-1 を結ぶ ---- */
+function nbrs(N,i){const r=Math.floor(i/N),c=i%N,o=[];
+  for(const[dr,dc]of[[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0]]){const rr=r+dr,cc=c+dc;if(rr>=0&&rr<N&&cc>=0&&cc<N)o.push(rr*N+cc)}return o}
+const NB={};function nb(N){if(!NB[N])NB[N]=[...Array(N*N).keys()].map(i=>nbrs(N,i));return NB[N]}
+function connected(board,N,p){const n=nb(N),seen=new Uint8Array(N*N),st=[];
+  for(let k=0;k<N;k++){const i=p===0?k:k*N;if(board[i]===p){seen[i]=1;st.push(i)}}
+  while(st.length){const i=st.pop();const r=Math.floor(i/N),c=i%N;if(p===0?r===N-1:c===N-1)return true;
+    for(const j of n[i])if(!seen[j]&&board[j]===p){seen[j]=1;st.push(j)}}return false}
+function winPath(board,N,p){const n=nb(N),prev=new Int32Array(N*N).fill(-2),q=[];
+  for(let k=0;k<N;k++){const i=p===0?k:k*N;if(board[i]===p){prev[i]=-1;q.push(i)}}
+  for(let h=0;h<q.length;h++){const i=q[h];const r=Math.floor(i/N),c=i%N;
+    if(p===0?r===N-1:c===N-1){const path=[];for(let x=i;x>=0;x=prev[x])path.push(x);return path}
+    for(const j of n[i])if(prev[j]===-2&&board[j]===p){prev[j]=i;q.push(j)}}return null}
+const mirror=(N,i)=>(i%N)*N+Math.floor(i/N);
+
+/* ---- CPU ---- */
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+function emptiesOf(b){const e=[];for(let i=0;i<b.length;i++)if(b[i]<0)e.push(i);return e}
+/* つながるまでに要る石の数（自分の石=0・空き=1・相手=通れない）の最短 */
+function distance(board,N,p){const n=nb(N),d=new Array(N*N).fill(1e9),q=[];
+  const cost=i=>board[i]===p?0:board[i]<0?1:1e9;
+  for(let k=0;k<N;k++){const i=p===0?k:k*N;const c=cost(i);if(c<1e9){d[i]=c;q.push(i)}}
+  let best=1e9;
+  while(q.length){let mi=0;for(let k=1;k<q.length;k++)if(d[q[k]]<d[q[mi]])mi=k;const i=q.splice(mi,1)[0];
+    const r=Math.floor(i/N),c=i%N;if(p===0?r===N-1:c===N-1)best=Math.min(best,d[i]);
+    for(const j of n[i]){const c2=cost(j);if(c2<1e9&&d[i]+c2<d[j]){d[j]=d[i]+c2;q.push(j)}}}
+  return best}
+function immediateWin(board,N,p){for(const i of emptiesOf(board)){board[i]=p;const w=connected(board,N,p);board[i]=-1;if(w)return i}return -1}
+function cpuMove(level,board,N,p){
+  const E=emptiesOf(board);
+  const w=immediateWin(board,N,p);if(w>=0)return w;
+  const blk=immediateWin(board,N,1-p);if(level>=2&&blk>=0)return blk;
+  if(E.length===N*N)return openingMove(N);
+  if(level===1){const near=E.filter(i=>nb(N)[i].some(j=>board[j]>=0));return rnd(near.length&&Math.random()<.7?near:E)}
+  if(level===2){let best=-1e9,cands=[];
+    for(const i of E){board[i]=p;const v=distance(board,N,1-p)-distance(board,N,p)+Math.random()*.3;board[i]=-1;
+      if(v>best){best=v;cands=[i]}}return cands[0]}
+  return monteCarlo(board,N,p,N<=7?700:N<=9?1100:1500);
+}
+/* 強: 残りをでたらめに埋める試合を何千回もして、勝った試合で自分が置いていたマスを高く見る */
+function monteCarlo(board,N,p,ms){
+  const E=emptiesOf(board),M=N*N,win=new Float64Array(M),tot=new Float64Array(M),b=new Int8Array(M);
+  const t0=performance.now();let n=0;
+  while(performance.now()-t0<ms||n<300){
+    for(let i=0;i<M;i++)b[i]=board[i];
+    const e=E.slice();for(let k=e.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[e[k],e[j]]=[e[j],e[k]]}
+    for(let k=0;k<e.length;k++)b[e[k]]=(k%2===0)?p:1-p;
+    const pw=connected(b,N,p);
+    for(const i of E)if(b[i]===p){tot[i]++;if(pw)win[i]++}
+    n++;if(n>60000)break}
+  let best=-1,bi=E[0];for(const i of E){const v=tot[i]?win[i]/tot[i]:0;if(v>best){best=v;bi=i}}
+  return bi}
+function openingMove(N){/* 入れ替えありでも取られにくい、辺に近い手 */
+  const r=1+Math.floor(Math.random()*(N-2)),c=Math.random()<.5?0:N-1;return r*N+c}
+function wantSwap(N,i){const r=Math.floor(i/N),c=i%N,m=(N-1)/2;return Math.abs(r-m)+Math.abs(c-m)<=N/2}
+
+/* ---- 状態 ---- */
+let S;
+function fresh(){const mode=document.getElementById('mode').value,N=+document.getElementById('size').value;
+  return {N,board:new Array(N*N).fill(-1),turn:0,moves:0,last:-1,mode,level:mode==='2p'?0:+mode.slice(3),
+    cpu:document.getElementById('order').value==='first'?1:0,pie:document.getElementById('pie').checked,canSwap:false,over:false,winner:-1,path:null}}
+const isCpu=t=>S.level>0&&t===S.cpu;
+const name=t=>t===0?'藍':'山吹';
+const who=t=>S.level>0?(t===S.cpu?`CPU（${name(t)}）`:`あなた（${name(t)}）`):name(t);
+
+function render(){
+  const N=S.N,s=20,w=Math.sqrt(3)*s,pad=s*1.6;
+  const X=i=>pad+w*((i%N)+Math.floor(i/N)/2)+w/2, Y=i=>pad+1.5*s*Math.floor(i/N)+s;
+  const W=pad*2+w*(N+(N-1)/2), H=pad*2+1.5*s*(N-1)+2*s;
+  const svg=document.getElementById('board');svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const hexPts=(x,y,k=1)=>[0,1,2,3,4,5].map(a=>{const t=Math.PI/180*(60*a-30);return `${(x+s*k*Math.cos(t)).toFixed(1)},${(y+s*k*Math.sin(t)).toFixed(1)}`}).join(' ');
+  const corner=(i,dx,dy)=>[X(i)+dx,Y(i)+dy];
+  /* 辺の帯（上下=藍・左右=山吹） */
+  const TL=corner(0,-w/2-6,-s-6),TR=corner(N-1,w/2+6,-s-6),BL=corner(N*N-N,-w/2-6,s+6),BR=corner(N*N-1,w/2+6,s+6);
+  let h=`<polygon class="edge0" points="${TL} ${TR} ${X(N-1)},${Y(N-1)} ${X(0)},${Y(0)}" opacity=".9"/>`;
+  h+=`<polygon class="edge0" points="${BL} ${BR} ${X(N*N-1)},${Y(N*N-1)} ${X(N*N-N)},${Y(N*N-N)}" opacity=".9"/>`;
+  h+=`<polygon class="edge1" points="${TL} ${BL} ${X(N*N-N)},${Y(N*N-N)} ${X(0)},${Y(0)}" opacity=".9"/>`;
+  h+=`<polygon class="edge1" points="${TR} ${BR} ${X(N*N-1)},${Y(N*N-1)} ${X(N-1)},${Y(N-1)}" opacity=".9"/>`;
+  const path=new Set(S.path||[]);const can=!S.over&&!isCpu(S.turn);
+  for(let i=0;i<N*N;i++){const v=S.board[i];
+    h+=`<polygon class="hex ${v===0?'p0':v===1?'p1':can?'can':''} ${path.has(i)?'path':''}" data-i="${i}" points="${hexPts(X(i),Y(i),.96)}" role="gridcell" aria-label="${Math.floor(i/N)+1}行${i%N+1}列${v<0?' 空き':' '+name(v)}"></polygon>`}
+  if(S.last>=0)h+=`<circle class="lastmark" cx="${X(S.last)}" cy="${Y(S.last)}" r="${s*.22}"/>`;
+  svg.innerHTML=h;
+  const m=document.getElementById('msg'),sub=document.getElementById('sub');
+  const dot=t=>`<span class="dot" style="background:var(${t===0?'--ai':'--kiku'})"></span>`;
+  if(S.over){m.innerHTML=`${dot(S.winner)}${who(S.winner)}の勝ち`;sub.textContent=`${S.moves}手。太い線のマスでつながった`}
+  else{m.innerHTML=`${dot(S.turn)}${who(S.turn)}の番`;sub.textContent=isCpu(S.turn)?'考えています…':(S.turn===0?'上と下の辺をつなぐ':'左と右の辺をつなぐ')+(S.canSwap&&!isCpu(S.turn)?'。1手目を自分のものにするなら「入れ替える」':'')}
+  document.getElementById('swap').hidden=!(S.canSwap&&!isCpu(S.turn)&&!S.over);
+}
+function play(i){if(S.over||S.board[i]>=0)return;S.board[i]=S.turn;S.last=i;S.moves++;
+  S.canSwap=S.pie&&S.moves===1;
+  if(connected(S.board,S.N,S.turn)){S.over=true;S.winner=S.turn;S.path=winPath(S.board,S.N,S.turn)}else S.turn^=1;
+  render();step()}
+function swap(){if(!S.canSwap)return;const i=S.last,j=mirror(S.N,i);S.board[i]=-1;S.board[j]=1;S.last=j;S.moves++;S.canSwap=false;S.turn=0;render();step()}
+function step(){if(S.over||!isCpu(S.turn))return;
+  setTimeout(()=>{if(S.over||!isCpu(S.turn))return;
+    if(S.canSwap&&wantSwap(S.N,S.last)){swap();return}
+    play(cpuMove(S.level,S.board,S.N,S.turn))},350)}
+document.getElementById('board').addEventListener('click',e=>{const t=e.target.closest('.hex');if(!t||S.over||isCpu(S.turn))return;play(+t.dataset.i)});
+document.getElementById('swap').onclick=swap;
+document.getElementById('new').onclick=()=>start();
+function start(saved){S=saved&&saved.board?saved:fresh();render();step()}
+window.claude?.hot?.snapshot?.(()=>S);
+
+/* ---- 自己試験（答えの分かっている例） ---- */
+function runTests(){const T=[],ok=(n,c)=>T.push([n,!!c]);const B=N=>new Array(N*N).fill(-1);
+  ok('藍のまっすぐな縦1列はつながる',(()=>{const N=5,b=B(N);for(let r=0;r<N;r++)b[r*N+2]=0;return connected(b,N,0)&&!connected(b,N,1)})());
+  ok('1マス欠けるとつながらない',(()=>{const N=5,b=B(N);for(let r=0;r<N;r++)if(r!==3)b[r*N+2]=0;return !connected(b,N,0)})());
+  ok('ななめ（右上へ）の隣もつながる',(()=>{const N=3,b=B(N);b[0*N+2]=0;b[1*N+1]=0;b[2*N+0]=0;return connected(b,N,0)})());
+  ok('左上→右下のななめは隣ではない',(()=>{const N=3,b=B(N);b[0]=0;b[4]=0;b[8]=0;return !connected(b,N,0)})());
+  ok('山吹は左右でつながる',(()=>{const N=4,b=B(N);for(let c=0;c<N;c++)b[2*N+c]=1;return connected(b,N,1)})());
+  ok('盤を埋めると必ずどちらか1人だけがつながる（200回）',(()=>{for(let k=0;k<200;k++){const N=7,b=B(N).map(()=>Math.random()<.5?0:1);if(connected(b,N,0)===connected(b,N,1))return false}return true})());
+  ok('入れ替えはななめの線で映した位置',mirror(9,1*9+4)===4*9+1);
+  ok('最短の石の数: 空の 5×5 は 5',distance(B(5),5,0)===5);
+  ok('CPU はすぐ勝てる手を打つ',(()=>{const N=5,b=B(N);for(let r=0;r<N;r++)if(r!==2)b[r*N+1]=0;return cpuMove(1,b,N,0)===2*N+1})());
+  ok('CPU 中は相手の勝ちをふさぐ',(()=>{const N=5,b=B(N);for(let c=0;c<N;c++)if(c!==3)b[1*N+c]=1;b[0]=0;return cpuMove(2,b,N,0)===1*N+3})());
+  ok('勝った道筋は上の辺から下の辺まで',(()=>{const N=5,b=B(N);for(let r=0;r<N;r++)b[r*N+2]=0;const p=winPath(b,N,0);return p&&p.length===5})());
+  return T}
+const R=runTests();document.getElementById('tests').innerHTML=`<p>${R.filter(t=>t[1]).length}/${R.length} 合格</p><ul>${R.map(t=>`<li>${t[1]?'✅':'❌'} ${t[0]}</li>`).join('')}</ul>`;
+
+window.claude?.hot?.ready?window.claude.hot.ready(d=>start(d)):start(window.claude?.hot?.data);
+</script>
+</body>
+</html>

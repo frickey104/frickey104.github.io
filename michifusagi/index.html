@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="壁を置いて相手の道をふさぎ、先に向こう側へ着いた方が勝ち。市販の「コリドール」が手本。CPU とも対戦できる。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="frickey の工房">
+<meta property="og:title" content="みちふさぎ">
+<meta property="og:description" content="壁を置いて相手の道をふさぎ、先に向こう側へ着いた方が勝ち。市販の「コリドール」が手本。CPU とも対戦できる。">
+<meta property="og:url" content="https://frickey104.github.io/michifusagi/">
+<meta property="og:image" content="https://frickey104.github.io/img/og-michifusagi.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+.fk-bar{all:initial;display:flex;align-items:center;justify-content:space-between;gap:12px;box-sizing:border-box;width:100%;min-height:34px;padding:6px max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px));background:#16283c;color:#e9eef4;font:600 13px/1.3 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",sans-serif;position:relative;z-index:2147483647}
+.fk-bar a{all:initial;color:#e9eef4;font:inherit;cursor:pointer;text-decoration:none}
+.fk-bar a:hover,.fk-bar a:focus-visible{text-decoration:underline;outline:none}
+.fk-bar span{all:initial;color:#9fb3c8;font:500 12px/1.3 ui-monospace,Consolas,monospace}
+</style>
+</head>
+<body>
+<nav class="fk-bar" aria-label="作品集"><a href="../">← frickey の工房</a><span>ボードゲーム・2人</span></nav>
+<title>みちふさぎ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
+<style>
+/* レイアウト: 縦1列。上に手番と残りの壁、中央に9×9の盤（主役）、その下に操作の切り替え・結果・遊び方・自己試験（おしだしと同じ型） */
+:root{
+  --paper:#eef0f3; --board:#dfe3ea; --ink:#1d2333; --muted:#5d6577; --line:#c7ccd6; --card:#f8f9fb;
+  --beni:#c8313f; --ai:#2d4f9e; --win:#e9a92a; --wall:#a8742a;
+  --beni-goal:rgba(200,49,63,.13); --ai-goal:rgba(45,79,158,.13);
+  --ok:#2f7d4f; --ng:#b3352f;
+  --f-display:"Dela Gothic One","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic","Meiryo",sans-serif;
+  --f-mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#151927; --board:#20263a; --ink:#e7eaf2; --muted:#a2a9bb; --line:#343b52; --card:#1b2031;
+  --beni:#e0505c; --ai:#5b80d6; --win:#f0b840; --wall:#d6a24f;
+  --beni-goal:rgba(224,80,92,.16); --ai-goal:rgba(91,128,214,.18);
+  --ok:#5cc187; --ng:#ef6a62; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#151927; --board:#20263a; --ink:#e7eaf2; --muted:#a2a9bb; --line:#343b52; --card:#1b2031;
+  --beni:#e0505c; --ai:#5b80d6; --win:#f0b840; --wall:#d6a24f;
+  --beni-goal:rgba(224,80,92,.16); --ai-goal:rgba(91,128,214,.18);
+  --ok:#5cc187; --ng:#ef6a62; color-scheme:dark}
+[hidden]{display:none!important}
+html,body{background:var(--paper);color:var(--ink)}
+body{font-family:var(--f-body);font-size:15px;line-height:1.7}
+.wrap{max-width:460px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px;display:flex;flex-direction:column;gap:16px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--f-display);font-weight:400;font-size:2.1rem;line-height:1;margin:0;letter-spacing:.02em}
+h1 .bar{display:inline-block;width:22px;height:6px;border-radius:3px;background:var(--wall);margin-left:10px;vertical-align:middle}
+.sub{font-size:.85rem;color:var(--muted);text-align:right;line-height:1.4}
+.seg{display:flex;gap:6px;background:var(--board);padding:4px;border-radius:10px;flex-wrap:wrap}
+.seg button{flex:1;min-width:0;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:700;padding:8px 4px;border-radius:7px;cursor:pointer;font-size:.9rem;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.seg button:disabled{opacity:.4;cursor:not-allowed}
+.seg button:focus-visible,.btn:focus-visible,.cell:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pl{border-radius:12px;padding:8px 12px;background:var(--card);border:2px solid transparent;display:flex;flex-direction:column;gap:4px;min-width:0}
+.pl.turn{border-color:var(--ink)}
+.pl .name{font-weight:700;display:flex;align-items:center;gap:8px;font-size:.95rem}
+.pl .name i{width:16px;height:16px;border-radius:50%;display:block;flex:none}
+.pl .tag{font-size:.72rem;color:var(--muted);font-weight:400}
+.pl .stock{display:flex;gap:3px;align-items:center;font-size:.72rem;color:var(--muted);flex-wrap:wrap}
+.pl .stock span{margin-right:4px}
+.pl .stock b{width:5px;height:14px;border-radius:2px;display:block;background:var(--wall)}
+.pl .stock b.used{background:transparent;border:1px dashed var(--line);box-sizing:border-box}
+.c1{background:var(--beni)}.c2{background:var(--ai)}
+.boardbox{position:relative;aspect-ratio:1/1;max-width:100%;background:var(--board);border-radius:16px;padding:10px;box-sizing:border-box}
+.bd{position:relative;width:100%;height:100%}
+.cell{position:absolute;border:0;padding:0;border-radius:5px;background:var(--paper);cursor:default}
+.cell.g0{background:linear-gradient(var(--beni-goal),var(--beni-goal)),var(--paper)}
+.cell.g1{background:linear-gradient(var(--ai-goal),var(--ai-goal)),var(--paper)}
+.cell.hint{cursor:pointer}
+.cell.hint::after{content:"";position:absolute;inset:36%;border-radius:50%;background:var(--muted);opacity:.55}
+.cell.tap{cursor:pointer}
+.pawn{position:absolute;pointer-events:none;transition:left .22s ease-out,top .22s ease-out}
+.pawn i{position:absolute;inset:12%;border-radius:50%;box-shadow:inset 0 -4px 0 rgba(0,0,0,.22);display:block}
+.pawn.win i{box-shadow:0 0 0 3px var(--win),inset 0 -4px 0 rgba(0,0,0,.22)}
+.wall{position:absolute;background:var(--wall);border-radius:3px;pointer-events:none;box-shadow:0 1px 0 rgba(0,0,0,.25)}
+.wall.new{animation:drop .25s ease-out}
+.wall.pv{background:transparent;border:2px dashed var(--ok);box-shadow:none;box-sizing:border-box}
+.wall.pv.bad{border-color:var(--ng)}
+@keyframes drop{from{transform:scale(1.25);opacity:.2}to{transform:none;opacity:1}}
+.act{display:flex;flex-direction:column;gap:8px}
+.confirm{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.msg{min-height:1.7em;font-size:.95rem;text-align:center;margin:0;font-weight:700}
+.tools{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.btn{border:0;border-radius:10px;padding:9px 16px;font:inherit;font-weight:700;cursor:pointer;background:var(--ink);color:var(--paper)}
+.btn.ghostbtn{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.result{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.result h2{font-family:var(--f-display);font-weight:400;font-size:1.3rem;margin:0}
+.share{font-family:var(--f-mono);white-space:pre;background:var(--paper);border-radius:10px;padding:10px 12px;font-size:.95rem;line-height:1.4;overflow-x:auto;user-select:all}
+.note{font-size:.8rem;color:var(--muted);margin:0}
+section.rules h2,details summary{font-family:var(--f-display);font-weight:400;font-size:1.1rem;margin:0}
+section.rules ol{margin:8px 0 0;padding-left:1.3em}
+details{border-top:1px solid var(--line);padding-top:12px}
+details summary{cursor:pointer}
+#tests{list-style:none;padding:0;margin:10px 0 0;font-size:.85rem}
+#tests li{display:grid;grid-template-columns:1.6em 1fr;gap:4px;padding:3px 0;border-bottom:1px solid var(--line)}
+.pass{color:var(--ok);font-weight:700}.fail{color:var(--ng);font-weight:700}
+@media (prefers-reduced-motion:reduce){.pawn{transition:none}.wall.new{animation:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>みちふさぎ<span class="bar" aria-hidden="true"></span></h1>
+    <div class="sub" id="sub">2人対戦の試作</div>
+  </header>
+
+  <div class="seg" role="group" aria-label="対戦相手">
+    <button id="mPvp" aria-pressed="true">2人で</button>
+    <button id="mCpu1" aria-pressed="false" aria-label="CPU やさしい">CPU 弱</button>
+    <button id="mCpu2" aria-pressed="false" aria-label="CPU ふつう">CPU 中</button>
+    <button id="mCpu3" aria-pressed="false" aria-label="CPU つよい">CPU 強</button>
+  </div>
+
+  <div class="players">
+    <div class="pl" id="pl0"><div class="name"><i class="c1"></i><span>紅</span><span class="tag" id="tag0"></span></div><div class="stock" id="st0"></div></div>
+    <div class="pl" id="pl1"><div class="name"><i class="c2"></i><span>藍</span><span class="tag" id="tag1"></span></div><div class="stock" id="st1"></div></div>
+  </div>
+
+  <div class="boardbox"><div class="bd" id="bd"></div></div>
+
+  <div class="act">
+    <div class="seg" role="group" aria-label="この手でやること">
+      <button id="aMove" aria-pressed="true">コマを動かす</button>
+      <button id="aH" aria-pressed="false">壁（横）</button>
+      <button id="aV" aria-pressed="false">壁（縦）</button>
+    </div>
+    <div class="confirm" id="confirmBox" hidden>
+      <button class="btn" id="place">ここに置く</button>
+      <button class="btn ghostbtn" id="cancel">やめる</button>
+    </div>
+  </div>
+  <p class="msg" id="msg" aria-live="polite"></p>
+  <div class="tools">
+    <button class="btn ghostbtn" id="undo">1手もどす</button>
+    <button class="btn ghostbtn" id="restart">はじめから</button>
+  </div>
+
+  <div class="result" id="result" hidden>
+    <h2 id="rTitle"></h2>
+    <div class="share" id="share"></div>
+    <div class="tools" style="justify-content:flex-start">
+      <button class="btn" id="copy">結果をコピー</button>
+      <button class="btn ghostbtn" id="next">次の対戦（先手交代）</button>
+    </div>
+    <p class="note" id="copied" aria-live="polite"></p>
+  </div>
+
+  <section class="rules">
+    <h2>遊び方</h2>
+    <ol>
+      <li>紅は下の段から上の段（赤い列）へ、藍は上の段から下の段（青い列）へ。<b>先に向こう側の段に着いた方の勝ち</b>。</li>
+      <li>自分の番には「コマを1マス動かす」か「壁を1枚置く」のどちらかをします。壁は1人10枚。</li>
+      <li>コマは上下左右に1マス。壁は越えられません。</li>
+      <li>相手のコマと隣り合ったら、跳び越せます。真後ろに壁や盤の端があるときは、ななめ横に進めます。</li>
+      <li>壁は2マス分の長さ。ほかの壁と重ねたり、十字に交差させたりはできません。<b>どちらかのゴールへの道を完全にふさぐ壁も置けません</b>。</li>
+      <li>壁を置くときは「壁（横）」か「壁（縦）」を選び、マスをタップすると、そのマスの右下の角を中心に置く場所が点線で出ます。緑なら「ここに置く」で確定、赤は置けない場所です。</li>
+      <li>先手は対戦ごとに交代します。</li>
+    </ol>
+  </section>
+
+  <details>
+    <summary>自己試験</summary>
+    <p class="note">動き・跳び越し・壁の重なりと交差・道をふさぐ壁の禁止・勝ちの判定・CPU の手が、答えの分かっている例どおりに動くかを確かめます。</p>
+    <ul id="tests"></ul>
+  </details>
+</div>
+
+<script>
+/* ===== ルール（画面に依存しない部分） ===== */
+const N=9, W=8, WALLS=10, MAXPLY=200;
+const GOAL=[0,8];
+function newGame(first){return {p:[{r:8,c:4},{r:0,c:4}],walls:[WALLS,WALLS],h:new Uint8Array(64),v:new Uint8Array(64),turn:first,over:null,plies:0,first:first};}
+function clone(s){return {p:[{...s.p[0]},{...s.p[1]}],walls:s.walls.slice(),h:s.h.slice(),v:s.v.slice(),turn:s.turn,over:s.over,plies:s.plies,first:s.first};}
+const hw=(s,r,c)=>r>=0&&r<W&&c>=0&&c<W&&s.h[r*W+c]===1;
+const vw=(s,r,c)=>r>=0&&r<W&&c>=0&&c<W&&s.v[r*W+c]===1;
+// (r,c) から (r+dr,c+dc) へ進めないか
+function blocked(s,r,c,dr,dc){
+  const nr=r+dr,nc=c+dc;
+  if(nr<0||nr>=N||nc<0||nc>=N) return true;
+  if(dr===1) return hw(s,r,c)||hw(s,r,c-1);
+  if(dr===-1) return hw(s,r-1,c)||hw(s,r-1,c-1);
+  if(dc===1) return vw(s,r,c)||vw(s,r-1,c);
+  return vw(s,r,c-1)||vw(s,r-1,c-1);
+}
+const DIRS=[[-1,0],[1,0],[0,-1],[0,1]];
+// ゴールまでの最短の歩数（コマは無視）。道が無ければ Infinity。withPath なら道のマスも返す
+function dist(s,i,withPath){
+  const g=GOAL[i],st=s.p[i].r*N+s.p[i].c;
+  const d=new Int16Array(81).fill(-1),par=new Int16Array(81).fill(-1);
+  const q=[st];d[st]=0;
+  for(let h=0;h<q.length;h++){
+    const x=q[h],r=(x/N)|0,c=x%N;
+    if(r===g){
+      if(!withPath) return d[x];
+      const path=[];let y=x;while(y!==-1){path.push(y);y=par[y];}
+      return {d:d[x],path:path.reverse()};
+    }
+    for(const [dr,dc] of DIRS){
+      if(blocked(s,r,c,dr,dc)) continue;
+      const y=(r+dr)*N+c+dc;
+      if(d[y]===-1){d[y]=d[x]+1;par[y]=x;q.push(y);}
+    }
+  }
+  return withPath?{d:Infinity,path:[]}:Infinity;
+}
+function pawnMoves(s,i){
+  const me=s.p[i],op=s.p[1-i],out=[];
+  for(const [dr,dc] of DIRS){
+    if(blocked(s,me.r,me.c,dr,dc)) continue;
+    const nr=me.r+dr,nc=me.c+dc;
+    if(nr===op.r&&nc===op.c){
+      if(!blocked(s,op.r,op.c,dr,dc)) out.push({t:"m",r:op.r+dr,c:op.c+dc});
+      else for(const [pr,pc] of (dr!==0?[[0,-1],[0,1]]:[[-1,0],[1,0]])){
+        if(!blocked(s,op.r,op.c,pr,pc)){
+          const tr=op.r+pr,tc=op.c+pc;
+          if(!(tr===me.r&&tc===me.c)) out.push({t:"m",r:tr,c:tc});
+        }
+      }
+    } else out.push({t:"m",r:nr,c:nc});
+  }
+  return out;
+}
+// 重なり・交差だけを見る（道の確認は別）
+function wallFits(s,o,r,c){
+  if(r<0||r>=W||c<0||c>=W) return false;
+  if(o==="h") return !(hw(s,r,c)||hw(s,r,c-1)||hw(s,r,c+1)||vw(s,r,c));
+  return !(vw(s,r,c)||vw(s,r-1,c)||vw(s,r+1,c)||hw(s,r,c));
+}
+// 置けない理由（置ければ ""）
+function wallProblem(s,o,r,c){
+  if(s.walls[s.turn]<=0) return "壁が残っていません";
+  if(!wallFits(s,o,r,c)) return "ほかの壁と重なるか交差します";
+  const t=clone(s);(o==="h"?t.h:t.v)[r*W+c]=1;
+  if(dist(t,0)===Infinity||dist(t,1)===Infinity) return "ゴールへの道を完全にふさぐので置けません";
+  return "";
+}
+function apply(s,m){
+  const t=clone(s),i=s.turn;
+  if(m.t==="m"){t.p[i]={r:m.r,c:m.c};}
+  else{(m.o==="h"?t.h:t.v)[m.r*W+m.c]=1;t.walls[i]--;}
+  t.plies++;
+  if(t.p[0].r===GOAL[0]) t.over={w:0};
+  else if(t.p[1].r===GOAL[1]) t.over={w:1};
+  else if(t.plies>=MAXPLY) t.over={w:-1};
+  t.turn=1-i;
+  return t;
+}
+function isLegal(s,m){
+  if(s.over) return false;
+  if(m.t==="m") return pawnMoves(s,s.turn).some(x=>x.r===m.r&&x.c===m.c);
+  return wallProblem(s,m.o,m.r,m.c)==="";
+}
+
+/* ===== CPU ===== */
+function evalFor(s,me){
+  if(s.over) return s.over.w===me?10000-s.plies:s.over.w===-1?0:-10000+s.plies;
+  const dm=dist(s,me),dop=dist(s,1-me);
+  // 手番の側は実質1歩先にいる
+  const tempo=s.turn===me?0.5:-0.5;
+  return (dop-dm+tempo)*10+(s.walls[me]-s.walls[1-me])*1.5;
+}
+// 相手の最短の道をふさぐ候補の壁（全128枚から絞る）
+function wallCands(s,target){
+  const {path}=dist(s,target,true),set=new Set(),out=[];
+  const add=(o,r,c)=>{const k=o+r*W+c;if(r>=0&&r<W&&c>=0&&c<W&&!set.has(k)){set.add(k);out.push({t:"w",o,r,c});}};
+  for(let k=0;k+1<path.length&&k<6;k++){
+    const a=path[k],b=path[k+1],ar=(a/N)|0,ac=a%N,br=(b/N)|0,bc=b%N;
+    if(ar!==br){const r=Math.min(ar,br);add("h",r,ac);add("h",r,ac-1);}
+    else{const c=Math.min(ac,bc);add("v",ar,c);add("v",ar-1,c);}
+  }
+  return out.filter(m=>wallProblem(s,m.o,m.r,m.c)==="");
+}
+function cpuMove(s,level,rnd=Math.random){
+  const me=s.turn,pm=pawnMoves(s,me);
+  const stepBest=()=>{let best=null,bd=Infinity;for(const m of pm){const d=dist(apply(s,m),me);if(d<bd||(d===bd&&rnd()<.5)){bd=d;best=m;}}return best;};
+  if(level===1){
+    const ws=s.walls[me]>0?wallCands(s,1-me):[];
+    if(ws.length&&rnd()<.25) return ws[(rnd()*ws.length)|0];
+    if(rnd()<.2) return pm[(rnd()*pm.length)|0];
+    return stepBest();
+  }
+  const mine=pm.concat(s.walls[me]>0?wallCands(s,1-me):[]);
+  let best=null,bv=-Infinity;
+  for(const m of mine){
+    const s1=apply(s,m);let v;
+    if(level===2||s1.over) v=evalFor(s1,me);
+    else{
+      const opp=pawnMoves(s1,1-me).concat(s1.walls[1-me]>0?wallCands(s1,me):[]);
+      v=Infinity;
+      for(const m2 of opp){const e=evalFor(apply(s1,m2),me);if(e<v)v=e;if(v<=bv)break;}
+    }
+    v+=rnd()*0.01;
+    if(v>bv){bv=v;best=m;}
+  }
+  return best;
+}
+
+/* ===== 自己試験 ===== */
+function runTests(){
+  const R=[],ok=(name,cond)=>R.push({name,cond:!!cond});
+  let s=newGame(0);
+  ok("はじめはどちらもゴールまで8歩",dist(s,0)===8&&dist(s,1)===8);
+  ok("はじめの紅は3方向に動ける",pawnMoves(s,0).length===3);
+  let t=apply(s,{t:"w",o:"h",r:7,c:3});
+  ok("横の壁は真上へ進めなくする",blocked(t,8,4,-1,0)&&blocked(t,8,3,-1,0)&&!blocked(t,8,5,-1,0));
+  ok("壁を置くと残りが1枚へる",t.walls[0]===9&&t.walls[1]===10);
+  ok("同じ場所・半分ずらした壁は重なりで置けない",!wallFits(t,"h",7,3)&&!wallFits(t,"h",7,4)&&!wallFits(t,"h",7,2)&&wallFits(t,"h",7,5));
+  ok("十字に交差する縦の壁は置けない",!wallFits(t,"v",7,3)&&wallFits(t,"v",6,3));
+  // 跳び越し
+  s=newGame(0);s.p[0]={r:5,c:4};s.p[1]={r:4,c:4};
+  ok("隣の相手はまっすぐ跳び越せる",pawnMoves(s,0).some(m=>m.r===3&&m.c===4));
+  s.h[3*W+4]=1; // 相手の真後ろ（4段目と3段目の間）に壁
+  const pm=pawnMoves(s,0);
+  ok("真後ろが壁ならななめ横へ進める",!pm.some(m=>m.r===3&&m.c===4)&&pm.some(m=>m.r===4&&m.c===3)&&pm.some(m=>m.r===4&&m.c===5));
+  // 道を完全にふさぐ壁
+  s=newGame(0);s.p[0]={r:8,c:0};
+  ok("道が残る壁は置ける",wallProblem(s,"h",7,0)==="");
+  s.h[7*W+0]=1; // 左下の2マスの上をふさぐ
+  ok("ゴールへの道を完全にふさぐ壁は置けない",wallProblem(s,"v",7,1).includes("ふさぐ"));
+  ok("ふさがない場所の縦の壁は置ける",wallProblem(s,"v",5,1)==="");
+  // 勝ち
+  s=newGame(0);s.p[0]={r:1,c:0};s.p[1]={r:5,c:8};
+  ok("紅が上の段に着いたら紅の勝ち",apply(s,{t:"m",r:0,c:0}).over?.w===0);
+  // CPU
+  s=newGame(1);
+  const m3=cpuMove(s,3,()=>0.4);
+  ok("CPU（強）は合法な手を選ぶ",isLegal(s,m3));
+  s=newGame(1);s.p[1]={r:7,c:2};s.p[0]={r:4,c:6};
+  const m2=cpuMove(s,2,()=>0.4);
+  ok("CPU（中）はあと1歩なら勝ちに行く",m2.t==="m"&&m2.r===8);
+  s=newGame(1);s.p[0]={r:1,c:4};s.p[1]={r:6,c:0};s.walls=[0,10];
+  const mb=cpuMove(s,3,()=>0.4);
+  ok("CPU（強）は相手の勝ちを壁で止める",mb.t==="w"&&dist(apply(s,mb),0)>1);
+  return R;
+}
+
+/* ===== 画面 ===== */
+const $=id=>document.getElementById(id);
+const G=2.4,S=(100-G*(N-1))/N,P=x=>x*(S+G);
+let mode=0,first=0,g=newGame(0),hist=[],act="move",pv=null,busy=false,newWall=null;
+const cpuSide=()=>mode>0?1:-1;
+const NAMES=["紅","藍"],LV=["","やさしい","ふつう","つよい"];
+
+const bd=$("bd"),cells=[];
+for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+  const b=document.createElement("button");
+  b.className="cell"+(r===0?" g0":r===N-1?" g1":"");
+  b.style.left=P(c)+"%";b.style.top=P(r)+"%";b.style.width=S+"%";b.style.height=S+"%";
+  b.setAttribute("aria-label",`${r+1}段目 ${c+1}列目`);
+  b.addEventListener("click",()=>tapCell(r,c));
+  bd.appendChild(b);cells.push(b);
+}
+const wallLayer=document.createElement("div");bd.appendChild(wallLayer);
+const pawns=[0,1].map(i=>{const d=document.createElement("div");d.className="pawn";d.style.width=S+"%";d.style.height=S+"%";d.innerHTML=`<i class="${i?"c2":"c1"}"></i>`;bd.appendChild(d);return d;});
+
+function wallEl(o,r,c,cls){
+  const d=document.createElement("div");d.className="wall"+(cls?" "+cls:"");
+  if(o==="h"){d.style.left=P(c)+"%";d.style.top=(P(r)+S)+"%";d.style.width=(2*S+G)+"%";d.style.height=G+"%";}
+  else{d.style.left=(P(c)+S)+"%";d.style.top=P(r)+"%";d.style.width=G+"%";d.style.height=(2*S+G)+"%";}
+  return d;
+}
+function myTurn(){return !g.over&&!busy&&g.turn!==cpuSide();}
+function render(){
+  const hints=myTurn()&&act==="move"?pawnMoves(g,g.turn):[];
+  cells.forEach((b,k)=>{
+    const r=(k/N)|0,c=k%N,h=hints.some(m=>m.r===r&&m.c===c);
+    b.classList.toggle("hint",h);b.classList.toggle("tap",myTurn()&&act!=="move");
+    b.disabled=!(h||(myTurn()&&act!=="move"));
+  });
+  wallLayer.innerHTML="";
+  for(let r=0;r<W;r++)for(let c=0;c<W;c++){
+    const isNew=k=>newWall&&newWall.o===k&&newWall.r===r&&newWall.c===c;
+    if(g.h[r*W+c]) wallLayer.appendChild(wallEl("h",r,c,isNew("h")?"new":""));
+    if(g.v[r*W+c]) wallLayer.appendChild(wallEl("v",r,c,isNew("v")?"new":""));
+  }
+  if(pv&&myTurn()) wallLayer.appendChild(wallEl(pv.o,pv.r,pv.c,"pv"+(pv.err?" bad":"")));
+  pawns.forEach((d,i)=>{d.style.left=P(g.p[i].c)+"%";d.style.top=P(g.p[i].r)+"%";d.classList.toggle("win",g.over?.w===i);});
+  for(const i of [0,1]){
+    $("pl"+i).classList.toggle("turn",!g.over&&g.turn===i);
+    $("tag"+i).textContent=(g.first===i?"先手":"後手")+(cpuSide()===i?"・CPU":"");
+    let h="<span>壁</span>";for(let k=0;k<WALLS;k++)h+=`<b class="${k<g.walls[i]?"":"used"}"></b>`;
+    $("st"+i).innerHTML=h;
+  }
+  const noWall=g.walls[g.turn]<=0;
+  $("aH").disabled=$("aV").disabled=noWall||!myTurn();$("aMove").disabled=!myTurn();
+  if(noWall&&act!=="move") setAct("move",true);
+  ["aMove","aH","aV"].forEach((id,k)=>$(id).setAttribute("aria-pressed",String(["move","h","v"][k]===act)));
+  $("confirmBox").hidden=!(pv&&myTurn());
+  $("place").disabled=!pv||!!pv.err;
+  $("undo").disabled=busy||hist.length===0;
+  $("sub").textContent=mode?`CPU（${LV[mode]}）と対戦`:"2人で対戦";
+  let m="";
+  if(g.over) m=g.over.w===-1?`${MAXPLY}手で引き分け`:`${NAMES[g.over.w]}の勝ち！`;
+  else if(busy) m="CPU が考えています…";
+  else if(pv) m=pv.err||"この場所に置けます";
+  else m=`${NAMES[g.turn]}の番です`+(act==="move"?"（点のマスへ動かす）":"（マスをタップして壁の場所を選ぶ）");
+  $("msg").textContent=m;
+  showResult();
+}
+function setAct(a,quiet){act=a;pv=null;if(!quiet)render();}
+function tapCell(r,c){
+  if(!myTurn())return;
+  if(act==="move"){
+    const m={t:"m",r,c};if(isLegal(g,m)) play(m);
+    return;
+  }
+  const wr=Math.min(r,W-1),wc=Math.min(c,W-1);
+  if(pv&&pv.r===wr&&pv.c===wc&&pv.o===act&&!pv.err){play({t:"w",o:act,r:wr,c:wc});return;}
+  pv={o:act,r:wr,c:wc,err:wallProblem(g,act,wr,wc)};render();
+}
+function play(m){
+  hist.push(g);g=apply(g,m);newWall=m.t==="w"?m:null;pv=null;act="move";render();
+  if(!g.over&&g.turn===cpuSide()) cpuTurn();
+}
+function cpuTurn(){
+  busy=true;render();
+  setTimeout(()=>{
+    const m=cpuMove(g,mode);
+    busy=false;
+    if(m){hist.push(g);g=apply(g,m);newWall=m.t==="w"?m:null;}
+    render();
+  },380);
+}
+function showResult(){
+  const box=$("result");
+  if(!g.over){box.hidden=true;return;}
+  box.hidden=false;
+  $("rTitle").textContent=g.over.w===-1?"引き分け":`${NAMES[g.over.w]}の勝ち`;
+  const used=i=>WALLS-g.walls[i];
+  $("share").textContent=`みちふさぎ ${g.over.w===-1?"引き分け":NAMES[g.over.w]+"の勝ち"}${mode?`（CPU ${LV[mode]}）`:""}\n手数 ${g.plies}・使った壁 紅${used(0)} 藍${used(1)}`;
+  $("copied").textContent="";
+}
+function start(f){first=f;g=newGame(f);hist=[];pv=null;act="move";newWall=null;busy=false;render();if(g.turn===cpuSide())cpuTurn();}
+function setMode(k){mode=k;["mPvp","mCpu1","mCpu2","mCpu3"].forEach((id,j)=>$(id).setAttribute("aria-pressed",String(j===k)));start(first);}
+["mPvp","mCpu1","mCpu2","mCpu3"].forEach((id,k)=>$(id).addEventListener("click",()=>setMode(k)));
+$("aMove").addEventListener("click",()=>setAct("move"));
+$("aH").addEventListener("click",()=>{if(pv){pv={...pv,o:"h"};pv.err=wallProblem(g,"h",pv.r,pv.c);}act="h";if(pv)pv.o="h";render();});
+$("aV").addEventListener("click",()=>{if(pv){pv={...pv,o:"v"};pv.err=wallProblem(g,"v",pv.r,pv.c);}act="v";if(pv)pv.o="v";render();});
+$("place").addEventListener("click",()=>{if(pv&&!pv.err&&myTurn())play({t:"w",o:pv.o,r:pv.r,c:pv.c});});
+$("cancel").addEventListener("click",()=>{pv=null;render();});
+$("restart").addEventListener("click",()=>start(first));
+$("next").addEventListener("click",()=>start(1-first));
+$("undo").addEventListener("click",()=>{
+  if(busy||!hist.length)return;
+  g=hist.pop();
+  while(hist.length&&g.turn===cpuSide()) g=hist.pop();
+  pv=null;act="move";newWall=null;render();
+  if(!g.over&&g.turn===cpuSide()) cpuTurn();
+});
+$("copy").addEventListener("click",()=>{
+  const txt=$("share").textContent;
+  const done=()=>$("copied").textContent="コピーしました";
+  const fallback=()=>{const r=document.createRange();r.selectNodeContents($("share"));const s=getSelection();s.removeAllRanges();s.addRange(r);$("copied").textContent="選択しました。長押しでコピーしてください";};
+  try{navigator.clipboard.writeText(txt).then(done,fallback);}catch(e){fallback();}
+});
+
+(function(){
+  const R=runTests(),ul=$("tests");let pass=0;
+  for(const t of R){if(t.cond)pass++;const li=document.createElement("li");li.innerHTML=`<span class="${t.cond?"pass":"fail"}">${t.cond?"✓":"✗"}</span><span>${t.name}</span>`;ul.appendChild(li);}
+  $("tests").previousElementSibling.textContent+=`（${pass}/${R.length} 合格）`;
+})();
+start(0);
+</script>
+</body>
+</html>

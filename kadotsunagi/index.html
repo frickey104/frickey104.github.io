@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="1〜5マスの駒を、自分の駒と角だけでつなげて置いていく陣取り。市販の「ブロックス」（2人用）が手本。CPU とも対戦できる。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="frickey の工房">
+<meta property="og:title" content="かどつなぎ">
+<meta property="og:description" content="1〜5マスの駒を、自分の駒と角だけでつなげて置いていく陣取り。市販の「ブロックス」（2人用）が手本。CPU とも対戦できる。">
+<meta property="og:url" content="https://frickey104.github.io/kadotsunagi/">
+<meta property="og:image" content="https://frickey104.github.io/img/og-kadotsunagi.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+.fk-bar{all:initial;display:flex;align-items:center;justify-content:space-between;gap:12px;box-sizing:border-box;width:100%;min-height:34px;padding:6px max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px));background:#16283c;color:#e9eef4;font:600 13px/1.3 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",sans-serif;position:relative;z-index:2147483647}
+.fk-bar a{all:initial;color:#e9eef4;font:inherit;cursor:pointer;text-decoration:none}
+.fk-bar a:hover,.fk-bar a:focus-visible{text-decoration:underline;outline:none}
+.fk-bar span{all:initial;color:#9fb3c8;font:500 12px/1.3 ui-monospace,Consolas,monospace}
+</style>
+</head>
+<body>
+<nav class="fk-bar" aria-label="作品集"><a href="../">← frickey の工房</a><span>ボードゲーム・2人</span></nav>
+<title>かどつなぎ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
+<style>
+/* レイアウト: 縦1列。上に手番と点数、中央に14×14の盤（主役）、その下に回す・裏返す・置く、手持ちの駒の棚、結果・遊び方・自己試験（おしだし・みちふさぎと同じ型） */
+:root{
+  --paper:#eef0f3; --board:#dfe3ea; --ink:#1d2333; --muted:#5d6577; --line:#c7ccd6; --card:#f8f9fb;
+  --beni:#c8313f; --ai:#2d4f9e; --win:#e9a92a;
+  --beni-soft:rgba(200,49,63,.22); --ai-soft:rgba(45,79,158,.22);
+  --ok:#2f7d4f; --ng:#b3352f;
+  --f-display:"Dela Gothic One","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic","Meiryo",sans-serif;
+  --f-mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#151927; --board:#20263a; --ink:#e7eaf2; --muted:#a2a9bb; --line:#343b52; --card:#1b2031;
+  --beni:#e0505c; --ai:#5b80d6; --win:#f0b840;
+  --beni-soft:rgba(224,80,92,.3); --ai-soft:rgba(91,128,214,.32);
+  --ok:#5cc187; --ng:#ef6a62; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#151927; --board:#20263a; --ink:#e7eaf2; --muted:#a2a9bb; --line:#343b52; --card:#1b2031;
+  --beni:#e0505c; --ai:#5b80d6; --win:#f0b840;
+  --beni-soft:rgba(224,80,92,.3); --ai-soft:rgba(91,128,214,.32);
+  --ok:#5cc187; --ng:#ef6a62; color-scheme:dark}
+[hidden]{display:none!important}
+html,body{background:var(--paper);color:var(--ink)}
+body{font-family:var(--f-body);font-size:15px;line-height:1.7}
+.wrap{max-width:460px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px;display:flex;flex-direction:column;gap:14px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--f-display);font-weight:400;font-size:2.1rem;line-height:1;margin:0;letter-spacing:.02em}
+h1 .mk{display:inline-grid;grid-template-columns:10px 10px;grid-template-rows:10px 10px;gap:2px;margin-left:10px;vertical-align:middle}
+h1 .mk i{display:block;border-radius:2px}
+.sub{font-size:.85rem;color:var(--muted);text-align:right;line-height:1.4}
+.seg{display:flex;gap:6px;background:var(--board);padding:4px;border-radius:10px;flex-wrap:wrap}
+.seg button{flex:1;min-width:0;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:700;padding:8px 4px;border-radius:7px;cursor:pointer;font-size:.9rem;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.seg button:focus-visible,.btn:focus-visible,.pc:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pl{border-radius:12px;padding:8px 12px;background:var(--card);border:2px solid transparent;display:flex;flex-direction:column;gap:2px;min-width:0}
+.pl.turn{border-color:var(--ink)}
+.pl .name{font-weight:700;display:flex;align-items:center;gap:8px;font-size:.95rem}
+.pl .name i{width:14px;height:14px;border-radius:3px;display:block;flex:none}
+.pl .tag{font-size:.72rem;color:var(--muted);font-weight:400}
+.pl .left{font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.c0{background:var(--beni)}.c1{background:var(--ai)}
+.boardbox{aspect-ratio:1/1;max-width:100%;background:var(--board);border-radius:14px;padding:8px;box-sizing:border-box}
+.grid{display:grid;grid-template-columns:repeat(14,1fr);grid-template-rows:repeat(14,1fr);gap:2px;width:100%;height:100%;touch-action:manipulation}
+.cell{border-radius:3px;background:var(--paper);position:relative;cursor:pointer}
+.cell.p0{background:var(--beni);box-shadow:inset 0 -2px 0 rgba(0,0,0,.2)}
+.cell.p1{background:var(--ai);box-shadow:inset 0 -2px 0 rgba(0,0,0,.2)}
+.cell.last{box-shadow:inset 0 0 0 2px var(--win)}
+.cell.start::after{content:"";position:absolute;inset:30%;border-radius:50%;border:2px solid var(--muted);box-sizing:border-box}
+.cell.hint::after{content:"";position:absolute;inset:38%;border-radius:50%;background:var(--muted);opacity:.5}
+.cell.pv0{background:var(--beni-soft);box-shadow:inset 0 0 0 2px var(--ok)}
+.cell.pv1{background:var(--ai-soft);box-shadow:inset 0 0 0 2px var(--ok)}
+.cell.pvbad{box-shadow:inset 0 0 0 2px var(--ng)}
+.ctrl{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.msg{min-height:1.7em;font-size:.95rem;text-align:center;margin:0;font-weight:700}
+.tray{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;background:var(--board);border-radius:12px;padding:8px}
+.pc{border:2px solid transparent;background:var(--card);border-radius:8px;aspect-ratio:1/1;padding:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;min-width:0}
+.pc[aria-pressed="true"]{border-color:var(--ink)}
+.pc:disabled{opacity:.18;cursor:default}
+.pc .mini{display:grid;gap:1px}
+.pc .mini i{display:block;width:6px;height:6px;border-radius:1px}
+.trayhead{display:flex;justify-content:space-between;align-items:baseline;font-size:.8rem;color:var(--muted);margin-bottom:-6px}
+.tools{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.btn{border:0;border-radius:10px;padding:9px 16px;font:inherit;font-weight:700;cursor:pointer;background:var(--ink);color:var(--paper)}
+.btn.ghostbtn{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.result{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.result h2{font-family:var(--f-display);font-weight:400;font-size:1.3rem;margin:0}
+.share{font-family:var(--f-mono);white-space:pre;background:var(--paper);border-radius:10px;padding:10px 12px;font-size:.95rem;line-height:1.4;overflow-x:auto;user-select:all}
+.note{font-size:.8rem;color:var(--muted);margin:0}
+section.rules h2,details summary{font-family:var(--f-display);font-weight:400;font-size:1.1rem;margin:0}
+section.rules ol{margin:8px 0 0;padding-left:1.3em}
+details{border-top:1px solid var(--line);padding-top:12px}
+details summary{cursor:pointer}
+#tests{list-style:none;padding:0;margin:10px 0 0;font-size:.85rem}
+#tests li{display:grid;grid-template-columns:1.6em 1fr;gap:4px;padding:3px 0;border-bottom:1px solid var(--line)}
+.pass{color:var(--ok);font-weight:700}.fail{color:var(--ng);font-weight:700}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>かどつなぎ<span class="mk" aria-hidden="true"><i class="c0"></i><i></i><i></i><i class="c1"></i></span></h1>
+    <div class="sub" id="sub">2人対戦の試作</div>
+  </header>
+
+  <div class="seg" role="group" aria-label="対戦相手">
+    <button id="mPvp" aria-pressed="true">2人で</button>
+    <button id="mCpu1" aria-pressed="false" aria-label="CPU やさしい">CPU 弱</button>
+    <button id="mCpu2" aria-pressed="false" aria-label="CPU ふつう">CPU 中</button>
+    <button id="mCpu3" aria-pressed="false" aria-label="CPU つよい">CPU 強</button>
+  </div>
+
+  <div class="players">
+    <div class="pl" id="pl0"><div class="name"><i class="c0"></i><span>紅</span><span class="tag" id="tag0"></span></div><div class="left" id="left0"></div></div>
+    <div class="pl" id="pl1"><div class="name"><i class="c1"></i><span>藍</span><span class="tag" id="tag1"></span></div><div class="left" id="left1"></div></div>
+  </div>
+
+  <div class="boardbox"><div class="grid" id="grid" role="grid" aria-label="盤 14×14"></div></div>
+
+  <p class="msg" id="msg" aria-live="polite"></p>
+  <div class="ctrl">
+    <button class="btn ghostbtn" id="rot">回す</button>
+    <button class="btn ghostbtn" id="flip">裏返す</button>
+    <button class="btn" id="place">ここに置く</button>
+  </div>
+
+  <div class="trayhead"><span id="trayTitle">手持ちの駒</span><span id="trayCount"></span></div>
+  <div class="tray" id="tray"></div>
+
+  <div class="tools">
+    <button class="btn ghostbtn" id="undo">1手もどす</button>
+    <button class="btn ghostbtn" id="restart">はじめから</button>
+  </div>
+
+  <div class="result" id="result" hidden>
+    <h2 id="rTitle"></h2>
+    <div class="share" id="share"></div>
+    <div class="tools" style="justify-content:flex-start">
+      <button class="btn" id="copy">結果をコピー</button>
+      <button class="btn ghostbtn" id="next">次の対戦（先手交代）</button>
+    </div>
+    <p class="note" id="copied" aria-live="polite"></p>
+  </div>
+
+  <section class="rules">
+    <h2>遊び方</h2>
+    <ol>
+      <li>1人21個の駒（1〜5マス・合わせて89マス）を、交互に1個ずつ盤に置きます。</li>
+      <li>最初の駒は、自分の<b>はじまりの丸</b>（紅は左上寄り、藍は右下寄り）にかかるように置きます。</li>
+      <li>2個目からは、自分の駒と<b>角だけで</b>つながるように置きます。自分の駒と辺がくっつくのは禁止。相手の駒とは辺がくっついてもかまいません。</li>
+      <li>置ける場所が無くなったら、その人はパス（自動）。2人とも置けなくなったら終わりです。</li>
+      <li>点数: 置けずに残ったマスの数だけ −1点。全部置けたら +15点、最後に置いたのが1マスの駒ならさらに +5点。点数の高い方の勝ち。</li>
+      <li>操作: 下の棚から駒を選び、盤をタップすると置く形が出ます（緑は置ける・赤は置けない）。「回す」「裏返す」で向きを変え、同じマスをもう一度タップするか「ここに置く」で確定。灰色の点は、自分の駒の角がつながる場所です。</li>
+      <li>先手は対戦ごとに交代します。</li>
+    </ol>
+  </section>
+
+  <details>
+    <summary>自己試験</summary>
+    <p class="note">駒の数と形・向きの数・最初の置き方・角のつながり・辺の接触の禁止・点数・CPU の手が、答えの分かっている例どおりに動くかを確かめます。</p>
+    <ul id="tests"></ul>
+  </details>
+</div>
+
+<script>
+/* ===== ルール（画面に依存しない部分） ===== */
+const N=14, START=[[4,4],[9,9]];
+const PIECES=[
+  [[0,0]],
+  [[0,0],[0,1]],
+  [[0,0],[0,1],[0,2]],[[0,0],[1,0],[1,1]],
+  [[0,0],[0,1],[0,2],[0,3]],[[0,0],[0,1],[1,0],[1,1]],[[0,0],[0,1],[0,2],[1,1]],[[0,0],[1,0],[2,0],[2,1]],[[0,1],[0,2],[1,0],[1,1]],
+  [[0,0],[0,1],[0,2],[0,3],[0,4]],[[0,0],[1,0],[2,0],[3,0],[3,1]],[[0,1],[1,0],[1,1],[2,1],[3,1]],[[0,1],[1,1],[2,0],[2,1],[3,0]],
+  [[0,0],[0,1],[1,0],[1,1],[2,0]],[[0,0],[0,2],[1,0],[1,1],[1,2]],[[0,0],[1,0],[2,0],[2,1],[2,2]],[[0,0],[1,0],[1,1],[2,1],[2,2]],
+  [[0,0],[0,1],[1,1],[2,1],[2,2]],[[0,0],[0,1],[0,2],[1,1],[2,1]],[[0,1],[0,2],[1,0],[1,1],[2,1]],[[0,1],[1,0],[1,1],[1,2],[2,1]]
+];
+function norm(cells){
+  const mr=Math.min(...cells.map(x=>x[0])),mc=Math.min(...cells.map(x=>x[1]));
+  return cells.map(([r,c])=>[r-mr,c-mc]).sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+}
+const rot=cells=>norm(cells.map(([r,c])=>[c,-r]));
+const flp=cells=>norm(cells.map(([r,c])=>[r,-c]));
+const key=cells=>cells.map(x=>x.join(",")).join(";");
+const ORIENTS=PIECES.map(p=>{
+  const out=[],seen=new Set();let a=norm(p);
+  for(let f=0;f<2;f++){for(let k=0;k<4;k++){const kk=key(a);if(!seen.has(kk)){seen.add(kk);out.push(a);}a=rot(a);}a=flp(a);}
+  return out;
+});
+function newGame(first){return {b:new Int8Array(N*N).fill(-1),left:[PIECES.map(()=>true),PIECES.map(()=>true)],placed:[0,0],last:[-1,-1],turn:first,first,passes:0,over:null,lastCells:[]};}
+function clone(s){return {b:s.b.slice(),left:[s.left[0].slice(),s.left[1].slice()],placed:s.placed.slice(),last:s.last.slice(),turn:s.turn,first:s.first,passes:s.passes,over:s.over,lastCells:s.lastCells};}
+const inB=(r,c)=>r>=0&&r<N&&c>=0&&c<N;
+const at=(s,r,c)=>inB(r,c)?s.b[r*N+c]:-2;
+// 置けない理由（置ければ ""）。cells は盤の座標
+function problem(s,p,cells){
+  let corner=false,start=false;
+  for(const [r,c] of cells){
+    if(!inB(r,c)) return "盤からはみ出します";
+    if(s.b[r*N+c]!==-1) return "ほかの駒と重なります";
+  }
+  for(const [r,c] of cells){
+    if(at(s,r-1,c)===p||at(s,r+1,c)===p||at(s,r,c-1)===p||at(s,r,c+1)===p) return "自分の駒と辺がくっつきます";
+    if(at(s,r-1,c-1)===p||at(s,r-1,c+1)===p||at(s,r+1,c-1)===p||at(s,r+1,c+1)===p) corner=true;
+    if(r===START[p][0]&&c===START[p][1]) start=true;
+  }
+  if(s.placed[p]===0) return start?"":"最初の駒は、はじまりの丸にかけて置きます";
+  return corner?"":"自分の駒と角でつながっていません";
+}
+// 角がつながる空きマス（はじまりの前は、はじまりの丸）
+function corners(s,p){
+  if(s.placed[p]===0){const [r,c]=START[p];return s.b[r*N+c]===-1?[[r,c]]:[];}
+  const out=[];
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    if(s.b[r*N+c]!==-1) continue;
+    if(at(s,r-1,c)===p||at(s,r+1,c)===p||at(s,r,c-1)===p||at(s,r,c+1)===p) continue;
+    if(at(s,r-1,c-1)===p||at(s,r-1,c+1)===p||at(s,r+1,c-1)===p||at(s,r+1,c+1)===p) out.push([r,c]);
+  }
+  return out;
+}
+function legalMoves(s,p,limitOne){
+  const cs=corners(s,p),out=[],seen=new Set();
+  for(let i=0;i<PIECES.length;i++){
+    if(!s.left[p][i]) continue;
+    ORIENTS[i].forEach((sh,o)=>{
+      for(const [cr,cc] of cs){
+        for(const [sr,sc] of sh){
+          const dr=cr-sr,dc=cc-sc,k=i*10000+o*1000+(dr+20)*40+(dc+20);
+          if(seen.has(k)) continue;seen.add(k);
+          const cells=sh.map(([r,c])=>[r+dr,c+dc]);
+          if(problem(s,p,cells)==="") {out.push({i,o,cells});if(limitOne) return;}
+        }
+      }
+    });
+    if(limitOne&&out.length) return out;
+  }
+  return out;
+}
+const canMove=(s,p)=>legalMoves(s,p,true).length>0;
+function score(s,p){
+  const rest=PIECES.reduce((a,pc,i)=>a+(s.left[p][i]?pc.length:0),0);
+  if(rest>0) return -rest;
+  return 15+(s.last[p]===0?5:0);
+}
+// 手番を進める（置けない人は自動でパス）
+function advance(t){
+  for(let k=0;k<2;k++){
+    if(canMove(t,t.turn)) return t;
+    t.turn=1-t.turn;
+  }
+  const a=score(t,0),b=score(t,1);
+  t.over={w:a>b?0:b>a?1:-1,score:[a,b]};
+  return t;
+}
+function apply(s,m){
+  const t=clone(s),p=s.turn;
+  for(const [r,c] of m.cells) t.b[r*N+c]=p;
+  t.left[p][m.i]=false;t.placed[p]++;t.last[p]=m.i;t.lastCells=m.cells;
+  t.turn=1-p;
+  return advance(t);
+}
+
+/* ===== CPU ===== */
+function stateEval(s,me){
+  const sq=p=>PIECES.reduce((a,pc,i)=>a+(s.left[p][i]?0:pc.length),0);
+  return (sq(me)-sq(1-me))*10+(corners(s,me).length-corners(s,1-me).length)*2;
+}
+function greedyScore(s,m,me){
+  const t=clone(s);for(const [r,c] of m.cells) t.b[r*N+c]=me;t.left[me][m.i]=false;t.placed[me]++;
+  let v=stateEval(t,me);
+  if(s.placed[me]<4){ // 序盤は真ん中へ伸ばす
+    const cr=m.cells.reduce((a,x)=>a+Math.abs(x[0]-6.5)+Math.abs(x[1]-6.5),0)/m.cells.length;
+    v-=cr*3;
+  }
+  return v;
+}
+function cpuMove(s,level,rnd=Math.random){
+  const me=s.turn,ms=legalMoves(s,me);
+  if(!ms.length) return null;
+  if(level===1){
+    const big=Math.max(...ms.map(m=>m.cells.length));
+    const pool=ms.filter(m=>m.cells.length>=Math.min(big,4));
+    return pool[(rnd()*pool.length)|0];
+  }
+  const sc=ms.map(m=>({m,v:greedyScore(s,m,me)+rnd()*0.5})).sort((a,b)=>b.v-a.v);
+  if(level===2) return sc[0].m;
+  let best=sc[0].m,bv=-Infinity;
+  for(const {m} of sc.slice(0,8)){
+    const s1=apply(s,m);
+    let v;
+    if(s1.over) v=s1.over.w===me?1e6:-1e6;
+    else if(s1.turn===me) v=stateEval(s1,me)+50;
+    else{
+      const rep=legalMoves(s1,1-me);let worst=Infinity;
+      // 相手は自分にとっていちばん得な手を打つ
+      let bestOpp=-Infinity,pick=null;
+      for(const r of rep){const g=greedyScore(s1,r,1-me);if(g>bestOpp){bestOpp=g;pick=r;}}
+      worst=pick?stateEval(apply(s1,pick),me):stateEval(s1,me);
+      v=worst;
+    }
+    v+=rnd()*0.5;
+    if(v>bv){bv=v;best=m;}
+  }
+  return best;
+}
+
+/* ===== 自己試験 ===== */
+function runTests(){
+  const R=[],ok=(n,c)=>R.push({name:n,cond:!!c});
+  ok("駒は21個・合わせて89マス",PIECES.length===21&&PIECES.reduce((a,p)=>a+p.length,0)===89);
+  ok("向きの数: 1マス1・4マス四角1・5マス棒2・十字1・F形8",ORIENTS[0].length===1&&ORIENTS[5].length===1&&ORIENTS[9].length===2&&ORIENTS[20].length===1&&ORIENTS[19].length===8);
+  ok("向きの数の合計は91",ORIENTS.reduce((a,o)=>a+o.length,0)===91);
+  let s=newGame(0);
+  ok("最初の駒は、はじまりの丸にかからないと置けない",problem(s,0,[[0,0]])!==""&&problem(s,0,[[4,4],[4,5]])==="");
+  s=apply(s,{i:1,o:0,cells:[[4,4],[4,5]]});
+  ok("置いたら相手の番",s.turn===1&&s.placed[0]===1&&!s.left[0][1]);
+  s=apply(s,{i:0,o:0,cells:[[9,9]]});
+  ok("自分の駒と辺がくっつくと置けない",problem(s,0,[[5,4]]).includes("辺"));
+  ok("角だけでつながれば置ける",problem(s,0,[[5,6]])===""&&problem(s,0,[[3,3]])==="");
+  ok("角でつながっていないと置けない",problem(s,0,[[7,7]]).includes("角"));
+  ok("相手の駒とは辺がくっついてもよい",(()=>{const t=clone(s);t.b[5*N+7]=1;return problem(t,0,[[5,6]])==="";})());
+  ok("はじめの手は全部はじまりの丸にかかる",legalMoves(newGame(0),0).every(m=>m.cells.some(([r,c])=>r===4&&c===4)));
+  const e=newGame(0);e.left[0]=e.left[0].map(()=>false);e.last[0]=0;
+  ok("全部置いて最後が1マスなら +20点",score(e,0)===20);
+  e.last[0]=5;ok("全部置いて最後がほかの駒なら +15点",score(e,0)===15);
+  ok("残ったマスの数だけ −1点",score(newGame(0),1)===-89);
+  s=newGame(0);const m=cpuMove(s,3,()=>.3);
+  ok("CPU（強）は置ける手を選ぶ",m&&problem(s,0,m.cells)==="");
+  // CPU どうしで最後まで
+  let g=newGame(0),guard=0;while(!g.over&&guard<100){g=apply(g,cpuMove(g,2,()=>.3));guard++;}
+  ok("CPU どうしで最後まで進み、点数が出る",!!g.over&&g.over.score.length===2);
+  return R;
+}
+
+/* ===== 画面 ===== */
+const $=id=>document.getElementById(id);
+const NAMES=["紅","藍"],LV=["","やさしい","ふつう","つよい"];
+let mode=0,first=0,g=newGame(0),hist=[],sel=-1,shape=null,pv=null,busy=false;
+const cpuSide=()=>mode>0?1:-1;
+const human=()=>mode>0?0:g.turn;
+const myTurn=()=>!g.over&&!busy&&g.turn!==cpuSide();
+
+const gridEl=$("grid"),cells=[];
+for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+  const d=document.createElement("div");d.className="cell";d.dataset.r=r;d.dataset.c=c;
+  gridEl.appendChild(d);cells.push(d);
+}
+gridEl.addEventListener("click",e=>{const d=e.target.closest(".cell");if(d)tapCell(+d.dataset.r,+d.dataset.c);});
+
+// 形の中心に近いマス（タップしたマスにこのマスを合わせる）
+function anchorOf(sh){
+  const h=Math.max(...sh.map(x=>x[0])),w=Math.max(...sh.map(x=>x[1]));
+  let best=sh[0],bd=Infinity;
+  for(const x of sh){const d=Math.abs(x[0]-h/2)+Math.abs(x[1]-w/2);if(d<bd){bd=d;best=x;}}
+  return best;
+}
+function placeCells(sh,r,c){const [ar,ac]=anchorOf(sh);return sh.map(([y,x])=>[y-ar+r,x-ac+c]);}
+function updatePv(){if(pv&&shape){pv.cells=placeCells(shape,pv.r,pv.c);pv.err=problem(g,g.turn,pv.cells);}}
+
+function renderTray(){
+  const p=human(),tray=$("tray");tray.innerHTML="";
+  let n=0;
+  PIECES.forEach((pc,i)=>{
+    const b=document.createElement("button");b.className="pc";
+    const has=g.left[p][i];if(has)n++;
+    b.disabled=!has||!myTurn();b.setAttribute("aria-pressed",String(sel===i));
+    b.setAttribute("aria-label",`${pc.length}マスの駒`);
+    const sh=sel===i&&shape?shape:norm(pc);
+    const h=Math.max(...sh.map(x=>x[0]))+1,w=Math.max(...sh.map(x=>x[1]))+1;
+    const m=document.createElement("div");m.className="mini";m.style.gridTemplateColumns=`repeat(${w},6px)`;m.style.gridTemplateRows=`repeat(${h},6px)`;
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){const q=document.createElement("i");if(sh.some(s=>s[0]===y&&s[1]===x))q.className="c"+p;m.appendChild(q);}
+    b.appendChild(m);
+    b.addEventListener("click",()=>selectPiece(i));
+    tray.appendChild(b);
+  });
+  $("trayTitle").textContent=`${NAMES[p]}の手持ちの駒`;
+  $("trayCount").textContent=`残り${n}個`;
+}
+function render(){
+  const hints=myTurn()?corners(g,g.turn):[];
+  const pvSet=new Map();if(pv&&pv.cells&&myTurn())for(const [r,c] of pv.cells)if(inB(r,c))pvSet.set(r*N+c,true);
+  const lastSet=new Set(g.lastCells.map(([r,c])=>r*N+c));
+  cells.forEach((d,k)=>{
+    const r=(k/N)|0,c=k%N,v=g.b[k];
+    let cls="cell";
+    if(v>=0) cls+=" p"+v;
+    if(lastSet.has(k)) cls+=" last";
+    if(v<0&&((r===START[0][0]&&c===START[0][1]&&g.placed[0]===0)||(r===START[1][0]&&c===START[1][1]&&g.placed[1]===0))) cls+=" start";
+    if(pvSet.has(k)) cls+=pv.err?(v<0?" pv"+g.turn:"")+" pvbad":" pv"+g.turn;
+    else if(v<0&&hints.some(([y,x])=>y===r&&x===c)&&g.placed[g.turn]>0) cls+=" hint";
+    d.className=cls;
+  });
+  for(const i of [0,1]){
+    $("pl"+i).classList.toggle("turn",!g.over&&g.turn===i);
+    $("tag"+i).textContent=(g.first===i?"先手":"後手")+(cpuSide()===i?"・CPU":"");
+    const rest=PIECES.reduce((a,pc,j)=>a+(g.left[i][j]?pc.length:0),0),cnt=g.left[i].filter(Boolean).length;
+    $("left"+i).textContent=`残り ${cnt}個・${rest}マス`;
+  }
+  $("rot").disabled=$("flip").disabled=!(myTurn()&&sel>=0);
+  $("place").disabled=!(myTurn()&&pv&&pv.cells&&!pv.err);
+  $("undo").disabled=busy||hist.length===0;
+  $("sub").textContent=mode?`CPU（${LV[mode]}）と対戦`:"2人で対戦";
+  let m;
+  if(g.over) m=g.over.w===-1?"引き分け":`${NAMES[g.over.w]}の勝ち！`;
+  else if(busy) m="CPU が考えています…";
+  else if(sel<0) m=`${NAMES[g.turn]}の番です（下の棚から駒を選ぶ）`;
+  else if(!pv) m="盤をタップして置く場所を選ぶ";
+  else m=pv.err||"置けます（もう一度タップか「ここに置く」）";
+  if(note&&!g.over&&!busy&&!pv) m=note+" "+m;
+  $("msg").textContent=m;
+  renderTray();showResult();
+}
+let note="";
+function selectPiece(i){if(!myTurn())return;if(sel===i){sel=-1;shape=null;pv=null;}else{sel=i;shape=norm(PIECES[i]);updatePv();}render();}
+function tapCell(r,c){
+  if(!myTurn()||sel<0)return;
+  if(pv&&pv.r===r&&pv.c===c&&!pv.err){commit();return;}
+  pv={r,c};updatePv();render();
+}
+function commit(){
+  if(!pv||pv.err)return;
+  const m={i:sel,cells:pv.cells};
+  play(m);
+}
+function play(m){
+  const before=g.turn;hist.push(g);g=apply(g,m);sel=-1;shape=null;pv=null;
+  note=(!g.over&&g.turn===before)?`${NAMES[1-before]}は置ける場所が無いのでパス。`:"";
+  render();
+  if(!g.over&&g.turn===cpuSide())cpuTurn();
+}
+function cpuTurn(){
+  busy=true;render();
+  setTimeout(()=>{
+    const m=cpuMove(g,mode);busy=false;
+    if(m){const before=g.turn;hist.push(g);g=apply(g,m);note=(!g.over&&g.turn===before)?`${NAMES[1-before]}は置ける場所が無いのでパス。`:"";}
+    render();
+    if(!g.over&&g.turn===cpuSide())cpuTurn();
+  },420);
+}
+function showResult(){
+  const box=$("result");if(!g.over){box.hidden=true;return;}
+  box.hidden=false;const [a,b]=g.over.score;
+  $("rTitle").textContent=g.over.w===-1?"引き分け":`${NAMES[g.over.w]}の勝ち`;
+  $("share").textContent=`かどつなぎ ${g.over.w===-1?"引き分け":NAMES[g.over.w]+"の勝ち"}${mode?`（CPU ${LV[mode]}）`:""}\n紅 ${a}点・藍 ${b}点`;
+  $("copied").textContent="";
+}
+function start(f){first=f;g=newGame(f);hist=[];sel=-1;shape=null;pv=null;busy=false;note="";render();if(g.turn===cpuSide())cpuTurn();}
+function setMode(k){mode=k;["mPvp","mCpu1","mCpu2","mCpu3"].forEach((id,j)=>$(id).setAttribute("aria-pressed",String(j===k)));start(first);}
+["mPvp","mCpu1","mCpu2","mCpu3"].forEach((id,k)=>$(id).addEventListener("click",()=>setMode(k)));
+$("rot").addEventListener("click",()=>{if(shape){shape=rot(shape);updatePv();render();}});
+$("flip").addEventListener("click",()=>{if(shape){shape=flp(shape);updatePv();render();}});
+$("place").addEventListener("click",commit);
+$("restart").addEventListener("click",()=>start(first));
+$("next").addEventListener("click",()=>start(1-first));
+$("undo").addEventListener("click",()=>{
+  if(busy||!hist.length)return;
+  g=hist.pop();while(hist.length&&g.turn===cpuSide())g=hist.pop();
+  sel=-1;shape=null;pv=null;note="";render();
+  if(!g.over&&g.turn===cpuSide())cpuTurn();
+});
+$("copy").addEventListener("click",()=>{
+  const txt=$("share").textContent,done=()=>$("copied").textContent="コピーしました";
+  const fb=()=>{const r=document.createRange();r.selectNodeContents($("share"));const s=getSelection();s.removeAllRanges();s.addRange(r);$("copied").textContent="選択しました。長押しでコピーしてください";};
+  try{navigator.clipboard.writeText(txt).then(done,fb);}catch(e){fb();}
+});
+(function(){
+  const R=runTests(),ul=$("tests");let pass=0;
+  for(const t of R){if(t.cond)pass++;const li=document.createElement("li");li.innerHTML=`<span class="${t.cond?"pass":"fail"}">${t.cond?"✓":"✗"}</span><span>${t.name}</span>`;ul.appendChild(li);}
+  ul.previousElementSibling.textContent+=`（${pass}/${R.length} 合格）`;
+})();
+start(0);
+</script>
+</body>
+</html>

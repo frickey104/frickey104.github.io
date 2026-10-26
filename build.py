@@ -38,9 +38,27 @@ ITEMS = [
     dict(slug="yoake", src="2026-10-23_yoake-quest", title="夜明けの塔", kind="RPG", ver="試作1版",
          time="10〜15分", crop=(40, 130, 736, 652),
          desc="歩いて、出会って、コマンドで戦う。王道の RPG を小さくした1本道。犬のシュナがついてくる。"),
+    dict(slug="kadotsunagi", src="2026-10-22_kadotsunagi", title="かどつなぎ", kind="ボードゲーム・2人", ver="",
+         time="", crop=(28, 300, 746, 838),
+         desc="1〜5マスの駒を、自分の駒と角だけでつなげて置いていく陣取り。市販の「ブロックス」（2人用）が手本。CPU とも対戦できる。"),
+    dict(slug="michifusagi", src="2026-10-22_michifusagi", title="みちふさぎ", kind="ボードゲーム・2人", ver="",
+         time="", crop=(28, 370, 746, 908),
+         desc="壁を置いて相手の道をふさぎ、先に向こう側へ着いた方が勝ち。市販の「コリドール」が手本。CPU とも対戦できる。"),
+    dict(slug="hex", src="2026-10-23_hex", title="ヘックス", kind="ボードゲーム・2人", ver="試し",
+         time="", crop=(40, 450, 720, 960),
+         desc="六角形の盤で、自分の色の辺と辺を石でつないだら勝ち。昔からある公開のゲーム「ヘックス」を作ってみた。"),
+    dict(slug="tewatashi", src="2026-10-23_tewatashi", title="てわたし", kind="ボードゲーム・2人", ver="試し",
+         time="", crop=(0, 20, 768, 596),
+         desc="置く駒を相手が選んで渡してくる2人対戦。クアルトと同じ型を、自分なりに作ってみた試し。"),
     dict(slug="stl-viewer", src="2026-10-23_stl-viewer", title="STL ビューア", kind="道具", ver="",
          time="", crop=(0, 400, 800, 1000),
          desc="3D の形のファイル（STL）を回して見るだけの道具。ファイルは端末の中で読むだけで、どこにも送らない。"),
+    dict(slug="vcm-calc", src="2026-10-12_vcm-calc", title="VCM 効き方計算", kind="計算シート", ver="",
+         time="", crop=(150, 440, 730, 875),
+         desc="可動コイル型の VCM で、寸法・磁石・コイルを変えたら推力が何%変わるかを、幅つきで出す。断面図と解説つき。"),
+    dict(slug="force-balance", src="2026-10-12_force-balance", title="力のつり合い計算", kind="計算シート", ver="試作",
+         time="", crop=(0, 20, 768, 596), bundle=True,
+         desc="部品1つについて、触れているところが受ける力を、つり合いの式から求める。接触の種類を選ぶと力の向きが決まる。"),
 ]
 # 外にあるもの（写さない・リンクだけ）
 EXTERNAL = [
@@ -48,7 +66,10 @@ EXTERNAL = [
          desc="触った跡が作品に残り、次の動きを変える。ブラウザで動く実験の記録。"),
 ]
 
-ALLOWED_HOSTS = {"fonts.googleapis.com", "fonts.gstatic.com", "frickey104.github.io", "github.com"}
+ALLOWED_HOSTS = {"fonts.googleapis.com", "fonts.gstatic.com", "frickey104.github.io", "github.com",
+                 "www.w3.org"}  # w3.org は SVG の名前（通信しない）
+# 出典として押すと開くリンク（<a href> だけ認める。読み込みには使わせない）
+LINK_ONLY_HOSTS = {"www.duramag.com", "product.tdk.com"}
 
 SKELETON = """<!doctype html>
 <html lang="ja">
@@ -139,7 +160,7 @@ def make_images() -> None:
     og = blueprint(1200, 630)
     d = ImageDraw.Draw(og)
     d.text((60, 70), NAME, font=big, fill=(240, 246, 252))
-    d.text((62, 160), "仕事のあとに、AI と作っているゲームと道具", font=mid, fill=(170, 200, 228))
+    d.text((62, 160), "仕事のあとに、AI と作っているゲームと道具と計算シート", font=mid, fill=(170, 200, 228))
     for i, slug in enumerate(["chikai", "oshidashi", "shuna", "yoake"]):
         pic = thumbs[slug].resize((256, 192), Image.LANCZOS)
         x = 60 + i * 276
@@ -172,9 +193,20 @@ def wrap(d, text, xy, width, font, fill):
         d.text((x, y), line, font=font, fill=fill)
 
 
+def source(it: dict) -> str:
+    """作品の元のファイル。複数のファイルに分かれた作品は、その作品の1ファイル版を作る道具でまとめる。"""
+    if not it.get("bundle"):
+        return (WORKS / it["src"] / "index.html").read_text(encoding="utf-8")
+    import subprocess
+    tmp = HERE / "drafts" / f"{it['slug']}.bundled.html"
+    subprocess.run([sys.executable, str(WORKS / it["src"] / "build_artifact.py"), str(tmp)], check=True,
+                   stdout=subprocess.DEVNULL)
+    return tmp.read_text(encoding="utf-8")
+
+
 def build_pages() -> None:
     for it in ITEMS:
-        src = (WORKS / it["src"] / "index.html").read_text(encoding="utf-8")
+        src = source(it)
         head = SKELETON.format(
             desc=html.escape(it["desc"]), name=html.escape(NAME), title=html.escape(it["title"]),
             url=f"{SITE}/{it['slug']}/", img=f"{SITE}/img/og-{it['slug']}.jpg", label=html.escape(label(it)))
@@ -191,11 +223,17 @@ def check() -> int:
     for p in texts:
         t = p.read_text(encoding="utf-8")
         for w in words:
-            if w.lower() in t.lower():
+            # 英字の言葉は単語として一致したときだけ（canonical などの一部に当たらないように）
+            pat = rf"(?<![A-Za-z]){re.escape(w)}(?![A-Za-z])" if w.isascii() else re.escape(w)
+            if re.search(pat, t, re.I):
                 bad.append(f"{p.relative_to(HERE)}: 個人の情報の言葉が見つかった")
-        for host in set(re.findall(r"https?://([a-zA-Z0-9.-]+)", t)):
-            if host not in ALLOWED_HOSTS:
-                bad.append(f"{p.relative_to(HERE)}: 外への読み込み {host}")
+        for m in re.finditer(r"https?://([a-zA-Z0-9.-]+)", t):
+            host = m.group(1)
+            if host in ALLOWED_HOSTS:
+                continue
+            if host in LINK_ONLY_HOSTS and re.search(r'<a href="$', t[max(0, m.start() - 9):m.start()]):
+                continue
+            bad.append(f"{p.relative_to(HERE)}: 外への読み込み {host}")
     # 画像のファイルに写真の情報（Exif）が残っていないか
     from PIL import Image
     for p in files:
@@ -212,9 +250,11 @@ def check() -> int:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true")
+    ap.add_argument("--pages", action="store_true", help="画像は作らず、ページだけ作る（画面を撮る前）")
     a = ap.parse_args()
     if not a.check:
-        make_images()
+        if not a.pages:
+            make_images()
         build_pages()
     return check()
 

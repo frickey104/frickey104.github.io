@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="置く駒を相手が選んで渡してくる2人対戦。クアルトと同じ型を、自分なりに作ってみた試し。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="frickey の工房">
+<meta property="og:title" content="てわたし">
+<meta property="og:description" content="置く駒を相手が選んで渡してくる2人対戦。クアルトと同じ型を、自分なりに作ってみた試し。">
+<meta property="og:url" content="https://frickey104.github.io/tewatashi/">
+<meta property="og:image" content="https://frickey104.github.io/img/og-tewatashi.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+.fk-bar{all:initial;display:flex;align-items:center;justify-content:space-between;gap:12px;box-sizing:border-box;width:100%;min-height:34px;padding:6px max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px));background:#16283c;color:#e9eef4;font:600 13px/1.3 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",sans-serif;position:relative;z-index:2147483647}
+.fk-bar a{all:initial;color:#e9eef4;font:inherit;cursor:pointer;text-decoration:none}
+.fk-bar a:hover,.fk-bar a:focus-visible{text-decoration:underline;outline:none}
+.fk-bar span{all:initial;color:#9fb3c8;font:500 12px/1.3 ui-monospace,Consolas,monospace}
+</style>
+</head>
+<body>
+<nav class="fk-bar" aria-label="作品集"><a href="../">← frickey の工房</a><span>ボードゲーム・2人 / 試し</span></nav>
+<title>てわたし</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
+<style>
+/* レイアウト: 縦1列。上に手番と「次に置く駒」、中央に 4×4 の盤（主役）、下に渡せる駒の箱・遊び方・自己試験 */
+:root{
+  --bg:#e9eef0; --panel:#f7f9fa; --ink:#1d2a31; --muted:#5d6d75; --line:#c9d3d8;
+  --board:#24414f; --cell:#2e5263; --cell-hi:#3a6679;
+  --birch:#ecdcb8; --walnut:#5b3a26; --edge:#1a1a1a33;
+  --amber:#f0a23b; --win:#f5c84c;
+  --display:"Dela Gothic One","Hiragino Sans","Yu Gothic",sans-serif;
+  --body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#10181c; --panel:#172227; --ink:#e3ebee; --muted:#93a4ab; --line:#2b3a41;
+  --board:#1b3340; --cell:#24475a; --cell-hi:#2f5b70; --edge:#00000055; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10181c; --panel:#172227; --ink:#e3ebee; --muted:#93a4ab; --line:#2b3a41;
+  --board:#1b3340; --cell:#24475a; --cell-hi:#2f5b70; --edge:#00000055; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6}
+.wrap{max-width:560px;margin:0 auto;padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--display);font-weight:400;font-size:2rem;line-height:1;margin:0;letter-spacing:.04em}
+h1 small{display:block;font-family:var(--body);font-size:.75rem;color:var(--muted);letter-spacing:.08em;margin-top:6px}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+select,button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+button{cursor:pointer}
+button.primary{background:var(--board);color:#fff;border-color:var(--board)}
+button:focus-visible,select:focus-visible,.cell:focus-visible,.pc:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.status{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.status p{margin:0}
+#msg{font-weight:700}
+#sub{color:var(--muted);font-size:.85rem}
+.hand{width:64px;height:64px;border-radius:10px;border:2px dashed var(--line);display:grid;place-items:center}
+.hand.on{border-color:var(--amber);border-style:solid}
+.board{background:var(--board);border-radius:16px;padding:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;aspect-ratio:1;max-width:100%}
+.cell{background:var(--cell);border-radius:50%;display:grid;place-items:center;border:0;padding:0;aspect-ratio:1;transition:background .15s}
+.cell.can:hover{background:var(--cell-hi)}
+.cell.win{box-shadow:0 0 0 4px var(--win) inset}
+.cell svg{width:86%;height:86%}
+.pool-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.pool-head h2{font-size:.8rem;letter-spacing:.12em;color:var(--muted);margin:0;font-weight:700}
+.pool{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px}
+.pc{aspect-ratio:1;border:1px solid transparent;border-radius:8px;background:transparent;padding:2px;display:grid;place-items:center}
+.pc svg{width:100%;height:100%}
+.pc.can{cursor:pointer}
+.pc.can:hover{border-color:var(--amber)}
+.pc.gone{visibility:hidden}
+.pc.danger{opacity:.45}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--muted)}
+details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+summary{cursor:pointer;font-weight:700}
+details ol,details ul{padding-left:1.2em;margin:.5em 0}
+#tests{font-size:.8rem;font-variant-numeric:tabular-nums}
+@media (max-width:420px){.pool{grid-template-columns:repeat(8,1fr);gap:3px;padding:6px}h1{font-size:1.7rem}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>てわたし<small>相手が選んだ駒を置く 2人対戦</small></h1>
+    <div class="controls">
+      <select id="mode" aria-label="対戦相手">
+        <option value="2p">2人で（1台）</option>
+        <option value="cpu1">CPU 弱</option>
+        <option value="cpu2" selected>CPU 中</option>
+        <option value="cpu3">CPU 強</option>
+      </select>
+      <select id="order" aria-label="手番">
+        <option value="first">先に渡す</option>
+        <option value="second">後から</option>
+      </select>
+      <label style="font-size:.85rem;display:flex;gap:4px;align-items:center"><input type="checkbox" id="square"> 2×2 も勝ち</label>
+      <button class="primary" id="new">はじめる</button>
+    </div>
+  </header>
+
+  <div class="status">
+    <div><p id="msg">　</p><p id="sub">　</p></div>
+    <div class="hand" id="hand" aria-label="次に置く駒"></div>
+  </div>
+
+  <div class="board" id="board" role="grid" aria-label="盤"></div>
+
+  <div class="pool-head"><h2>渡せる駒</h2><span class="legend"><span>色: 白木 / くるみ</span><span>大きさ: 大 / 小</span><span>形: 丸 / 四角</span><span>中: 穴 / なし</span></span></div>
+  <div class="pool" id="pool"></div>
+
+  <details open>
+    <summary>遊び方</summary>
+    <ol>
+      <li>駒は16個。4つの特徴（色・大きさ・形・穴）の組み合わせが全部ちがう</li>
+      <li>自分の番は「置く」→「渡す」の順。置くのは<b>相手が選んで渡してきた駒</b>。置いたら、残りから相手に置かせる駒を選んで渡す</li>
+      <li>縦・横・ななめに4つ並んで、<b>どれか1つの特徴が全部同じ</b>なら、その駒を置いた人の勝ち（どちらの人が置いた駒でもよい）</li>
+      <li>盤が埋まって誰もそろえられなければ引き分け。「2×2 も勝ち」にすると、小さな正方形の4マスでもそろう</li>
+    </ol>
+    <p style="margin:0;color:var(--muted);font-size:.85rem">渡せる駒のうち薄く見えるものは、渡すと相手がすぐ勝てる駒。最初は見えている方が分かりやすいので表示している。</p>
+  </details>
+
+  <details>
+    <summary>自己試験</summary>
+    <div id="tests"></div>
+  </details>
+</div>
+
+<script>
+/* ---- 駒: 0〜15 の4ビット。bit0 色(1=くるみ) bit1 大きさ(1=大) bit2 形(1=四角) bit3 穴(1=あり) ---- */
+const LINES4=[];for(let r=0;r<4;r++)LINES4.push([0,1,2,3].map(c=>r*4+c));for(let c=0;c<4;c++)LINES4.push([0,1,2,3].map(r=>r*4+c));LINES4.push([0,5,10,15],[3,6,9,12]);
+const SQUARES=[];for(let r=0;r<3;r++)for(let c=0;c<3;c++){const a=r*4+c;SQUARES.push([a,a+1,a+4,a+5]);}
+function lines(sq){return sq?LINES4.concat(SQUARES):LINES4}
+function sameTrait(ps){let a=15,b=15;for(const p of ps){a&=p;b&=~p;}return (a|(b&15))!==0}
+function winLine(board,sq){for(const L of lines(sq)){const ps=L.map(i=>board[i]);if(ps.every(p=>p>=0)&&sameTrait(ps))return L;}return null}
+function wins(board,cell,piece,sq){board[cell]=piece;const w=winLine(board,sq);board[cell]=-1;return !!w}
+function empties(board){const e=[];board.forEach((v,i)=>{if(v<0)e.push(i)});return e}
+function winningCell(board,piece,sq){for(const c of empties(board))if(wins(board,c,piece,sq))return c;return -1}
+function safeGives(board,avail,sq){return avail.filter(p=>winningCell(board,p,sq)<0)}
+
+/* ---- CPU ---- */
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+function cpuPlace(level,board,piece,avail,sq){
+  const w=winningCell(board,piece,sq); if(w>=0)return w;
+  const E=empties(board); if(level===1)return rnd(E);
+  if(level===2){const ok=E.filter(c=>{board[c]=piece;const s=safeGives(board,avail,sq).length;board[c]=-1;return s>0});return rnd(ok.length?ok:E)}
+  return search(board,piece,avail,sq).cell;
+}
+function cpuGive(level,board,avail,sq){
+  if(level===1)return rnd(avail);
+  const safe=safeGives(board,avail,sq);
+  if(level===2)return rnd(safe.length?safe:avail);
+  return giveSearch(board,avail,sq);
+}
+/* 強: 置く→渡すを交互に読む（読む深さは空きマスの数で変える） */
+let nodes=0;
+function depthFor(n){return n>12?1:n>9?2:n>7?3:8}
+function negaPlace(board,piece,avail,sq,depth,alpha,beta){
+  nodes++; const E=empties(board);
+  for(const c of E){board[c]=piece;if(winLine(board,sq)){board[c]=-1;return 1}board[c]=-1}
+  if(!avail.length)return 0; if(depth<=0||nodes>150000)return 0;
+  let best=-2;
+  for(const c of E){board[c]=piece;
+    const v=negaGive(board,avail,sq,depth,alpha,beta); board[c]=-1;
+    if(v>best)best=v; if(best>alpha)alpha=best; if(alpha>=beta)break;}
+  return best;
+}
+function negaGive(board,avail,sq,depth,alpha,beta){
+  let best=-2;
+  for(const p of avail){const rest=avail.filter(x=>x!==p);
+    const v=-negaPlace(board,p,rest,sq,depth-1,-beta,-alpha);
+    if(v>best)best=v; if(best>alpha)alpha=best; if(alpha>=beta)break;}
+  return best===-2?0:best;
+}
+function search(board,piece,avail,sq){
+  nodes=0; const E=empties(board); const d=depthFor(E.length);
+  let bestV=-3,cands=[];
+  for(const c of E){board[c]=piece;const v=negaGive(board,avail,sq,d,-2,2);board[c]=-1;
+    if(v>bestV){bestV=v;cands=[c]}else if(v===bestV)cands.push(c);}
+  return {cell:rnd(cands),value:bestV};
+}
+function giveSearch(board,avail,sq){
+  nodes=0; const d=depthFor(empties(board).length);
+  let bestV=-3,cands=[];
+  for(const p of avail){const v=-negaPlace(board,p,avail.filter(x=>x!==p),sq,d-1,-2,2);
+    if(v>bestV){bestV=v;cands=[p]}else if(v===bestV)cands.push(p);}
+  return rnd(cands);
+}
+
+/* ---- 駒の絵（上から見た図。大きさは直径、穴は中の輪） ---- */
+function pieceSVG(p){
+  const dark=p&1,big=p&2,sqr=p&4,hole=p&8;
+  const fill=dark?'var(--walnut)':'var(--birch)';
+  const r=big?44:30, s=big?80:54;
+  const shape=sqr?`<rect x="${50-s/2}" y="${50-s/2}" width="${s}" height="${s}" rx="8" fill="${fill}" stroke="var(--edge)" stroke-width="3"/>`
+                 :`<circle cx="50" cy="50" r="${r}" fill="${fill}" stroke="var(--edge)" stroke-width="3"/>`;
+  const h=hole?`<circle cx="50" cy="50" r="${big?14:10}" fill="var(--board)" stroke="var(--edge)" stroke-width="2"/>`:'';
+  return `<svg viewBox="0 0 100 100" aria-hidden="true">${shape}${h}</svg>`;
+}
+const traitName=p=>`${p&1?'くるみ':'白木'}・${p&2?'大':'小'}・${p&4?'四角':'丸'}・${p&8?'穴あり':'穴なし'}`;
+
+/* ---- 状態 ---- */
+let S;
+function fresh(){
+  const mode=document.getElementById('mode').value;
+  return {board:new Array(16).fill(-1),avail:[...Array(16).keys()],hand:-1,turn:0,phase:'give',
+    mode,level:mode==='2p'?0:+mode.slice(3),cpuSide:document.getElementById('order').value==='first'?1:0,
+    sq:document.getElementById('square').checked,over:false,winL:null,winner:-1};
+}
+const isCpu=t=>S.level>0&&t===S.cpuSide;
+const who=t=>S.level>0?(t===S.cpuSide?'CPU':'あなた'):(t===0?'先手':'後手');
+
+function render(){
+  const B=document.getElementById('board');B.innerHTML='';
+  S.board.forEach((p,i)=>{const b=document.createElement('button');b.className='cell';b.setAttribute('aria-label',p>=0?traitName(p):`${Math.floor(i/4)+1}行${i%4+1}列 空き`);
+    const can=!S.over&&S.phase==='place'&&p<0&&!isCpu(S.turn);
+    if(can){b.classList.add('can');b.onclick=()=>place(i)}else b.disabled=p<0?!can:false;
+    if(S.winL&&S.winL.includes(i))b.classList.add('win');
+    if(p>=0)b.innerHTML=pieceSVG(p);B.appendChild(b)});
+  const P=document.getElementById('pool');P.innerHTML='';
+  const danger=(!S.over&&S.phase==='give')?new Set(S.avail.filter(p=>winningCell(S.board,p,S.sq)>=0)):new Set();
+  for(let p=0;p<16;p++){const b=document.createElement('button');b.className='pc';b.setAttribute('aria-label',traitName(p));
+    if(!S.avail.includes(p)){b.classList.add('gone');b.disabled=true}
+    else{b.innerHTML=pieceSVG(p);const can=!S.over&&S.phase==='give'&&!isCpu(S.turn);
+      if(can){b.classList.add('can');b.onclick=()=>give(p)}else b.disabled=true;
+      if(danger.has(p))b.classList.add('danger');}
+    P.appendChild(b)}
+  const H=document.getElementById('hand');H.innerHTML=S.hand>=0?pieceSVG(S.hand):'';H.classList.toggle('on',S.hand>=0);
+  const m=document.getElementById('msg'),s=document.getElementById('sub');
+  if(S.over){m.textContent=S.winner<0?'引き分け':`${who(S.winner)}の勝ち`;s.textContent=S.winner<0?'盤が埋まった':'光っている4つで、1つの特徴がそろった';}
+  else if(S.phase==='give'){m.textContent=`${who(S.turn)}の番: 相手に渡す駒を選ぶ`;s.textContent=isCpu(S.turn)?'考えています…':'下の箱から1つ選ぶ';}
+  else{m.textContent=`${who(S.turn)}の番: 渡された駒を置く`;s.textContent=isCpu(S.turn)?'考えています…':traitName(S.hand);}
+}
+function give(p){if(S.over||S.phase!=='give')return;S.avail=S.avail.filter(x=>x!==p);S.hand=p;S.turn^=1;S.phase='place';render();step()}
+function place(i){if(S.over||S.phase!=='place'||S.board[i]>=0)return;S.board[i]=S.hand;S.hand=-1;
+  const w=winLine(S.board,S.sq);
+  if(w){S.over=true;S.winL=w;S.winner=S.turn}else if(!S.avail.length){S.over=true}else S.phase='give';
+  render();step()}
+function step(){if(S.over||!isCpu(S.turn))return;
+  setTimeout(()=>{if(S.over||!isCpu(S.turn))return;
+    if(S.phase==='place')place(cpuPlace(S.level,S.board,S.hand,S.avail,S.sq));
+    else give(cpuGive(S.level,S.board,S.avail,S.sq));},450)}
+function start(saved){S=saved&&saved.board?saved:fresh();render();step()}
+document.getElementById('new').onclick=()=>start();
+window.claude?.hot?.snapshot?.(()=>S);
+
+/* ---- 自己試験（答えの分かっている例） ---- */
+function runTests(){const T=[],ok=(n,c)=>T.push([n,!!c]);const E=()=>new Array(16).fill(-1);
+  ok('色がそろった横1列は勝ち',(()=>{const b=E();[1,3,5,7].forEach((p,i)=>b[i]=p);return !!winLine(b,false)})());
+  ok('白木がそろった列も勝ち（0の特徴）',(()=>{const b=E();[0,2,4,6].forEach((p,i)=>b[i]=p);return !!winLine(b,false)})());
+  ok('どの特徴もそろわない列は勝ちでない',(()=>{const b=E();[0,15,6,9].forEach((p,i)=>b[i]=p);return !winLine(b,false)})());
+  ok('ななめの勝ち',(()=>{const b=E();[8,9,10,11].forEach((p,i)=>b[[0,5,10,15][i]]=p);return !!winLine(b,false)})());
+  ok('3つでは勝ちでない',(()=>{const b=E();[8,9,10].forEach((p,i)=>b[i]=p);return !winLine(b,false)})());
+  ok('2×2 は設定がオンのときだけ',(()=>{const b=E();[2,3,6,7].forEach((p,i)=>b[[0,1,4,5][i]]=p);return !winLine(b,false)&&!!winLine(b,true)})());
+  ok('すぐ勝てるマスを見つける',(()=>{const b=E();[1,3,5].forEach((p,i)=>b[i]=p);return winningCell(b,7,false)===3})());
+  ok('危ない駒は安全な駒から外れる',(()=>{const b=E();[1,3,5].forEach((p,i)=>b[i]=p);const s=safeGives(b,[7,0],false);return !s.includes(7)})());
+  ok('CPU 弱でも勝てる手は打つ',(()=>{const b=E();[1,3,5].forEach((p,i)=>b[i]=p);return cpuPlace(1,b,7,[],false)===3})());
+  ok('CPU 中は安全な駒があれば危ない駒を渡さない',(()=>{const b=E();[1,3,5].forEach((p,i)=>b[i]=p);for(let k=0;k<20;k++)if(cpuGive(2,b,[7,8],false)!==8)return false;return true})());
+  ok('CPU 強も危ない駒を渡さない',(()=>{const b=E();[1,3,5].forEach((p,i)=>b[i]=p);for(let k=0;k<5;k++)if(cpuGive(3,b,[7,8],false)!==8)return false;return true})());
+  ok('16個の駒はすべて特徴の組み合わせがちがう',new Set([...Array(16).keys()].map(traitName)).size===16);
+  return T}
+const R=runTests();document.getElementById('tests').innerHTML=`<p>${R.filter(t=>t[1]).length}/${R.length} 合格</p><ul>${R.map(t=>`<li>${t[1]?'✅':'❌'} ${t[0]}</li>`).join('')}</ul>`;
+
+window.claude?.hot?.ready?window.claude.hot.ready(d=>start(d)):start(window.claude?.hot?.data);
+</script>
+</body>
+</html>
