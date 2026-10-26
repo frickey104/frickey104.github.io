@@ -1,0 +1,1385 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="王の書記の見習いが、霧の奥の長へ王の手紙を届ける三日間の旅。剣では戦わず、相手の事情を見抜いて進む。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="frickey の工房">
+<meta property="og:title" content="誓いの世界">
+<meta property="og:description" content="王の書記の見習いが、霧の奥の長へ王の手紙を届ける三日間の旅。剣では戦わず、相手の事情を見抜いて進む。">
+<meta property="og:url" content="https://frickey104.github.io/chikai/">
+<meta property="og:image" content="https://frickey104.github.io/img/og-chikai.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+.fk-bar{all:initial;display:flex;align-items:center;justify-content:space-between;gap:12px;box-sizing:border-box;width:100%;min-height:34px;padding:6px max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px));background:#16283c;color:#e9eef4;font:600 13px/1.3 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",sans-serif;position:relative;z-index:2147483647}
+.fk-bar a{all:initial;color:#e9eef4;font:inherit;cursor:pointer;text-decoration:none}
+.fk-bar a:hover,.fk-bar a:focus-visible{text-decoration:underline;outline:none}
+.fk-bar span{all:initial;color:#9fb3c8;font:500 12px/1.3 ui-monospace,Consolas,monospace}
+</style>
+</head>
+<body>
+<nav class="fk-bar" aria-label="作品集"><a href="../">← frickey の工房</a><span>RPG / 試作3版 / 30分</span></nav>
+<title>誓いの世界</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Old+Mincho:wght@400;700&display=swap">
+<style>
+/* レイアウト: 縦1列。上に場面の絵（ドット絵・魔素の霧が旅とともに濃くなる）、下に語りの窓と選択肢。旅日記は下からせり上がる紙。夜のろうそくの色だけを差し色にする */
+:root{
+  --night:#12131f; --panel:#1c1e2e; --ink:#ece6d6; --muted:#9c98a8; --line:#34364a;
+  --candle:#f0b45a; --mist:#9a7fd6; --paper:#e9dfc7; --paperink:#2b2418; --blood:#c8574a;
+  --display:"DotGothic16","Hiragino Sans","Yu Gothic",monospace;
+  --body:"Zen Old Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--night)}
+body{color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.85}
+.wrap{max-width:460px;margin:0 auto;padding-block:12px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:10px}
+header{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+h1{font-family:var(--display);font-weight:400;font-size:1.35rem;letter-spacing:.2em;margin:0;text-wrap:balance}
+.chap{font-family:var(--display);font-size:.8rem;color:var(--muted);letter-spacing:.08em;font-variant-numeric:tabular-nums}
+.stage{position:relative;border:3px solid #07080e;border-radius:6px;overflow:hidden;background:#000}
+#scr{display:block;width:100%;height:auto;aspect-ratio:160/96;image-rendering:pixelated}
+.toast{position:absolute;left:8px;right:8px;top:8px;background:#000c;border:1px solid var(--candle);color:var(--candle);font-family:var(--display);font-size:.85rem;padding:4px 10px;border-radius:4px;text-align:center}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-height:8.5em;cursor:pointer;position:relative}
+.who{font-family:var(--display);font-size:.85rem;color:var(--candle);letter-spacing:.1em;min-height:1.3em}
+#line{margin:2px 0 0;white-space:pre-wrap;min-height:4.6em}
+.more{position:absolute;right:12px;bottom:6px;color:var(--candle);font-family:var(--display);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{display:flex;flex-direction:column;gap:8px}
+.choices button,.tools button,.game button{font:inherit;color:var(--ink);background:#262840;border:1px solid var(--line);border-radius:8px;padding:10px 14px;text-align:left;cursor:pointer;line-height:1.5}
+.choices button:hover,.game button:hover{border-color:var(--candle)}
+.choices button:disabled{opacity:.45;cursor:default}
+.choices button small{display:block;color:var(--muted);font-size:.78rem}
+button:focus-visible{outline:3px solid var(--candle);outline-offset:2px}
+.game{background:#0c0d16;border:1px dashed var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.game h3{margin:0;font-family:var(--display);font-weight:400;font-size:.85rem;color:var(--muted);letter-spacing:.08em}
+.meter{height:12px;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.meter b{display:block;height:100%;background:linear-gradient(90deg,var(--candle),var(--blood));transition:width .4s}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row button{flex:1 1 30%;text-align:center}
+.pick button.on{border-color:var(--candle);background:#3a3220}
+.oath{font-size:1.05rem;line-height:2.1;background:var(--paper);color:var(--paperink);border-radius:4px;padding:10px 12px}
+.oath span{cursor:pointer;border-bottom:1px dotted #0004;padding:0 1px}
+.oath span.hit{background:#d9a54a}
+.oath span.miss{text-decoration:line-through;opacity:.5}
+.timer{height:4px;background:var(--candle);transition:width linear}
+.tools{display:flex;gap:8px;justify-content:space-between}
+.tools button{padding:6px 12px;font-family:var(--display);font-size:.8rem}
+.diary{position:fixed;left:0;right:0;bottom:0;max-height:72%;overflow:auto;background:var(--paper);color:var(--paperink);border-radius:14px 14px 0 0;padding:16px max(18px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));box-shadow:0 -8px 30px #0008;z-index:5}
+.diary h2{font-family:var(--display);font-weight:400;margin:0 0 6px;font-size:1rem;letter-spacing:.15em}
+.diary ol{margin:0;padding-left:1.4em}
+.diary li{margin:.2em 0}
+.diary .close{float:right;font:inherit;background:none;border:1px solid #0003;border-radius:6px;padding:2px 10px;color:var(--paperink);cursor:pointer}
+details{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:.85rem}
+summary{cursor:pointer;font-family:var(--display)}
+#tests{font-family:var(--display);font-size:.78rem;white-space:pre-wrap}
+.card{display:flex;flex-direction:column;gap:6px}
+.card .tag{font-family:var(--display);font-size:.75rem;color:var(--candle);letter-spacing:.12em}
+.card h3{color:var(--ink);font-size:1rem}
+.card .goal{margin:0;font-weight:700}
+.card ul{margin:0;padding-left:1.2em;font-size:.9rem;line-height:1.7}
+.card .fail{margin:0;font-size:.8rem;color:var(--muted)}
+.card button{text-align:center;font-family:var(--display)}
+.zone{position:relative;height:14px;background:#000;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.zone i{position:absolute;top:0;bottom:0}
+.zone .calm{left:0;width:30%;background:#2f4a3a}
+.zone .rage{right:0;width:12%;background:#5a2420}
+.zone .pin{width:4px;margin-left:-2px;background:var(--candle);transition:left .4s}
+.zlab{display:flex;justify-content:space-between;font-family:var(--display);font-size:.72rem;color:var(--muted)}
+.fb{min-height:1.6em;font-size:.9rem;color:var(--candle)}
+.log{margin:0;padding-left:1.2em;font-size:.82rem;color:var(--muted);line-height:1.6}
+.found{font-family:var(--display);font-size:.8rem;color:var(--candle);letter-spacing:.2em}
+.paper{background:var(--paper);color:var(--paperink);border-radius:4px;padding:10px 12px;cursor:pointer;line-height:1.9}
+.paper p{margin:0 0 .3em}
+.paper .blank{color:#0005}
+.diary h3{font-family:var(--display);font-weight:400;font-size:.85rem;margin:12px 0 4px;letter-spacing:.1em}
+.diary .qs{margin:0;padding-left:1.2em;list-style:"？ "}
+.diary .qs li.done{list-style:"✓ "}
+.diary .qs li.done span{text-decoration:line-through;opacity:.55}
+.diary .qs li em{display:block;font-style:normal}
+@media (prefers-reduced-motion:reduce){.more{animation:none}.meter b{transition:none}}
+</style>
+
+<div class="wrap">
+  <header><h1>誓いの世界</h1><span class="chap" id="chap">序</span></header>
+  <div class="stage"><canvas id="scr" width="480" height="288"></canvas><div class="toast" id="toast" hidden></div></div>
+  <div class="box" id="box" role="button" tabindex="0" aria-live="polite"><div class="who" id="who"></div><p id="line"></p><span class="more" id="more" hidden>▼</span></div>
+  <div class="game" id="game" hidden></div>
+  <div class="choices" id="choices"></div>
+  <div class="tools"><button id="btnDiary" type="button">旅日記</button><button id="btnSnd" type="button">音: 切</button><button id="btnNew" type="button">はじめから</button></div>
+  <details><summary>あらすじ</summary>
+    <p>王の書記の見習いが、倒れた師匠の代わりに、王の手紙を霧の奥の長へ届ける三日間の旅。この世界の決まりは、旅の中で少しずつ分かっていきます。</p>
+  </details>
+  <details><summary>遊び方・この試作について</summary>
+    <p>語りの窓を押すと先へ進みます。30分ほどで終わります。</p>
+    <p>剣で戦う場面はありません。出会う相手ごとに、切り抜け方が変わります。始める前に、目的とやり方のカードが出ます。</p>
+    <p>旅日記には「分かったこと」と「まだ分からないこと（問い）」がたまります。分かったことが増えるほど、選べる道が増えます。負けてもゲームは終わりませんが、そのぶん誰かが助からないかもしれません。</p>
+    <p>章の始めで自動で記録され、開き直すと続きから遊べます。試作3版（2026-10-26・台本を約5倍に・背景を描き込み・手紙の読み上げは押すだけに）。</p>
+  </details>
+  <details><summary>自己試験</summary><button id="runTests" type="button" style="font:inherit;margin:6px 0">試験を回す</button><div id="tests"></div></details>
+</div>
+<div class="diary" id="diary" hidden><button class="close" id="closeDiary" type="button">閉じる</button><h2>旅日記</h2><h3>分かったこと</h3><ol id="diaryList"></ol><h3>まだ分からないこと</h3><ul class="qs" id="qList"></ul></div>
+
+<script>
+"use strict";
+/* ===== 状態 ===== */
+const FRESH=()=>({ch:0,diary:[],qs:[],f:{childOath:"none",motherSaved:false,clawSeen:false,beastHits:0,knightTrust:0,sealOpened:false,friendTruths:0,friendTrusted:false,puzzleSolved:false,trapFound:false}});
+let S=FRESH();
+const KEY="chikai-v3";
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&typeof s.ch==="number")return s}catch(e){}return null}
+
+/* ===== 画面 ===== */
+const $=id=>document.getElementById(id);
+const cv=$("scr"),cx=cv.getContext("2d");cx.imageSmoothingEnabled=false;
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+let scene={draw:()=>{},mist:0,night:false},t0=performance.now();
+const motes=Array.from({length:70},(_,i)=>({x:(i*37)%160,y:(i*53)%96,v:.05+((i*7)%10)/80,p:i}));
+function px(x,y,w,h,c){cx.fillStyle=c;cx.fillRect(x|0,y|0,w|0,h|0)}
+function frame(now){
+  const t=(now-t0)/1000;
+  cx.setTransform(1,0,0,1,0,0);cx.imageSmoothingEnabled=false;cx.globalAlpha=1;cx.clearRect(0,0,480,288);
+  scene.draw(reduce?0:t);
+  cx.setTransform(1,0,0,1,0,0);cx.globalAlpha=1;
+  const n=Math.round(scene.mist*70);
+  cx.fillStyle=`rgba(154,127,214,${.18+.25*scene.mist})`;
+  for(let i=0;i<n;i++){const m=motes[i];const x=((m.x+(reduce?0:t*m.v*12))%160)*SC;const y=(m.y+(reduce?0:Math.sin(t+m.p)*2))*SC;cx.fillRect(x|0,y|0,6,3)}
+  if(scene.mist>0){cx.fillStyle=`rgba(80,60,130,${scene.mist*.28})`;cx.fillRect(0,0,480,288)}
+  requestAnimationFrame(frame)
+}
+requestAnimationFrame(frame);
+/* 背景: 画面そのままの 480×288 の点で描く。動かない部分は一度だけ裏の画布に描いて写す */
+function sky(top,bot){for(let y=0;y<180;y+=3){const k=y/180;const c=top.map((v,i)=>Math.round(v+(bot[i]-v)*k));cx.fillStyle=`rgb(${c})`;cx.fillRect(0,y,480,3)}}
+function ground(c){cx.fillStyle=c;cx.fillRect(0,180,480,108)}
+/* 人物と獣: 背景の点より細かい点で描く。塗ってから外側に濃い輪郭を付ける */
+const SC=3,OUT="#15121d";
+function hexrgb(h){return [1,3,5].map(i=>parseInt(h.slice(i,i+2),16))}
+function sprite(w,h,paint){
+  const g=new Uint8Array(w*h),pal=[null];const k=c=>{let i=pal.indexOf(c);if(i<0){pal.push(c);i=pal.length-1}return i};
+  const P={
+    rect(x,y,ww,hh,c){const v=k(c);for(let j=y;j<y+hh;j++)for(let i=x;i<x+ww;i++)if(i>=0&&j>=0&&i<w&&j<h)g[j*w+i]=v},
+    ell(ex,ey,rx,ry,c){const v=k(c);for(let j=0;j<h;j++)for(let i=0;i<w;i++){const dx=(i+.5-ex)/rx,dy=(j+.5-ey)/ry;if(dx*dx+dy*dy<=1)g[j*w+i]=v}},
+    trap(cxm,y,tw,bw,hh,c){const v=k(c);for(let j=0;j<hh;j++){const ww=Math.round(tw+(bw-tw)*j/Math.max(1,hh-1));const x0=Math.round(cxm-ww/2);for(let i=x0;i<x0+ww;i++)if(i>=0&&i<w&&y+j<h)g[(y+j)*w+i]=v}},
+    dot(x,y,c){if(x>=0&&y>=0&&x<w&&y<h)g[y*w+x]=k(c)}
+  };
+  paint(P);
+  const cv2=document.createElement("canvas");cv2.width=w+2;cv2.height=h+2;const q=cv2.getContext("2d");const img=q.createImageData(w+2,h+2);
+  const at=(i,j)=>i<0||j<0||i>=w||j>=h?0:g[j*w+i];const ol=hexrgb(OUT);
+  for(let j=-1;j<=h;j++)for(let i=-1;i<=w;i++){const v=at(i,j);let rgb=null;if(v)rgb=hexrgb(pal[v]);else if(at(i-1,j)||at(i+1,j)||at(i,j-1)||at(i,j+1))rgb=ol;
+    if(rgb){const o=((j+1)*(w+2)+(i+1))*4;img.data[o]=rgb[0];img.data[o+1]=rgb[1];img.data[o+2]=rgb[2];img.data[o+3]=255}}
+  q.putImageData(img,0,0);return cv2;
+}
+/* 人の形: o = {skin,hair,body,pants,long(丈の長い服),longHair,horns,eye(光る瞳の色),beard,blush,small,cape,sword,satchel,cane,sash,white} */
+function human(o){
+  const small=!!o.small,W=20,H=small?34:44,c=10;
+  const legTop=small?27:34,bodyTop=small?18:19,bodyH=small?10:16;
+  return sprite(W,H,P=>{
+    const dark=o.pants||"#3a3040";
+    if(o.cape)P.rect(3,bodyTop+1,14,bodyH+6,o.cape);
+    if(o.longHair)P.rect(4,8,12,small?12:14,o.hair);
+    if(o.long)P.trap(c,bodyTop,10,16,H-bodyTop-1,o.body);
+    else{P.rect(6,legTop,3,H-legTop-2,dark);P.rect(11,legTop,3,H-legTop-2,dark);P.rect(5,H-3,4,3,"#3a2a20");P.rect(11,H-3,4,3,"#3a2a20");P.trap(c,bodyTop,10,13,bodyH,o.body)}
+    if(o.long)P.rect(6,H-2,8,2,"#3a2a20");
+    const arm=o.armC||o.body;P.rect(3,bodyTop+2,3,small?7:11,arm);P.rect(14,bodyTop+2,3,small?7:11,arm);
+    P.rect(3,bodyTop+(small?9:13),3,2,o.skin);P.rect(14,bodyTop+(small?9:13),3,2,o.skin);
+    if(!o.long&&!small)P.rect(5,bodyTop+bodyH-3,10,2,"#3b2c22");
+    if(o.sash)P.rect(5,bodyTop+8,10,2,o.sash);
+    if(o.satchel){P.rect(13,bodyTop+9,5,5,"#8a5a32");P.dot(7,bodyTop+1,"#6a4426");P.dot(8,bodyTop+2,"#6a4426");P.dot(9,bodyTop+3,"#6a4426")}
+    P.rect(8,16,4,3,o.skin);
+    P.ell(c,11,6.2,6.4,o.skin);
+    P.ell(c,6.8,6.6,3.9,o.hair);P.rect(4,6,2,small?5:5,o.hair);P.rect(14,6,2,5,o.hair);
+    if(o.horns){const hc="#e6dcc8";P.rect(4,1,2,4,hc);P.dot(4,0,hc);P.rect(14,1,2,4,hc);P.dot(15,0,hc);if(o.hornsLong){P.dot(3,0,hc);P.dot(16,0,hc)}}
+    const ec=o.eye||"#2a1e1a";P.rect(7,11,2,2,ec);P.rect(11,11,2,2,ec);
+    if(!o.eye){P.dot(7,11,"#ffffff");P.dot(11,11,"#ffffff")}else{P.dot(8,11,"#ffffff");P.dot(12,11,"#ffffff")}
+    if(o.white){P.rect(6,10,3,1,"#9a948c");P.rect(11,10,3,1,"#9a948c")}
+    if(o.beard)P.ell(c,15.5,4.4,3.2,o.hair);else P.rect(9,15,2,1,"#9a4a42");
+    if(o.blush){P.dot(6,14,"#e89a9a");P.dot(13,14,"#e89a9a")}
+    if(o.sword){P.rect(17,bodyTop+4,2,16,"#cfd6de");P.rect(16,bodyTop+3,4,1,"#c8a04a")}
+    if(o.cane)P.rect(18,bodyTop+6,1,H-bodyTop-6,"#7a5a3a");
+  });
+}
+const ROLES={
+  me:{skin:"#f0cfa8",hair:"#5a3a22",body:"#3f5e8c",pants:"#3a3446",satchel:1},
+  master:{skin:"#ecc9a0",hair:"#b8b4ac",body:"#5a4a7a",long:1,beard:1,white:1},
+  knight:{skin:"#e8c49c",hair:"#6a4a2a",body:"#a9b2be",armC:"#8f98a6",pants:"#4a4a5a",cape:"#8a2f2f",sword:1},
+  mother:{skin:"#e3c8c0",hair:"#3a2a40",body:"#8a4a5e",long:1,longHair:1,horns:1,eye:"#b48cff",blush:1},
+  child:{skin:"#e8ccc4",hair:"#3a2a40",body:"#a8687a",horns:1,eye:"#b48cff",blush:1,small:1},
+  towna:{skin:"#e6c29a",hair:"#2e2a26",body:"#6a7a5a"},
+  townb:{skin:"#f0cfa8",hair:"#8a5a2a",body:"#5a5a7a"},
+  old:{skin:"#cdbcb4",hair:"#e8e4dc",body:"#5a4a6a",long:1,horns:1,eye:"#b48cff",cane:1,white:1},
+  survivor:{skin:"#c8b8b0",hair:"#f2efe8",body:"#4a4458",long:1,longHair:1,horns:1,hornsLong:1,eye:"#b48cff",white:1},
+  chief:{skin:"#d8c4bc",hair:"#2a2236",body:"#3e3450",long:1,longHair:1,horns:1,hornsLong:1,eye:"#ffb0f0",sash:"#c8a04a"}
+};
+const FIGC={};
+function figSprite(role){return FIGC[role]||(FIGC[role]=human(ROLES[role]))}
+function blit(spr,nx,ny,k=1){cx.save();cx.setTransform(1,0,0,1,0,0);cx.imageSmoothingEnabled=false;cx.drawImage(spr,Math.round(nx),Math.round(ny),spr.width*k,spr.height*k);cx.restore()}
+/* 背景の目盛りで (x,y) = 頭の左上。足もとが (x+3, y+14) に来るように置く */
+/* 人物は2倍で置く（背景の点より細かく、顔が分かる大きさ） */
+const FS=2;
+function fig(role,x,y){const sp=figSprite(role);blit(sp,(x+3)*SC-sp.width*FS/2,(y+14)*SC-sp.height*FS+2,FS)}
+let BEAST=null;
+function beastSprite(){return BEAST||(BEAST=sprite(150,96,P=>{
+  const fur="#4a3a30",furD="#3a2c24",belly="#5e4a3c";
+  P.rect(30,62,14,26,furD);P.rect(104,62,14,26,furD);
+  P.ell(70,50,54,25,fur);
+  for(let i=0;i<7;i++)P.ell(30+i*12,28,6,5,furD);
+  P.ell(72,60,38,12,belly);
+  P.rect(50,64,14,24,fur);P.rect(86,64,14,24,fur);
+  for(const fx of [50,86])for(let i=0;i<4;i++)P.rect(fx+1+i*3,88,2,3,"#e8e2d4");
+  P.ell(122,40,22,18,fur);
+  P.rect(106,16,7,12,furD);P.rect(128,14,7,12,furD);P.rect(108,19,3,6,"#7a5a4a");P.rect(130,17,3,6,"#7a5a4a");
+  P.ell(138,47,12,8,belly);P.rect(144,42,5,4,"#141014");
+  P.rect(119,33,7,5,"#ffcc44");P.rect(122,34,2,3,"#141014");
+  P.rect(132,53,2,4,"#f4efe6");P.rect(139,54,2,4,"#f4efe6");
+  P.rect(14,40,10,4,furD);P.rect(8,36,8,4,furD);
+}))}
+function figBeast(b){const sp=beastSprite();blit(sp,168,138+b*SC)}
+function person(x,y,body,head="#e8c9a0",extra){px(x+1,y,4,4,head);px(x,y+4,6,7,body);px(x+1,y+11,1,3,"#222");px(x+4,y+11,1,3,"#222");if(extra)extra(x,y)}
+function horns(x,y){px(x,y-2,1,2,"#d8d0c0");px(x+5,y-2,1,2,"#d8d0c0")}
+function eyes(x,y,c="#b48cff"){px(x+2,y+1,1,1,c);px(x+4,y+1,1,1,c)}
+/* ---- 背景の道具（g = 描く先の画布） ---- */
+const W=480,H=288,LAY={};
+function R(g,x,y,w,h,c){g.fillStyle=c;g.fillRect(x|0,y|0,w|0,h|0)}
+function rng(s){return()=>{s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff}}
+function mix(a,b,k){return a.map((v,i)=>Math.round(v+(b[i]-v)*k))}
+function rgb(a){return `rgb(${a[0]},${a[1]},${a[2]})`}
+function layer(key,paint){if(LAY[key])return LAY[key];const c=document.createElement("canvas");c.width=W;c.height=H;const g=c.getContext("2d");g.imageSmoothingEnabled=false;paint(g);return LAY[key]=c}
+function put(c){cx.drawImage(c,0,0)}
+/* 段になった空のグラデーション（ドット絵らしく帯で） */
+function bands(g,y0,y1,top,bot,step=4){for(let y=y0;y<y1;y+=step){const k=(y-y0)/Math.max(1,y1-y0);R(g,0,y,W,step,rgb(mix(top,bot,k)))}
+  for(let y=y0+step;y<y1;y+=step){const k=(y-y0)/Math.max(1,y1-y0);const c=rgb(mix(top,bot,Math.max(0,k-step/(y1-y0))));for(let x=(y/step)%2*2;x<W;x+=4)R(g,x,y,2,1,c)}}
+function disc(g,cx0,cy0,r,c){for(let j=-r;j<=r;j++){const w=Math.round(Math.sqrt(r*r-j*j));R(g,cx0-w,cy0+j,w*2,1,c)}}
+function ellR(g,cx0,cy0,rx,ry,c){for(let j=-ry;j<=ry;j++){const w=Math.round(rx*Math.sqrt(1-(j*j)/(ry*ry)));R(g,cx0-w,cy0+j,w*2,1,c)}}
+function hills(g,base,amp,f,ph,c,step=2){for(let x=0;x<W;x+=step){const h=amp*(.6*Math.sin(x*f+ph)+.4*Math.sin(x*f*2.3+ph*1.7));R(g,x,base-h-amp,step,H,c)}}
+function stars(g,n,y1,seed){const r=rng(seed);for(let i=0;i<n;i++){const x=r()*W|0,y=r()*y1|0;R(g,x,y,1,1,r()<.3?"#fff6d8":"#b8b4d8");if(r()<.12){R(g,x-1,y,3,1,"#d8d4f0");R(g,x,y-1,1,3,"#d8d4f0")}}}
+function glow(g,x,y,r,col,a){const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,`rgba(${col},${a})`);gr.addColorStop(1,`rgba(${col},0)`);g.fillStyle=gr;g.fillRect(x-r,y-r,r*2,r*2)}
+function bricks(g,x,y,w,h,base,dark,light,seed,bw=14,bh=7){const r=rng(seed);R(g,x,y,w,h,base);
+  for(let j=0;j*bh<h;j++){const yy=y+j*bh;R(g,x,yy,w,1,dark);const off=(j%2)*(bw/2);for(let i=-1;i*bw<w;i++){const xx=x+i*bw+off;if(xx>x&&xx<x+w)R(g,xx,yy,1,Math.min(bh,y+h-yy),dark);
+    if(r()<.35){const sx=Math.max(x,xx+2),sw=Math.min(bw-4,x+w-sx);if(sw>0)R(g,sx,yy+2,sw,1,light)}if(r()<.12){const sx=Math.max(x,xx+3);if(sx+4<x+w)R(g,sx,yy+3,4,2,dark)}}}}
+function cobbles(g,y0,y1,base,dark,light,seed){const r=rng(seed);R(g,0,y0,W,y1-y0,base);for(let y=y0;y<y1;){const s=3+Math.round((y-y0)/(y1-y0)*6);for(let x=-(r()*s|0);x<W;x+=s*2+1){R(g,x,y,s*2,s,r()<.5?base:light);R(g,x,y+s-1,s*2,1,dark);R(g,x+s*2,y,1,s,dark)}y+=s+1}}
+function roof(g,x,y,w,h,c,d){for(let j=0;j<h;j++){const k=j/h;const ww=Math.round(w*k);R(g,x+(w-ww)/2,y+j,ww,1,j%4===3?d:c)}}
+function tree(g,x,base,h,tr,lf,ld,seed){const r=rng(seed);R(g,x-2,base-h*.45,4,h*.45,tr);R(g,x-1,base-h*.45,1,h*.45,ld);
+  for(let i=0;i<9;i++){const a=r()*6.28,d=r()*h*.22;disc(g,x+Math.cos(a)*d|0,base-h*.62+Math.sin(a)*d*.8|0,(h*.16+r()*h*.08)|0,i<5?ld:lf)}}
+function window_(g,x,y,w,h,lit){R(g,x-1,y-1,w+2,h+2,"#3a2a20");R(g,x,y,w,h,lit?"#f0c070":"#2a2430");R(g,x+(w>>1),y,1,h,"#3a2a20");R(g,x,y+(h>>1),w,1,"#3a2a20");if(lit)R(g,x,y,w,1,"#ffe0a0")}
+/* 木組みの家 */
+function house(g,x,base,w,h,rh,seed,o={}){const r=rng(seed);const wall=o.wall||"#d8c8a8",tim=o.tim||"#4a3226",st=o.stone||"#9a8c78";
+  bricks(g,x,base-Math.round(h*.4),w,Math.round(h*.4),st,"#6e6252","#b0a490",seed+1,12,6);
+  R(g,x,base-h,w,h-Math.round(h*.4),wall);R(g,x,base-h,w,3,tim);R(g,x,base-Math.round(h*.4)-3,w,3,tim);R(g,x,base-h,3,h-Math.round(h*.4),tim);R(g,x+w-3,base-h,3,h-Math.round(h*.4),tim);
+  const top=base-h+3,bot=base-Math.round(h*.4)-3;for(let i=1;i<4;i++){const xx=x+Math.round(w*i/4);R(g,xx-1,top,3,bot-top,tim)}
+  for(let j=0;j<bot-top;j++){const xx=x+Math.round(w/4)+Math.round(j*(w/4)/(bot-top));R(g,xx,top+j,2,1,tim)}
+  window_(g,x+Math.round(w*.62),top+5,10,10,o.lit);
+  R(g,x+6,base-22,12,22,"#4a3020");R(g,x+7,base-21,10,21,"#6a4630");R(g,x+15,base-11,1,2,"#d8b060");
+  roof(g,x-6,base-h-rh,w+12,rh,o.roof||"#8a4a36","#6a3426");
+  if(o.chim){R(g,x+w-18,base-h-rh-10,8,rh,"#7a6a5a");R(g,x+w-19,base-h-rh-12,10,3,"#5a4a3c")}}
+/* 煙: 動き */
+function smoke(x,y,t,n=6){for(let i=0;i<n;i++){const k=((t*.25+i/n)%1);const yy=y-k*60,xx=x+Math.sin(k*5+i)*6+k*14;cx.fillStyle=`rgba(220,214,220,${.42*(1-k)})`;const s=4+k*10|0;cx.fillRect(xx|0,yy|0,s,s*.7|0)}}
+function flick(t,sp=9){return reduce?1:.86+.08*Math.sin(t*sp)+.06*Math.sin(t*sp*2.7+1)}
+function haze(y,h,col,a,t,sp,seed){const r=rng(seed);for(let i=0;i<5;i++){const w=120+r()*140,x=((r()*W+t*sp*(1+i*.3))%(W+w))-w,yy=y+r()*h;cx.fillStyle=`rgba(${col},${a})`;cx.fillRect(x|0,yy|0,w|0,4);cx.fillRect((x+12)|0,(yy-2)|0,(w-30)|0,2)}}
+function lantern(g,x,y,c){R(g,x,y-6,1,6,"#2a2220");R(g,x-3,y,7,9,"#3a2a20");R(g,x-2,y+1,5,7,c);R(g,x-3,y+9,7,1,"#3a2a20")}
+
+/* ---- 場面ごとの動かない層 ---- */
+const BG={
+desk:g=>{R(g,0,0,W,H,"#17141c");
+  for(let x=0;x<W;x+=24){R(g,x,0,1,170,"#110f16");}for(let y=8;y<170;y+=40)R(g,0,y,W,1,"#1d1922");
+  /* 窓と月 */
+  R(g,26,22,92,82,"#3a2a20");R(g,30,26,84,74,"#1a2040");
+  g.save();g.beginPath();g.rect(30,26,84,74);g.clip();bands(g,26,100,[20,24,56],[46,48,90],4);stars(g,30,100,7);disc(g,88,46,11,"#efe6c8");disc(g,92,43,9,"#d8cfb0");disc(g,85,49,2,"#cfc6a8");
+  for(let x=30;x<114;x+=6)R(g,x,84+((x*7)%5),6,20,"#14182c");R(g,40,72,4,14,"#14182c");g.restore();
+  R(g,70,26,3,74,"#3a2a20");R(g,30,61,84,3,"#3a2a20");R(g,22,102,100,6,"#4a3626");R(g,22,108,100,2,"#2a1e16");
+  /* 本棚: 帳簿の背表紙 */
+  const r=rng(31);R(g,300,10,170,162,"#2c2018");R(g,304,14,162,154,"#1a120c");
+  for(let s=0;s<4;s++){const sy=14+s*38;R(g,300,sy+34,170,4,"#4a3424");let x=306;while(x<460){const w=6+(r()*6|0),h=22+(r()*10|0);const c=["#6a2a24","#3a4a6a","#5a4a2a","#2a4a3a","#7a5a3a","#4a2a4a"][r()*6|0];
+    if(r()<.12&&x<440){/* 巻物 */for(let k=0;k<3;k++){disc(g,x+5,sy+30-k*7,3,"#d8ccaa");R(g,x+2,sy+30-k*7,12,1,"#a89a78")}x+=16;continue}
+    R(g,x,sy+34-h,w,h,c);R(g,x,sy+38-h,w,1,"#c8a04a");R(g,x,sy+30,w,1,"#c8a04a");R(g,x+w-1,sy+34-h,1,h,"#0006");x+=w+1}}
+  /* 床 */
+  bands(g,170,H,[40,30,26],[24,18,16],4);for(let y=176;y<H;y+=10+(y-170)/8|0)R(g,0,y,W,1,"#1a120e");
+  /* 机 */
+  R(g,176,138,262,10,"#5a3e28");R(g,176,138,262,2,"#7a5638");R(g,180,148,254,4,"#3a281a");R(g,188,152,8,48,"#3a281a");R(g,418,152,8,48,"#3a281a");R(g,190,152,4,48,"#4a3424");
+  /* 写しの紙 */
+  R(g,232,128,74,10,"#e9dfc7");R(g,226,131,74,8,"#d8cdb0");for(let i=0;i<3;i++)R(g,236,130+i*2,50-i*9,1,"#776a55");
+  /* 巻物 */R(g,320,130,40,8,"#d8ccaa");disc(g,320,134,4,"#c4b690");disc(g,360,134,4,"#c4b690");R(g,338,130,3,8,"#8a2f2f");
+  /* インク壺と羽ペン */R(g,206,128,12,10,"#1a1a24");R(g,208,125,8,3,"#2a2a36");R(g,209,126,6,1,"#4a4a5a");for(let i=0;i<16;i++)R(g,214+i,124-i*1.4,2,2,i>10?"#f4efe6":"#e0d8c8");
+  /* 封蝋と印 */R(g,372,132,18,4,"#a8302a");R(g,372,132,18,1,"#d04a40");R(g,398,128,6,10,"#7a5a3a");disc(g,401,127,4,"#c8a04a");
+  /* ろうそく */R(g,268,108,7,20,"#efe6d0");R(g,268,108,2,20,"#fff8e8");R(g,264,128,15,3,"#8a7a5a");R(g,271,103,1,5,"#2a2020")},
+castle:g=>{bands(g,0,120,[96,140,196],[200,206,206]);
+  for(let i=0;i<6;i++){disc(g,40+i*90,60+(i%2)*14,10+i%3*4,"#e8ecf0")}
+  /* 塔 */const T=(x,w,h)=>{bricks(g,x,190-h,w,h,"#a89880","#7a6c5a","#c4b6a0",x,16,8);for(let i=0;i<w;i+=10)R(g,x+i,190-h-8,6,8,"#a89880");R(g,x+w/2-3,190-h+20,6,12,"#2a2230")};
+  T(0,70,170);T(410,70,170);
+  bricks(g,70,40,340,150,"#b4a48a","#857660","#cdbfa6",3,18,9);for(let i=0;i<340;i+=14)R(g,70+i,32,9,8,"#b4a48a");
+  /* アーチの回廊 */for(let i=0;i<5;i++){const ax=88+i*66;R(g,ax,118,46,72,"#2c2430");disc(g,ax+23,118,23,"#2c2430");R(g,ax-5,95,4,95,"#cdbfa6");R(g,ax+47,95,4,95,"#8a7a64");R(g,ax+4,150,38,40,"#3a3040")}
+  /* 旗: 王の印 */for(let i=0;i<4;i++){const bx=134+i*66;R(g,bx-14,46,30,3,"#5a4030");R(g,bx-12,49,26,58,"#2e4a8a");R(g,bx-12,49,26,3,"#4a6ab0");for(let k=0;k<6;k++)R(g,bx-12+k*5,107,5,4-(k%2)*2,"#2e4a8a");
+    disc(g,bx+1,72,8,"#c8a04a");disc(g,bx+1,72,6,"#2e4a8a");R(g,bx-2,68,7,8,"#c8a04a");R(g,bx,66,3,2,"#c8a04a")}
+  R(g,0,186,W,4,"#6e604e");
+  /* 石だたみ */for(let y=190;y<H;y+=8+((y-190)>>3)){R(g,0,y,W,1,"#6a5c4a");for(let x=((y>>3)%2)*20;x<W;x+=40)R(g,x,y,1,12,"#6a5c4a")}
+  g.globalCompositeOperation="destination-over";R(g,0,190,W,98,"#9a8a72");g.globalCompositeOperation="source-over";
+  /* 井戸代わりの石の植え込み */R(g,20,206,44,14,"#8a7a64");R(g,20,206,44,3,"#b0a088");tree(g,42,208,40,"#4a3424","#5a8a4a","#3e6a3a",9)},
+town:g=>{bands(g,0,190,[118,160,206],[232,206,170]);for(let i=0;i<5;i++)ellR(g,60+i*100,40+(i%2)*20,26,6,"#f4eee4");
+  hills(g,150,10,.012,1,"#8a9aa8");
+  /* 鐘の塔 */bricks(g,214,30,44,150,"#b8a88c","#86775f","#d0c2a6",11,12,6);roof(g,208,4,56,28,"#6a3a2e","#4e2a22");R(g,226,48,20,22,"#2a2026");disc(g,236,48,10,"#2a2026");disc(g,236,58,5,"#c8a04a");R(g,234,64,4,3,"#c8a04a");R(g,234,0,4,6,"#3a3030");
+  const hs=[[0,116,70],[70,100,58],[300,104,64],[372,120,72]];hs.forEach(([x,w,h],i)=>house(g,x,190,w,h,26,40+i,{chim:i%2===0,lit:i===1,roof:i%2?"#8a4a36":"#9a5a3a"}));
+  house(g,172,190,40,46,18,77,{wall:"#e0d2b4"});house(g,260,190,40,50,18,78,{wall:"#d4c4a4"});
+  cobbles(g,190,H,"#8a7a62","#5e5240","#a49478",5);
+  /* 井戸 */R(g,26,196,40,20,"#8a7c68");bricks(g,26,198,40,18,"#8a7c68","#5e5444","#a89a84",2,10,5);R(g,24,194,44,4,"#a49884");R(g,28,170,3,26,"#5a3e2a");R(g,61,170,3,26,"#5a3e2a");roof(g,22,158,48,14,"#6a3a2e","#4e2a22");R(g,44,172,1,14,"#9a8a70");R(g,41,184,6,5,"#6a4a30");
+  /* 掲示板 */R(g,410,170,4,46,"#4a3226");R(g,450,170,4,46,"#4a3226");R(g,404,160,56,32,"#6a4a30");R(g,407,163,50,26,"#8a6440");
+  [[410,166,14,12],[427,165,12,16],[441,167,13,10],[412,180,18,7]].forEach(([x,y,w,h])=>{R(g,x,y,w,h,"#e9dfc7");for(let k=2;k<h-1;k+=2)R(g,x+2,y+k,w-4,1,"#8a7a62");R(g,x+w/2,y,1,1,"#a8302a")})},
+gate:g=>{bands(g,0,190,[110,136,180],[214,184,160]);
+  /* 門の奥: 道と紫のもや */
+  bricks(g,0,24,W,166,"#9a8c76","#6e6252","#b6a892",21,16,8);for(let i=0;i<W;i+=16)R(g,i,14,10,10,"#9a8c76");R(g,0,22,W,3,"#7a6e5c");
+  const ax=192,aw=104;R(g,ax,90,aw,100,"#000");disc(g,ax+aw/2,90,aw/2,"#000");
+  g.save();g.beginPath();g.rect(ax,38,aw,152);g.clip();R(g,ax,38,aw,152,"#000");bands(g,38,150,[170,170,196],[196,160,200]);hills(g,150,6,.04,2,"#8a78a8");R(g,ax,150,aw,40,"#7a7a5a");
+    g.fillStyle="#9a8a6a";g.beginPath();g.moveTo(240,150);g.lineTo(250,150);g.lineTo(276,190);g.lineTo(216,190);g.fill();for(let y=140;y<156;y+=4)R(g,ax,y,aw,2,"rgba(170,140,220,.45)");
+    for(let x=ax;x<ax+aw;x+=10){R(g,x+4,38,3,58,"#3a3036");R(g,x+5,96,1,4,"#5a5056")}for(let y=42;y<96;y+=12)R(g,ax,y,aw,3,"#3a3036");g.restore();
+  for(let a=0;a<=12;a++){const an=Math.PI+a*Math.PI/12;const x=ax+aw/2+Math.cos(an)*(aw/2+6),y=90+Math.sin(an)*(aw/2+6);R(g,x-5,y-4,10,8,a%2?"#b6a892":"#8a7c66")}
+  R(g,ax-14,80,14,110,"#8a7c66");R(g,ax+aw,80,14,110,"#7a6c58");
+  /* 旗 */R(g,90,40,20,40,"#2e4a8a");disc(g,100,58,5,"#c8a04a");R(g,380,40,20,40,"#2e4a8a");disc(g,390,58,5,"#c8a04a");
+  cobbles(g,190,H,"#7a6c56","#544a3a","#968870",8);
+  /* 境の石 */R(g,40,176,20,40,"#8a8478");R(g,42,172,16,4,"#9a948a");R(g,40,176,3,40,"#a8a296");for(let i=0;i<4;i++)R(g,45,184+i*6,10,1,"#4a4640");R(g,36,214,28,4,"#5a5448")},
+market:g=>{bands(g,0,150,[150,150,180],[226,190,150]);
+  bricks(g,0,92,W,98,"#a0927a","#726654","#bcae96",13,16,8);for(let i=0;i<W;i+=16)R(g,i,82,10,10,"#a0927a");disc(g,420,80,0,"#000");
+  R(g,380,40,70,150,"#968870");bricks(g,380,40,70,150,"#968870","#6a5e4e","#b2a48e",15,14,7);roof(g,374,10,82,32,"#6a3a2e","#4e2a22");
+  bands(g,190,H,[118,100,78],[92,78,60]);const r=rng(4);for(let i=0;i<180;i++)R(g,r()*W,190+r()*98,2,1,"#6a5844");
+  /* 屋台 */const cols=[["#a8443c","#e8dcc8"],["#3c6aa8","#e8dcc8"],["#c8a040","#7a4a2a"],["#4a8a5a","#e8dcc8"]];
+  cols.forEach(([a,b],i)=>{const x=8+i*120;R(g,x+4,130,3,64,"#4a3424");R(g,x+96,130,3,64,"#4a3424");for(let k=0;k<10;k++)R(g,x+k*10,120,10,16,k%2?a:b);for(let k=0;k<10;k++)R(g,x+k*10+2,136,6,3,k%2?a:b);
+    R(g,x+2,166,100,8,"#6a4a30");R(g,x+2,174,100,20,"#4a3424");
+    if(i===0){for(let k=0;k<4;k++)R(g,x+10+k*22,152,18,14,["#8a3a4a","#3a5a8a","#c8b080","#5a7a4a"][k])}
+    if(i===1){for(let k=0;k<5;k++){ellR(g,x+16+k*18,162,8,5,"#a07a4a");R(g,x+10+k*18,158,12,2,"#c49a5a")}}
+    if(i===2){for(let k=0;k<6;k++){R(g,x+10+k*14,154,10,8,"#e6dcc8");for(let m=0;m<4;m++)R(g,x+11+k*14+m*2,162,1,4,"#e6dcc8")}}
+    if(i===3){for(let k=0;k<3;k++){disc(g,x+20+k*28,158,8,["#d8a040","#c85a3a","#9aa84a"][k])}}});
+  /* 籠 */for(let k=0;k<3;k++){R(g,150+k*22,210,18,12,"#a07a4a");for(let m=0;m<18;m+=3)R(g,150+k*22+m,210,1,12,"#7a5a34")}},
+road:g=>{bands(g,0,170,[66,72,110],[176,140,150]);for(let i=0;i<3;i++)ellR(g,90+i*150,36+i*12,40,4,"#a89ab4");
+  hills(g,140,12,.01,3,"#6a6488");hills(g,160,10,.018,0,"#4e5a5a");
+  bands(g,170,H,[70,84,62],[44,56,40]);
+  /* 古い石の街道 */const r=rng(17);for(let y=170;y<H;y++){const k=(y-170)/(H-170);const hw=8+k*150,cx0=246-k*30;R(g,cx0-hw,y,hw*2,1,(y%5)?"#7a7060":"#5e5648");
+    if(y%5===0)for(let x=cx0-hw;x<cx0+hw;x+=6+k*14)R(g,x+((y/5)%2)*(3+k*7),y-4,1,4,"#5e5648")}
+  for(let i=0;i<60;i++){const y=172+r()*116,k=(y-170)/118;R(g,246-k*30+(r()-.5)*(16+k*300),y,3,2,"#4a5a3a")}
+  /* まばらな木 */[[30,190,90],[96,176,60],[150,168,40],[340,168,36],[390,174,56],[456,192,96]].forEach(([x,b,h],i)=>tree(g,x,b,h,"#2e241c",i%2?"#3e5a3e":"#36503a","#2a3e2c",i+3));
+  [[380,182],[176,174]].forEach(([x,y],i)=>{const s=i?.6:1;R(g,x,y-16*s,10*s,16*s,"#8a8478");R(g,x,y-16*s,10*s,2,"#a8a296");R(g,x+2*s,y-10*s,6*s,1,"#4a4640")})},
+border:g=>{bands(g,0,170,[74,66,104],[178,130,150]);hills(g,150,10,.014,2,"#6e5a86");
+  bands(g,170,H,[66,70,62],[40,40,44]);
+  /* 崩れた見張り塔 */g.save();g.beginPath();g.moveTo(330,190);g.lineTo(330,52);g.lineTo(338,46);g.lineTo(346,56);g.lineTo(356,40);g.lineTo(366,48);g.lineTo(374,62);g.lineTo(384,58);g.lineTo(392,78);g.lineTo(400,74);g.lineTo(400,190);g.closePath();g.clip();bricks(g,330,30,70,160,"#7a7468","#54504a","#94907e",19,12,6);g.restore();
+  for(let i=0;i<6;i++)R(g,388+i*4,90+i*3,3,2,"#54504a");
+  R(g,354,90,12,20,"#2a2430");disc(g,360,90,6,"#2a2430");R(g,340,186,80,6,"#5a5448");for(let i=0;i<8;i++)R(g,406+i*7,180+((i*3)%5),6,6,"#6e6a5e");
+  for(let i=0;i<40;i++)R(g,330+(i*13)%70,90+(i*29)%90,2,2,"#4a6a3a");
+  /* 道 */for(let y=172;y<H;y++){const k=(y-170)/118,hw=10+k*120,c0=210-k*20;R(g,c0-hw,y,hw*2,1,y%6?"#6e665a":"#56504a")}
+  /* 境の石の列 */[[60,200,1],[130,186,.75],[178,178,.55],[260,176,.5],[300,180,.6]].forEach(([x,y,s],i)=>{const w=16*s|0,h=34*s|0;R(g,x,y-h,w,h,"#8a8478");R(g,x,y-h,w,2,"#a8a296");R(g,x,y-h,2,h,"#9e988c");R(g,x+w-2,y-h+4,2,h-4,"#6a665e");if(i===0){R(g,x+4,y-h+8,8,1,"#4a4640");R(g,x+4,y-h+12,6,1,"#4a4640");R(g,x+3,y-h+18,10,3,"#5a7a4a")}R(g,x-2,y-2,w+4,3,"#3e4a34")});
+  /* 霧の奥 */const gr=g.createLinearGradient(0,0,0,200);gr.addColorStop(0,"rgba(170,140,220,0)");gr.addColorStop(.7,"rgba(170,140,220,.35)");gr.addColorStop(1,"rgba(170,140,220,.1)");g.fillStyle=gr;g.fillRect(0,100,W,100)},
+knight:g=>{bands(g,0,170,[14,16,38],[50,44,72]);stars(g,140,150,23);disc(g,400,40,9,"#e8e0c0");disc(g,404,37,8,"#50487a");
+  hills(g,158,12,.012,4,"#1e2236");for(let i=0;i<24;i++){const x=i*21+(i%3)*4,h=40+(i*17)%30;for(let j=0;j<h;j+=3){const w=Math.round(j*.4)+2;R(g,x-w/2,170-h+j,w,3,"#151a24")}}
+  bands(g,170,H,[30,38,32],[18,22,20]);
+  /* 馬のかげ */const hx=420,hy=200;R(g,hx-28,hy-30,40,16,"#0e1016");R(g,hx+8,hy-46,8,22,"#0e1016");R(g,hx+10,hy-50,16,8,"#0e1016");R(g,hx+22,hy-46,6,5,"#0e1016");R(g,hx+10,hy-54,3,4,"#0e1016");
+  for(const lx of[-26,-16,2,8])R(g,hx+lx,hy-14,4,18,"#0e1016");R(g,hx-32,hy-28,4,14,"#0e1016");R(g,hx+30,hy-40,1,40,"#3a2a20");R(g,hx+24,hy-42,8,1,"#3a2a20");
+  /* 寝床 */R(g,60,226,70,10,"#5a3a3a");R(g,60,226,70,2,"#7a4a4a");R(g,60,222,16,8,"#c8b89a");R(g,330,228,70,10,"#3a4a5a");R(g,384,224,16,8,"#c8b89a");
+  /* 荷物 */R(g,140,206,18,14,"#6a4a30");R(g,146,202,6,4,"#4a3424")},
+forest:g=>{bands(g,0,H,[150,130,190],[90,80,120]);
+  const r=rng(51);[[ "#a898c8",34,10],["#7e70a4",28,14],["#54486e",20,20],["#2c2638",12,26]].forEach(([c,n,wd],L)=>{for(let i=0;i<n;i++){const x=r()*W|0,w=wd*(.6+r()*.6)|0;R(g,x,0,w,240+L*10,c);R(g,x+2,0,1,240,mix([0,0,0],[255,255,255],.3)&&"rgba(255,255,255,.06)");if(L>1)for(let y=40+r()*60|0;y<240;y+=30+r()*30|0){R(g,x-6,y,6,2,c)}}
+    R(g,0,236+L*10,W,H,["#6a5e86","#504668","#3a3250","#26202e"][L]);if(L<3){const gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,"rgba(170,150,210,.25)");gr.addColorStop(1,"rgba(170,150,210,.45)");g.fillStyle=gr;g.fillRect(0,0,W,H)}});
+  for(let i=0;i<70;i++)R(g,r()*W,232+r()*56,3,2,"#3e5a3e");
+  /* 道 */for(let y=228;y<H;y++){const k=(y-228)/60,hw=40+k*120;R(g,230-hw,y,hw*2,1,"#3a3248")}},
+village:g=>{bands(g,0,170,[86,72,112],[170,140,160]);hills(g,150,10,.015,1,"#5a4a72");
+  bands(g,170,H,[64,62,70],[42,40,50]);
+  const hs=[[10,90,60],[120,70,52],[300,80,58],[396,84,64]];hs.forEach(([x,w,h],i)=>{const b=196-i%2*4;bricks(g,x,b-h,w,h,"#6e6460","#4a4240","#86807a",60+i,12,6);
+    for(let k=0;k<12;k++)R(g,x+(k*17)%w,b-h+((k*23)%h),6+k%3*3,3,"#4e6a44");roof(g,x-6,b-h-30,w+12,30,"#3e3a46","#2c2834");for(let k=0;k<8;k++)R(g,x-4+k*(w/8),b-h-3,w/8+2,4,"#4e6a44");
+    R(g,x+12,b-28,14,28,"#3a2a22");R(g,x+13,b-27,12,27,"#5a4030");R(g,x+22,b-14,1,2,"#c8a04a");window_(g,x+w-26,b-h+14,12,10,i!==1)});
+  /* パンのかまど */const ox=210,oy=196;ellR(g,ox,oy-14,30,16,"#8a7464");R(g,ox-30,oy-14,60,14,"#8a7464");bricks(g,ox-30,oy-14,60,14,"#8a7464","#5e5048","#a08a7a",3,10,5);R(g,ox-10,oy-22,20,14,"#2a1610");disc(g,ox,oy-22,10,"#2a1610");R(g,ox+16,oy-40,8,12,"#6e6058");
+  R(g,ox-34,oy,68,4,"#5e5048");
+  /* 石の道 */for(let y=200;y<H;y+=7){for(let x=((y/7)%2)*10;x<W;x+=22)R(g,x,y,18,5,"#56525c")}},
+mine:g=>{bands(g,0,120,[60,52,80],[110,90,120]);
+  const r=rng(71);for(let x=0;x<W;x+=4){const h=70+Math.sin(x*.02)*20+Math.sin(x*.07)*8;R(g,x,h,4,H,"#3e3846")}for(let i=0;i<260;i++){R(g,r()*W,60+r()*140,4+r()*8,2,r()<.5?"#2e2a36":"#4e4858")}
+  bands(g,200,H,[54,48,56],[34,30,38]);
+  /* 坑道の口 */R(g,170,90,140,110,"#0c0a10");disc(g,240,92,60,"#0c0a10");R(g,164,84,12,118,"#6a4e34");R(g,304,84,12,118,"#5a4028");R(g,156,78,170,10,"#6a4e34");R(g,156,78,170,2,"#8a6a48");
+  /* 崩れた梁 */for(let i=0;i<70;i++)R(g,190+i*1.4,100+i,8,4,"#5a4028");disc(g,280,190,12,"#4e4858");disc(g,262,194,8,"#5a5462");disc(g,296,196,6,"#3e3846");
+  /* 線路 */for(let y=200;y<H;y+=8){const k=(y-200)/88;R(g,214-k*60,y,52+k*120,3,"#4a3424")}for(let y=200;y<H;y++){const k=(y-200)/88;R(g,220-k*50,y,2,1,"#8a7a6a");R(g,258+k*50,y,2,1,"#8a7a6a")}
+  /* 古い車 */R(g,340,196,58,26,"#5a4636");R(g,340,196,58,3,"#7a6048");for(let k=0;k<3;k++)R(g,346+k*18,200,2,22,"#3a2c22");disc(g,352,224,6,"#2a2228");disc(g,386,224,6,"#2a2228");disc(g,352,224,2,"#6a6068");disc(g,386,224,2,"#6a6068");
+  /* さびた鎖 */for(let i=0;i<12;i++){R(g,140+(i%2),92+i*6,3,4,"#7a4a30");R(g,140,92+i*6,1,1,"#9a6a44")}for(let i=0;i<9;i++)R(g,326+i*5,96+Math.sin(i*.4)*8,4,3,"#7a4a30")},
+spring:g=>{bands(g,0,186,[44,34,76],[120,90,146]);stars(g,30,90,61);
+  hills(g,160,14,.01,1,"#4a3a6a");hills(g,176,8,.02,3,"#3a2e52");
+  /* 長の小屋と石の輪 */const hx=330;R(g,hx,148,54,32,"#5a4a5a");for(let y=148;y<180;y+=6)R(g,hx,y,54,1,"#4a3a4a");roof(g,hx-10,120,74,30,"#6a5a4a","#4e4236");R(g,hx+20,160,12,20,"#2a2028");lantern(g,hx+40,152,"#f0c890");
+  [[140,182],[170,178],[200,176],[290,177],[320,180]].forEach(([x,y],i)=>{R(g,x,y-22,10,22,"#7a7488");R(g,x,y-22,10,2,"#9a94a8");R(g,x,y-22,2,22,"#8e889c")});
+  bands(g,182,H,[42,36,58],[26,22,36]);
+  /* 泉: 鏡のような水面 */const lx=300,ly=222,rx=170,ry=36;ellR(g,lx,ly,rx+4,ry+3,"#3a3248");g.save();g.beginPath();g.ellipse(lx,ly,rx,ry,0,0,7);g.clip();
+  bands(g,ly-ry,ly+ry,[110,86,150],[60,46,96]);
+  /* 映り込み */g.globalAlpha=.55;R(g,hx,ly-ry+2,54,20,"#3e3446");for(let j=0;j<16;j++){const ww=74-j*4;R(g,hx-10+j*2,ly-ry+22+j,ww,1,"#4a4036")}
+  [[140],[170],[200],[290],[320]].forEach(([x])=>R(g,x,ly-ry,10,16,"#5a5470"));g.globalAlpha=1;g.restore()},
+dawn:g=>{bands(g,0,200,[110,96,150],[250,190,130]);disc(g,240,170,28,"#ffe8a8");disc(g,240,170,22,"#fff2c8");
+  hills(g,176,18,.008,2,"#8a6a7a");hills(g,196,14,.014,5,"#5a4a5e");hills(g,220,10,.02,1,"#3e3446");R(g,0,232,W,H,"#3e3446");
+  for(let i=0;i<10;i++){const a=-Math.PI+.15+i*.3;for(let k=40;k<120;k+=3)R(g,240+Math.cos(a)*k,170+Math.sin(a)*k,2,2,"rgba(255,230,170,.25)")}},
+};
+for(const k in BG){const p=BG[k];BG[k]=()=>layer(k,p)}
+/* ---- 場面（動く部分と人物） ---- */
+const ARTS={
+  desk:t=>{put(BG.desk());const f=flick(t);cx.globalAlpha=f;cx.drawImage(layer("deskGlow",g=>{glow(g,271,104,170,"240,170,80",.30);glow(g,271,104,40,"255,210,120",.45)}),0,0);cx.globalAlpha=1;
+    R(cx,269,96+(f>1?0:1),3,7,"#ffcc66");R(cx,270,99,1,4,"#fff4d0");fig("master",42,44)},
+  castle:t=>{put(BG.castle());    for(const[x,y]of[[34,6],[444,6]]){R(cx,x,y-14,2,26,"#3a3030");for(let k=0;k<6;k++)R(cx,x+2+k*3,y-14+Math.round(Math.sin(t*4+k*.8)*1.5)+(k>>1),3,7-(k>>1),"#2e4a8a")}
+    fig("me",60,60);fig("knight",86,60);fig("towna",110,58)},
+  town:t=>{put(BG.town());smoke(442,96,t);smoke(68,84,t+2);smoke(134,106,t+1,4);fig("me",66,58);fig("knight",88,58)},
+  gate:t=>{put(BG.gate());haze(130,20,"190,160,230",.25,t,4,9);fig("me",62,58);fig("knight",84,58);fig("towna",118,58)},
+  market:t=>{put(BG.market());for(let i=0;i<5;i++){const x=40+i*100,y=114+Math.round(Math.sin(t*1.5+i)*1);R(cx,x-10,104,20,1,"#2a2220");lantern(cx,x,y,"#f0b45a");cx.fillStyle="rgba(240,180,90,.18)";cx.fillRect(x-8,y-2,17,14)}
+    smoke(410,8,t,4);fig("mother",56,60);fig("child",71,62);fig("towna",96,58);fig("townb",114,58)},
+  road:t=>{put(BG.road());haze(150,30,"200,180,230",.22,t,6,3);haze(200,60,"200,180,230",.14,t,9,5)},
+  border:t=>{put(BG.border());haze(120,60,"180,150,230",.25,t,5,11);haze(170,40,"180,150,230",.16,t,8,12);fig("me",60,60);fig("knight",80,60)},
+  beast:t=>{ARTS.road(t);const b=reduce?0:Math.sin(t*3);figBeast(b)},
+  knight:t=>{put(BG.knight());const f=flick(t,7);cx.globalAlpha=f;cx.drawImage(layer("fireGlow",g=>{glow(g,240,212,150,"240,140,60",.42)}),0,0);cx.globalAlpha=1;
+    for(let i=0;i<3;i++)R(cx,216+i*4,214+i*2,48-i*8,5,i%2?"#4a2a14":"#6a3a1a");for(let i=0;i<6;i++){const h=8+Math.round(10*Math.abs(Math.sin(t*6+i*1.7)))*(reduce?0:1)+(reduce?6:0);R(cx,226+i*5,212-h,4,h,i%2?"#f08a3a":"#ffc050")}R(cx,234,200,10,10,"#fff0b0");
+    if(!reduce)for(let i=0;i<4;i++){const k=(t*.6+i/4)%1;R(cx,238+Math.sin(k*9+i)*8,196-k*70,2,2,`rgba(255,200,120,${1-k})`)}
+    for(let i=0;i<6;i++){const a=.4+.6*Math.abs(Math.sin(t*1.3+i*2));cx.fillStyle=`rgba(255,250,220,${a})`;cx.fillRect((i*83+30)%W,(i*37+12)%120,2,2)}
+    fig("me",54,58);fig("knight",100,58)},
+  forest:t=>{put(BG.forest());cx.save();cx.globalAlpha=reduce?.14:.10+.05*Math.sin(t*.7);cx.fillStyle="#f4e8ff";for(const x0 of[120,300,400]){cx.beginPath();cx.moveTo(x0,0);cx.lineTo(x0+26,0);cx.lineTo(x0-40,240);cx.lineTo(x0-90,240);cx.fill()}cx.restore();
+    haze(200,40,"190,170,230",.22,t,5,21);fig("me",64,62);fig("knight",84,62)},
+  village:t=>{put(BG.village());const f=flick(t,6);cx.globalAlpha=f;cx.drawImage(layer("vilGlow",g=>{glow(g,210,176,46,"255,150,70",.5);[[70,160],[350,150],[454,160]].forEach(([x,y])=>glow(g,x,y,24,"240,190,120",.4))}),0,0);cx.globalAlpha=1;
+    R(cx,202,170,16,10,"#e07a30");R(cx,206,172,8,6,"#ffc060");smoke(214,150,t,5);
+    [[70,150],[350,140],[454,150]].forEach(([x,y],i)=>lantern(cx,x,y+Math.round(Math.sin(t+i)*0.6),"#f0c890"));haze(170,40,"180,150,220",.2,t,4,31);fig("old",80,60)},
+  mine:t=>{put(BG.mine());[[204,150],[226,176],[270,140],[150,190],[300,206],[110,150]].forEach(([x,y],i)=>{const a=reduce?.8:.6+.4*Math.abs(Math.sin(t*1.2+i));cx.fillStyle=`rgba(150,120,240,${a*.35})`;cx.fillRect(x-6,y-8,14,16);
+      R(cx,x,y-6,4,10,"#8a6ad8");R(cx,x+3,y-3,3,7,"#6a4ab8");R(cx,x+1,y-5,1,4,"#d8c8ff")});haze(196,30,"170,140,230",.2,t,4,41);fig("survivor",76,60)},
+  spring:t=>{put(BG.spring());const lx=300,ly=222;for(let i=0;i<9;i++){const y=ly-26+i*7,w=60+((i*37)%80),x=lx-w/2+((i*53)%120)-60+Math.round(reduce?0:Math.sin(t*1.2+i)*6);cx.fillStyle=`rgba(220,200,255,${.18+.12*Math.sin(t*2+i)})`;cx.fillRect(x|0,y,w,1)}
+    haze(150,40,"180,150,230",.25,t,3,51);haze(200,30,"180,150,230",.18,t,5,52);fig("chief",78,46);fig("me",40,58)},
+  dawn:t=>{put(BG.dawn());const lift=reduce?0:(t*3)%40;haze(200-lift,30,"240,220,230",.22,t,4,61);haze(224-lift/2,30,"240,220,230",.18,t,6,62)},
+  dark:t=>{R(cx,0,0,W,H,"#05050a")}
+};
+function setScene(name,mist,night){scene={draw:ARTS[name]||ARTS.dark,mist:mist||0}}
+
+/* ===== 音（合成音・押すまで鳴らない） ===== */
+let ac=null,snd=false;
+function beep(f=440,d=.08,type="square",v=.04){if(!snd||!ac)return;const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;g.gain.value=v;g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+d)}
+$("btnSnd").onclick=()=>{snd=!snd;$("btnSnd").textContent="音: "+(snd?"入":"切");if(snd&&!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}beep(660)};
+function chime(){[523,659,784].forEach((f,i)=>setTimeout(()=>beep(f,.25,"triangle",.05),i*120))}
+
+/* ===== 語りと選択 ===== */
+let advance=null,typing=null;
+function say(who,text){return new Promise(res=>{
+  $("who").textContent=who||"";const el=$("line");el.textContent="";$("more").hidden=true;
+  let i=0;const full=text;
+  const done=()=>{clearInterval(typing);typing=null;el.textContent=full;$("more").hidden=false;advance=()=>{advance=null;$("more").hidden=true;beep(330,.03);res()}};
+  if(reduce){done();return}
+  typing=setInterval(()=>{i++;el.textContent=full.slice(0,i);if(i%3===0)beep(220+((i*13)%5)*20,.02,"square",.015);if(i>=full.length)done()},28);
+  advance=()=>done();
+})}
+function tapBox(){if(advance)advance()}
+$("box").addEventListener("click",tapBox);
+$("box").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();tapBox()}});
+async function talk(lines){for(const l of lines){if(typeof l==="function"){await l();continue}await say(l[0],l[1])}}
+function choose(opts){return new Promise(res=>{
+  const box=$("choices");box.innerHTML="";
+  opts.forEach((o,i)=>{if(o.hide)return;const b=document.createElement("button");b.type="button";b.innerHTML=o.t+(o.note?`<small>${o.note}</small>`:"");if(o.off){b.disabled=true}
+    b.onclick=()=>{box.innerHTML="";beep(520,.05);res(o.v!==undefined?o.v:i)};box.appendChild(b)});
+  const first=box.querySelector("button:not([disabled])");if(first)first.focus({preventScroll:true});
+})}
+function toast(msg){const t=$("toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.k);toast.k=setTimeout(()=>t.hidden=true,2600)}
+/* 旅日記: 呼び名が「魔物」→「魔族」→名前へ変わる */
+function word(){return S.ch<=3?"魔物":"魔族"}
+function note(id,text){if(S.diary.some(d=>d.id===id))return;S.diary.push({id,text,ch:S.ch});chime();toast("旅日記に1行: "+text.slice(0,18)+(text.length>18?"…":""));renderDiary()}
+function has(id){return S.diary.some(d=>d.id===id)}
+function renderDiary(){const ol=$("diaryList");ol.innerHTML="";if(!S.diary.length)ol.innerHTML="<li>まだ何も書いていない。</li>";S.diary.forEach(d=>{const li=document.createElement("li");li.textContent=d.text;ol.appendChild(li)});
+  const ul=$("qList");ul.innerHTML="";if(!S.qs.length)ul.innerHTML="<li>今のところ、なし。</li>";
+  [...S.qs].sort((a,b)=>(a.ans?1:0)-(b.ans?1:0)).forEach(q=>{const li=document.createElement("li");if(q.ans)li.className="done";const sp=document.createElement("span");sp.textContent=q.text;li.appendChild(sp);if(q.ans){const em=document.createElement("em");em.textContent="→ "+q.ans;li.appendChild(em)}ul.appendChild(li)})}
+/* 問い: 説明する代わりに、プレイヤーの「なぜ？」を旅日記に残し、旅の中で答えを見つけさせる */
+function ask(id,text){if(S.qs.some(q=>q.id===id))return;S.qs.push({id,text,ans:""});beep(392,.12,"triangle",.04);toast("旅日記に問い: "+text.slice(0,16)+(text.length>16?"…":""));renderDiary()}
+function answer(id,ans){const q=S.qs.find(q=>q.id===id);if(!q||q.ans)return;q.ans=ans;chime();toast("問いの答え: "+ans.slice(0,16)+(ans.length>16?"…":""));renderDiary()}
+/* 出会いの前に出す「やり方カード」: 目的・操作・失敗したらどうなるか */
+function guide(o){return new Promise(res=>{const g=game(`<div class="card"><span class="tag">${o.tag}</span><h3>${o.title}</h3><p class="goal">目的: ${o.goal}</p><ul>${o.how.map(h=>`<li>${h}</li>`).join("")}</ul><p class="fail">${o.fail}</p><button type="button" id="goGuide">はじめる</button></div>`);
+  const b=$("goGuide");b.focus({preventScroll:true});b.onclick=()=>{beep(520,.05);game("");res()}})}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+$("btnDiary").onclick=()=>{renderDiary();$("diary").hidden=false};
+$("closeDiary").onclick=()=>$("diary").hidden=true;
+function chap(label){$("chap").textContent=label}
+function game(html){const g=$("game");g.innerHTML=html;g.hidden=!html;return g}
+
+/* ===== 章 ===== */
+const N="";const ME="わたし";
+const CH=[
+/* 0 序・夜: 世界の前提は、師匠と弟子の会話と「写し」の作業の中で見せる（講義にしない）。紙は押さない。読み上げると一行ずつ写る */
+async function(){
+  chap("序 ・ 夜");setScene("desk",0);
+  await talk([
+    [N,"夜。王の書記の部屋。ろうそくが一本。"],
+    [N,"わたしは書記の見習い。毎晩、師匠の手紙を書き写す。"],
+    [N,"人間は、何でも書いて残す。残すのが、書記の仕事だ。"],
+    ["師匠","……また、指が真っ黒だな。"],
+    [ME,"インクが、勝手に寄ってくるんです。"],
+    ["師匠","インクのせいにする書記は、出世せんぞ。"],
+    [N,"師匠は笑うと、ひげの端が少しだけ上がる。"],
+    ["師匠","ほら、ろうそくを替えなさい。目を悪くする。"]
+  ]);
+  await talk([
+    [N,"窓の外で、夜回りの声がした。「火の用心、門は閉じた」"],
+    [N,"町の門は、日が沈むと閉まる。朝の鐘まで、誰も出入りしない。"],
+    [ME,"門の外って、夜はどうなってるんでしょう。"],
+    ["師匠","星がよく見える。それと、狼の声がうるさい。"],
+    [ME,"行ったことがあるんですか。"],
+    ["師匠","毎年、手紙を届けに行くのは誰だと思っている。"],
+    [N,"そうだった。師匠は毎年、秋になると三日ほどいなくなる。"]
+  ]);
+  const cnd=await choose([{t:"新しいろうそくに替える",v:"new"},{t:"「まだ半分あります」",v:"half"}]);
+  if(cnd==="new")await talk([[N,"火を移すと、部屋が少し明るくなった。"],["師匠","よし。明るい所で書いた字は、うそをつかん。"]]);
+  else await talk([["師匠","半分の火で、半分の字を書くつもりか。"],[N,"結局、替えた。師匠には勝てない。"]]);
+  await talk([
+    ["師匠","さて。清書の前に、見せておきたいものがある。"],
+    [N,"師匠は棚の奥から、紐でくくった紙の束を出した。"],
+    [N,"紙は黄ばんで、端がやわらかく丸まっている。"],
+    ["師匠","これまでの手紙の写しだ。王から泉の長へ、毎年一通。"],
+    [ME,"全部、残してあるんですか。"],
+    ["師匠","書記は残す。残さなければ、なかったことになる。"],
+    [N,"師匠は一枚をぬき出した。十年前の日付だ。"],
+    [N,"細くて、まっすぐで、少しだけ右に傾いた字。"],
+    [ME,"……師匠の字だ。"],
+    ["師匠","読んでごらん。声に出して。"],
+    [ME,"「泉の長どの。今年も麦は実り、町に病は少なかった」"],
+    [ME,"「霧のほとりの冬が、おだやかであるように」"],
+    [ME,"「取り決めは、今年も変わらず守られる」"],
+    [ME,"……これだけ、ですか。"],
+    ["師匠","これだけだ。百年、手紙はずっとこうだった。"],
+    ["師匠","天気と、麦と、変わらないという一行。"],
+    [ME,"王さまの手紙って、もっといかめしいものかと。"],
+    ["師匠","言葉を決めるのは王さまだ。だが、字は書記が書く。"],
+    ["師匠","読む者が、一度で分かるように。読みちがえぬように。"],
+    ["師匠","わたしは書いたあと、かならず相手の声で読み直す。"],
+    [ME,"相手の声……泉の長の、ですか。"],
+    ["師匠","会ったことはない。だが、毎年読んでくれる人だ。"],
+    ["師匠","どんな声だろうと考えて読むと、まずい所が分かる。"]
+  ]);
+  const old=await choose([{t:"「長から、返事は来るんですか」",v:"reply"},{t:"「わたしも、いつか書けますか」",v:"me"}]);
+  if(old==="reply")await talk([["師匠","来ない。届いた、という知らせもない。"],["師匠","ただ、次の一年も、人が死なない。それが返事だ。"]]);
+  else await talk([["師匠","書けるさ。まずは、まっすぐ写せるようになれ。"],["師匠","それと、指を黒くしないことだ。"],[N,"わたしは黒い指を、そっと袖に隠した。"]]);
+  await say(N,"師匠は写しの束を、大事そうに紐でくくりなおした。");
+  await talk([
+    [N,"師匠は書く前に、かならずペン先を三度ぬぐう。"],
+    [N,"今夜は、それを五度やった。"],
+    [ME,"師匠、何かありました？"],
+    ["師匠","……いや。今年の手紙が、届いたばかりでな。"],
+    ["師匠","清書の前に、古い写しで手を慣らそう。"],
+    ["師匠","百年前の『手紙の取り決め』だ。読み上げてみなさい。"]
+  ]);
+  const lines=[
+    {t:"一、王は毎年、手紙の日までに、霧の奥の泉にいる長へ、手紙を届ける。",after:[["師匠","泉は霧のいちばん奥だ。人間は長くはいられない。"],["師匠","だから毎年、書記が届けに行く。……今年は、わたしの番だ。"],[ME,"帰ってきたら、霧の向こうの話を聞かせてください。"],["師匠","土産話は高いぞ。ろうそく十本だ。"]]},
+    {t:"二、手紙が届くかぎり、長は人間を殺さないと誓う。",after:[[ME,"「誓う」って……紙に書く約束とは、違うんですか。"],["師匠","まるで違う。あれらの「誓う」は、体を縛る。"],["師匠","いずれ、自分の目で見ることになるだろう。"]],q:["vow","霧の向こうの者たちの「誓う」は、紙の約束とどう違う？"]},
+    {t:"三、王は、霧の土地に兵を入れない。",after:[["師匠","この一行のために、昔はたくさん死んだ。"],[ME,"戦で、ですか？"],["師匠","……鉱山でな。"],[N,"師匠はそれ以上、言わなかった。"]],q:["mine","昔、鉱山で何があった？"]}
+  ];
+  await say(N,"机の紙には、わたしが写した字が並んでいる。");
+  game(`<h3>取り決めの写し</h3><div class="paper" id="paper" style="cursor:default">${lines.map((l,i)=>`<p id="ln${i}" class="blank">${"・".repeat(12)}</p>`).join("")}</div>`);
+  for(let i=0;i<lines.length;i++){
+    const el=$("ln"+i);el.textContent=lines[i].t;el.classList.remove("blank");beep(440+i*60,.06);
+    await say(ME,lines[i].t);
+    await talk(lines[i].after);
+    if(lines[i].q)ask(...lines[i].q);
+  }
+  await say("師匠","よく読めた。字も、前よりまっすぐになったな。");
+  game("");
+  note("world","百年前の取り決め: 王が毎年手紙を届けるかぎり、泉の長は人間を殺さない。");
+  await talk([
+    [ME,"今年の手紙も、麦と天気の話ですか。"],
+    ["師匠","……今年は、王さまのお言葉が先に届いた。"],
+    ["師匠","わたしは、それを字にするだけだ。いつもどおりにな。"],
+    [ME,"封蝋も、師匠が？"],
+    ["師匠","いや。今年は、城で王の使いが封をするそうだ。"],
+    [ME,"珍しいですね。いつもは、この部屋で押すのに。"],
+    ["師匠","珍しいことは、珍しいままにしておけ。書記は、書く。"],
+    [N,"師匠は封蝋の棒を手に取り、しばらく眺めて、もどした。"]
+  ]);
+  await talk([
+    [N,"師匠は、今年の手紙の清書に戻った。"],
+    [N,"わたしは明日の紙を切りそろえる。いつもの夜だ。"],
+    [N,"ふと、ペンの音がやんだ。"],
+    [N,"師匠は、同じ一行を何度も目でなぞっている。"],
+    ["師匠","……この手紙は、誰かを殺す。"]
+  ]);
+  ask("kill","師匠の言葉「この手紙は、誰かを殺す」の意味は？");
+  await talk([
+    [ME,"師匠？"],
+    ["師匠","……独り言だ。忘れなさい。"],
+    ["師匠","少し出てくる。先に寝ていなさい。"],
+    [N,"師匠は外套をはおり、灯りを一つ持った。"],
+    [ME,"こんな夜更けに、どこへ……"],
+    ["師匠","すぐ戻る。インクにふたをしておけよ。"],
+    [N,"扉が閉まる。ろうそくの火が、一度だけ大きく揺れた。"],
+    [N,"その夜、師匠は戻らなかった。"]
+  ]);
+  setScene("dark");await say(N,"――");
+},
+/* 1 町: 王城で手紙を受け取り、騎士と出会い、町の偏見の中を歩いて、師匠の寝台へ */
+async function(){
+  chap("一日目 ・ 町");setScene("desk",0);
+  await talk([
+    [N,"鐘の音で、目が覚めた。修道院の、朝いちばんの鐘。"],
+    [N,"机に伏せたまま眠っていたらしい。頬に紙のあとがある。"],
+    [N,"ろうそくは燃えつきて、皿に白いしずくが固まっていた。"],
+    [N,"朝。師匠の寝床は、冷たいままだった。"],
+    [N,"外套かけに、師匠の外套がない。灯りも一つ足りない。"],
+    [N,"インクのふたは、閉めておいた。言われたとおりに。"],
+    [N,"窓の外が、妙にさわがしい。"]
+  ]);
+  setScene("town",0);
+  await talk([
+    ["町の人","書記さまが見つかったぞ！ 境の近くの道だ！"],
+    [N,"師匠は大けがをしていた。息はあるが、目を開けない。"],
+    ["町の人","魔物にやられたんだ。爪のあとがあったってよ。"],
+    ["町の人","霧の向こうの化け物どもめ。角を生やして……"],
+    ["町の人","人の言葉までしゃべりやがる。気味が悪い。"]
+  ]);
+  ask("what","「魔物」とは、何者なのか？ 本当に人を襲うのか？");
+  await talk([
+    [N,"わたしは、施療院へ走った。"],
+    [N,"石の廊下は、薬草と、湯を沸かすにおいがした。"],
+    ["修道士","書記どのの弟子か。……入りなさい。静かにな。"],
+    [N,"寝台の師匠は目を閉じたまま、浅く息をしていた。"],
+    [ME,"師匠……。"],
+    ["修道士","傷は肩から背にかけて。四本の、深い切り傷だ。"],
+    ["修道士","血は止めた。熱が出なければ、命は助かるだろう。"],
+    [ME,"四本……。剣で、ですか。"],
+    ["修道士","剣で、四本もきれいに並べて切れるものか。"],
+    ["修道士","町の者は、魔物の爪だと言っておるがな。"],
+    ["修道士","わしの仕事は傷を縫うことだ。犯人さがしは役人の仕事。"],
+    [N,"師匠の右手の指は、インクで黒かった。いつものように。"],
+    [N,"その指が、何かをつかもうとするように、少し曲がっている。"],
+    ["修道士","今日は目を覚まさんだろう。また後で来なさい。"]
+  ]);
+  setScene("castle",0);
+  await talk([
+    [N,"昼すぎ、王城に呼ばれた。書記局の前の中庭。"],
+    [N,"見習いが一人でここに立つことは、ふつうはない。"],
+    [N,"書記局の窓から、先輩の書記たちがこちらをのぞいている。"],
+    [N,"目が合うと、みんな、さっと窓から消えた。"],
+    ["王の使い","おまえが、あの書記の見習いか。"],
+    [ME,"はい。師匠は……"],
+    ["王の使い","聞いている。不幸なことだ。"],
+    ["王の使い","だが手紙の日は待ってくれぬ。あと三日だ。"],
+    ["王の使い","見習い、おまえが今年の使者だ。"],
+    ["王の使い","この手紙を、泉の長へ届けよ。"],
+    [N,"手わたされた手紙は、思ったより重かった。"],
+    [N,"王の印の封蝋。いつもの倍ほども、厚く盛ってある。"],
+    [N,"宛名の字は、見なれた師匠の字だった。"],
+    [ME,"……ずいぶん、封が厚いですね。"],
+    ["王の使い","大事な手紙だからだ。余計なことは考えるな。"],
+    ["王の使い","騎士を一人つける。封が開かぬよう、見張りも兼ねる。"],
+    [N,"柱の陰から、鎧の男が出てきた。背が高い。笑わない。"],
+    ["騎士","……よろしく頼む。道は俺が知っている。"],
+    ["騎士","おまえ、町の外へ出たことは？"]
+  ]);
+  const out=await choose([{t:"「ありません」と正直に言う",v:"honest"},{t:"「本でなら、何度も」",v:"book"}]);
+  if(out==="honest")await talk([["騎士","……そうか。なら、俺の後ろを歩け。"]]);
+  else await talk([["騎士","本の道には、獣も泥もない。"],["騎士","……俺の後ろを歩け。"]]);
+  await talk([
+    ["騎士","それと、馬は出ない。三日、歩きだ。"],
+    [ME,"三日……。"],
+    ["騎士","足に豆ができたら言え。薬草なら持っている。"],
+    [N,"笑わないが、悪い人ではないのかもしれない。"]
+  ]);
+  await talk([
+    [N,"城の門を出ると、広場で子どもたちが遊んでいた。"],
+    ["町の子","おまえ、魔物の番な！ 角つけろ、角！"],
+    [N,"小さい子が、頭に木の枝を二本さして、泣きそうな顔をしている。"],
+    ["町の子","魔物は、誓ったら破れないんだぞ。『逃げない』って誓え！"],
+    ["町の子","……にげないって、ちかう。"],
+    ["町の子","よし、つかまえた！ 牢屋行き！"],
+    [N,"笑い声が広場にひびく。枝の角が、石だたみに落ちた。"],
+    ["騎士","……俺も、ガキのころは、ああやって遊んだ。"],
+    [ME,"誓ったら、破れなくなるんですか。本当に？"],
+    ["騎士","知らん。遊びの決まりだ。……と、思っていた。"],
+    [N,"騎士は落ちた枝をまたいで、何も言わずに歩いた。"]
+  ]);
+  note("start","師匠の代わりに、王の手紙を泉の長へ届ける。三日の旅。");
+  setScene("town",0);
+  await talk([
+    [N,"支度のため、書記の部屋へもどる。騎士が黙ってついてくる。"],
+    ["パン屋","おや、書記さんとこの子じゃないか。気の毒にねえ。"],
+    ["パン屋","ほら、焼きたてだ。持っていきな。"],
+    [N,"丸パンを二つ。一つを、騎士がじっと見ている。"],
+    [ME,"……半分、食べますか。"],
+    ["騎士","いや。……一つ、もらおう。"],
+    ["パン屋","境へ行くんだって？ 魔物には気をつけるんだよ。"],
+    ["パン屋","あいつら、夜に目が光るんだ。見たら、もう終わりさ。"],
+    ["パン屋","うちの亭主のいとこもね、境で羊をとられたって。"],
+    ["パン屋","……まあ、あれは狼だったかもしれないけどさ。"],
+    ["町の人","門の外の市にも、魔物がのさばってる。追い出せばいい。"],
+    [N,"誰も、自分で魔物を見たとは言わなかった。"],
+    [N,"わたしも、見たことはない。字でしか、知らない。"],
+    [ME,"騎士さまは、見たことがあるんですか。"],
+    ["騎士","ある。……あいつらは、こちらの言葉で話す。"],
+    ["騎士","だから、よけいに信用ならん。"]
+  ]);
+  setScene("desk",0);
+  await talk([
+    [N,"書記の部屋は、ゆうべのままだった。"],
+    [N,"机の上に、師匠のペンが三度ぬぐったまま置いてある。"],
+    ["騎士","荷は軽くしろ。三日分の水と食い物は、俺が持つ。"],
+    [ME,"書記の荷物は、決まっています。"],
+    [N,"インク壺。ふたをきつく締めて、布で二重にくるむ。"],
+    [N,"羽根ペンを三本。小刀。予備の紙。ろうそくを二本。"],
+    ["騎士","……ペンが三本もいるのか。"],
+    [ME,"一本は折れます。一本はなくします。"],
+    ["騎士","残りの一本で書くわけか。……兵の剣と同じだな。"],
+    [N,"師匠の棚の上に、布でくるんだ包みがあった。"],
+    [N,"紐に、紙きれがはさんである。師匠の字だ。"],
+    [N,"『見習いへ。来年は、おまえが泉へ行け。』"],
+    [N,"『見たこと、聞いたことを、ここに書いて残せ。』"],
+    [N,"包みの中は、革表紙の、真新しい帳面だった。"],
+    [ME,"……来年の、つもりだったのに。"],
+    ["騎士","師匠どのからか。"],
+    [ME,"旅日記です。……一年、早くなりました。"]
+  ]);
+  const dia=await choose([{t:"最初の頁に、自分の名前を書く",v:"name"},{t:"まだ何も書かずに、しまう",v:"keep"}]);
+  S.f.x_diary=dia;
+  if(dia==="name")await talk([[N,"ペン先をぬぐって、名前を書いた。"],[N,"一字も、さかさまにならなかった。"]]);
+  else await talk([[N,"白い頁を、まだ汚したくなかった。"],[N,"最初の一行は、旅の途中で書こう。"]]);
+  await talk([
+    [N,"帳面を胸の内側にしまう。手紙の、すぐとなりに。"],
+    ["騎士","済んだか。施療院に寄ってから、門へ行く。"]
+  ]);
+  setScene("town",0);
+  await talk([
+    [N,"出立の前に、もう一度施療院へ。師匠の顔は、紙のように白い。"],
+    [N,"肩にも腕にも、厚く布が巻かれている。"],
+    [ME,"師匠。……手紙は、わたしが届けます。"],
+    ["騎士","……出よう。日が落ちる前に門を抜けたい。"],
+    [N,"立ち上がったとき、師匠が、うすく目を開けた。"],
+    [N,"その目が、わたしの胸の手紙に止まる。"],
+    ["師匠","封を……"],
+    [N,"言葉はそこで途切れた。"],
+    [ME,"封を……どうするんです？ 師匠！"],
+    [N,"師匠はまた、深く眠ってしまった。"]
+  ]);
+  note("seal","師匠は「封を……」とだけ言った。");
+  ask("seal","師匠は「封を……」の先に、何を言いたかった？");
+  await talk([["騎士","封がどうした。"],[ME,"……分かりません。"],["騎士","なら、閉じたままにしておけ。それが俺たちの役目だ。"]]);
+  await talk([
+    ["騎士","手紙を見せろ。……いや、渡さなくていい。"],
+    [N,"騎士は手紙を窓の明かりにかざし、封蝋をじっと見た。"],
+    ["騎士","王の印。ひびも、指のあともない。"],
+    ["騎士","封の具合は、毎朝俺が見る。王の使いの言いつけだ。"],
+    [ME,"わたしが開けると思ってるんですか。"],
+    ["騎士","思っていない。思わずにすむように、見るんだ。"],
+    [N,"封蝋は、窓の光を吸って、黒っぽい赤に沈んでいた。"]
+  ]);
+},
+/* 2 門の外の市・母と子: 初めて城壁の外へ。角を初めて見る。母と子の出来事のあと、境へ歩く */
+async function(){
+  chap("一日目 ・ 門の外の市");setScene("gate",0);
+  await talk([
+    [N,"町の門。城壁は、空の半分をふさぐほど高い。"],
+    [N,"生まれてからずっと、わたしはこの内側にいた。"],
+    ["門番","通行の札は？ ……ああ、王の使者さまか。"],
+    ["門番","外は市だ。財布に気をつけな。角のやつらもいる。"],
+    ["騎士","余計なことは言うな。通るぞ。"],
+    ["門番","へいへい。……見習いさん、門は日が沈んだら閉まるよ。"],
+    ["門番","閉まったら、王さまの使者でも開けない。それが決まりだ。"],
+    [ME,"帰りは、三日後です。"],
+    ["門番","じゃあ三日後の夕方、ここで待ってるよ。遅れなさんな。"],
+    [N,"門番は、わたしの名を帳面に書きつけた。ここでも、人は書く。"],
+    [N,"門の下の影は長く、ひんやりしていた。"],
+    [N,"一歩。二歩。……そして、ぬけた。"]
+  ]);
+  setScene("market",.08);
+  await talk([
+    [N,"風のにおいが違う。土と、草と、知らない香辛料。"],
+    [N,"門の外には、魔物と人がものを売り買いする市がある。"],
+    [N,"布の屋根の下に、干した薬草、塩、銀の細工、紫がかった布。"],
+    ["商人","そこの見習いさん、霧のふちの蜂蜜だよ。甘いぞ。"],
+    [ME,"霧のふち……？"],
+    ["商人","向こうの連中から仕入れる。品はいいし、値切らない。"],
+    ["商人","角があろうが、払いがきれいなら客は客さ。"],
+    ["騎士","……町の中では、言わんほうがいい話だな。"],
+    ["商人","だから門の外で商売してるんですよ、騎士さま。"],
+    [N,"商人の肩ごしに、人影が見えた。"],
+    [N,"頭に、白い角が二本。瞳が、うす紫に光っている。"],
+    [N,"……初めて見た。思っていたより、ずっと人に似ている。"],
+    [N,"角のある女が、小さな子と並んで布を売っていた。"],
+    ["町の人","こいつ、師匠さまを襲った魔物の仲間だろう！"],
+    [N,"町の男たちが、女を囲んでいる。"],
+    [N,"騒ぎの中で、その子が門の中へ連れていかれた。"],
+    ["母","返して！ その子を……！"],
+    [N,"女は門へ駆け寄る。が、門の前で足が止まった。"],
+    [N,"指先が、糸のようにほどけはじめている。"]
+  ]);
+  const look=await choose([{t:"女の手を見る",v:"hand"},{t:"門のほうを見る",v:"gate"}]);
+  if(look==="hand"){await talk([[N,"ほどけた指先が、門から離れると元にもどっていく。"],["母","……わたしは昔、「二度と人間の町に入らない」と誓ったの。"],["母","入れば、死ぬ。"]]);note("vow1","魔物は「誓う」と言ったことを破れない。破れば死ぬ。");}
+  else{await talk([[N,"門の中で、子が大人たちに腕をつかまれ、泣き叫んでいる。"],["母","お願い、人間の子。わたしは中に入れないの。"],["母","誓ったから。"]]);note("vow1","魔物は「誓う」と言ったことを破れない。破れば死ぬ。");}
+  answer("vow","魔物は「誓う」と言ったことを破れない。破りかけると体がほどけ、破れば死ぬ。");
+  await talk([["母","あの子は、まだ一度も誓ったことがない。"],["母","初めての誓いは、一生消えないの。"],["母","お願い。あの子が怒りで誓ってしまう前に……"]]);
+  note("first","魔物が初めて口にした誓いは、一生消えないらしい。");
+  await talk([[N,"気づくと、わたしは門へ走っていた。"],["騎士","おい！ ……まったく。"]]);
+  setScene("town",.04);
+  await talk([[N,"門の中。子は人垣の中で、こぶしをにぎりしめている。"],["子","おまえら……おまえらなんか……"]]);
+  await guide({tag:"出会い ① 母と子",title:"言葉を選ぶ",goal:"子が怒りのまま「誓う」と言ってしまう前に、落ち着かせる",
+    how:["針は子の気持ち。右の赤い所まで行くと、子は怒りのまま誓ってしまう","言葉を3回選ぶ。針が左の緑まで戻れば、落ち着いた合図","旅日記に書いたことがあると、言える言葉が増える"],
+    fail:"どうなっても旅は続きます。ただ、あの子が初めて口にする誓いは、一生消えません。"});
+  let heat=55;
+  const g=game(`<h3>子の気持ち</h3><div class="zone"><i class="calm"></i><i class="rage"></i><i class="pin" id="heat"></i></div><div class="zlab"><span>落ち着く</span><span>誓ってしまう</span></div><div class="fb" id="fb"></div>`);
+  const paint=()=>{$("heat").style.left=Math.max(0,Math.min(100,heat))+"%"};paint();
+  const rounds=[
+    {who:"子",line:"おまえも人間だ！ 母さんをいじめたやつらと同じだ！",opts:[{t:"「そうだね。人間がひどいことをした」",d:-15},{t:"「落ち着いて。ぼくは味方だ」",d:+10},{t:"大人たちに「手を離してください」と言う",d:-20,need:"vow1",note:"（旅日記: 誓いの重さを知っている）"}]},
+    {who:"子",line:"母さんは門に入れないんだ。入ったら死んじゃうんだ……！",opts:[{t:"「知ってる。だから、ぼくが連れて帰る」",d:-20,need:"first"},{t:"「お母さんは大丈夫だよ」",d:+15},{t:"黙って手を差し出す",d:-10}]},
+    {who:"町の人",line:"魔物の子なんか、門の外へ放り出しちまえ！",opts:[{t:"「この子は誰も傷つけていない」と言い返す",d:-10},{t:"子の耳をふさぐ",d:-15},{t:"町の人をにらむ",d:+10}]}
+  ];
+  for(const r of rounds){await say(r.who,r.line);const v=await choose(r.opts.map(o=>({t:o.t,note:o.need&&has(o.need)?o.note:"",v:o.d,hide:o.need&&!has(o.need)})));heat+=v;paint();
+    $("fb").textContent=v<0?(heat<=30?"子の目から、怒りが消えていく。":"子の肩から、少し力が抜けた。"):"子のこぶしが、さらに固くなった。";await wait(reduce?300:900);if(heat>=100)break}
+  game("");
+  if(heat>=100){S.f.childOath="hate";await talk([["子","人間なんか……ぜったいに許さないと、誓う！"],[N,"子の体を、見えない糸が一度だけ強く巻いた。"]]);note("childhate","子の最初の誓いは「人間を許さない」になってしまった。");}
+  else if(heat<=30){S.f.childOath="help";await talk([[N,"子は、差し出された手をにぎった。"],["子","……いつか、この人を助けると、誓う。"],[N,"子の体を、見えない糸がやわらかく包んだ。"]]);note("childhelp","子の最初の誓いは「いつか、わたしを助ける」。");}
+  else{S.f.childOath="none";await talk([[N,"子は泣きやみ、何も誓わないまま、わたしの後ろについてきた。"]]);}
+  S.f.motherSaved=true;setScene("market",.08);
+  await talk([
+    [N,"門の外で、母は子を強く抱きしめた。"],
+    ["母","ありがとう。……あなた、使者なのね。"],
+    ["母","わたしもね、昔はこの町の粉屋の娘だったの。"],
+    ["母","霧のそばで暮らすうちに、こうなった。"],
+    ["母","泉へ行くなら、気をつけて。境の道には大きな獣が出る。"],
+    ["母","獣とわたしたちは、別のものよ。"]
+  ]);
+  note("origin1","市の母は、昔はこの町の娘だったと言った。");
+  await talk([["商人","……ほら、蜂蜜。今日はおまけだ。"],["商人","この市で、ああいうのは珍しくない。慣れたくはないがね。"]]);
+  setScene("road",.12);
+  await talk([
+    [N,"日がかたむく。街道は、境のほうへのびている。"],
+    [N,"門の外の道は、すぐに石だたみが終わり、土になった。"],
+    [N,"荷車のわだちが二本、まっすぐに地平へ消えていく。"],
+    [N,"塩を積んだ荷車が一台、市のほうへすれちがった。"],
+    ["御者","騎士さま、ご苦労さまで。境は今、静かですよ。"],
+    ["騎士","静かなときが、いちばん信用ならん。"],
+    ["御者","へへ。騎士さまは、みんなそう言う。"],
+    [N,"道ばたに、腰ほどの高さの石が立っている。"],
+    [N,"町の名と、数字が刻んである。数字は、ほとんど消えかけていた。"],
+    ["騎士","道しるべだ。町の鐘が聞こえるのは、このあたりまでだ。"],
+    ["騎士","この先の石には、もう町の名は刻まれていない。"],
+    [ME,"どうしてですか。"],
+    ["騎士","刻んだ者が、ここから先は町ではないと思ったからだろう。"],
+    [N,"わたしは、石の字を指でなぞった。古い、角ばった字。"],
+    [N,"誰かが書いて、残した。百年たっても、まだ読める。"],
+    [ME,"……足が、痛くなってきました。"],
+    ["騎士","早いな。……かかとか。"],
+    [ME,"かかとです。"],
+    ["騎士","宿に着いたら見せろ。豆は、つぶす前に手当てするものだ。"],
+    ["騎士","……おまえ、さっき門へ走ったな。"],
+    ["騎士","魔物の子のために、町の連中を敵に回して。"],
+    [ME,"あの子は、何もしていません。"],
+    ["騎士","師匠どのは、魔物に襲われたんだぞ。"],
+    [ME,"……それは、まだ分かりません。"],
+    ["騎士","……。"]
+  ]);
+  if(S.f.childOath==="hate")await talk([["騎士","あの子の誓いは、一生消えんのだろう。"],["騎士","……人間を許さない、か。俺たちが言わせたようなものだ。"]]);
+  else if(S.f.childOath==="help")await talk([["騎士","あの子、おまえを助けると誓ったな。"],["騎士","……妙なやつに好かれたものだ。"]]);
+  else await talk([["騎士","あの子は、何も誓わなかったな。"],["騎士","……それでいい。子どもが誓うことなど、何もない。"]]);
+  await talk([
+    ["騎士","俺には娘がいる。ちょうど、あのくらいの年だ。"],
+    [N,"騎士はそれ以上、話さなかった。"],
+    [N,"ふり返ると、城壁がもう、手のひらほどに小さい。"],
+    [N,"今夜は街道の宿で休み、明日、境へ入る。"],
+    [N,"胸の手紙の封蝋が、歩くたびに重く当たった。"]
+  ]);
+  await talk([
+    [N,"日が落ちるころ、街道ぞいの宿に着いた。"],
+    [N,"煙で黒くなった看板に、麦の穂の絵がかいてある。"],
+    ["宿の主人","いらっしゃい。……おや、騎士さまと、小さな書記さん。"],
+    [ME,"見習いです。"],
+    ["宿の主人","見習いさん。悪いが、今夜は部屋がいっぱいでね。"],
+    ["宿の主人","手紙の日の前は、いつもこうさ。境へ向かう客が増える。"],
+    ["騎士","裏の軒下でいい。火だけ貸してくれ。"],
+    ["宿の主人","スープなら出せる。豆と玉ねぎと、運がよけりゃ肉だ。"],
+    [N,"運は、よくなかった。豆と、玉ねぎだけだった。"],
+    [N,"広間の長机には、旅の人たちがひしめいていた。"],
+    ["行商人","境の向こうの銀細工はね、町じゃ倍で売れるんだ。"],
+    ["巡礼","わたしは近づきませんよ。霧を吸うと、角が生えるとか。"],
+    ["行商人","一晩で生えるもんか。生えるなら、俺はとっくに鹿だ。"],
+    [N,"広間に笑いが起きた。騎士は笑わずに、豆を食べている。"],
+    ["巡礼","でも、夜に光る目を見たら、終わりだと言いますよ。"],
+    [ME,"……今日、見ました。うす紫の目を。"],
+    [N,"長机が、一瞬しずかになった。"],
+    ["巡礼","そ、それで、ご無事だったので？"]
+  ]);
+  const inn=await choose([{t:"「子どもを連れた、お母さんでした」",v:"mom"},{t:"「……ええ。無事です」とだけ言う",v:"short"}]);
+  if(inn==="mom")await talk([["巡礼","子連れの、魔物……？"],["行商人","市の連中だろう。あいつらは、品の数をごまかさない。"],["巡礼","……そう、ですか。"],[N,"巡礼はそれきり、スープに目を落とした。"]]);
+  else await talk([["行商人","ほらな。目が光ったって、死にはしないのさ。"],[N,"騎士が、ちらりとわたしを見た。何も言わなかった。"]]);
+  await talk([
+    ["宿の主人","境の話といえばね。この秋、城の役人が二人泊まったよ。"],
+    ["宿の主人","古い鉱山へ行く道は、まだ通れるかって聞かれた。"],
+    ["行商人","鉱山？ 百年も前に閉じた穴だろう。"],
+    ["宿の主人","さあね。わしは道を教えて、宿代をもらっただけさ。"],
+    [N,"騎士の匙が、一度だけ止まった。"],
+    ["騎士","……食ったら寝ろ。明日は早い。"]
+  ]);
+  setScene("knight",.12);
+  await talk([
+    [N,"裏の軒下。藁を敷いて、小さな火をおこした。"],
+    ["騎士","かかとを見せろ。"],
+    [N,"靴をぬぐと、かかとが赤くふくれていた。"],
+    ["騎士","……ひどいな。書記は、一日じゅう座っているからだ。"],
+    [N,"騎士は腰の袋から、乾いた葉を一枚出して、もんだ。"],
+    ["騎士","しみるぞ。"],
+    [ME,"……っ！ しみるなら、先に言ってください！"],
+    ["騎士","言った。"],
+    [N,"言った。たしかに。"],
+    ["騎士","娘も、新しい靴をはくと、すぐこうなる。"],
+    ["騎士","布を巻いておけ。明日の朝には、歩ける。"],
+    [ME,"……ありがとうございます。"],
+    ["騎士","礼はいらん。おまえが歩けんと、手紙が遅れる。"],
+    [N,"空が、町より広い。星が多すぎて、少しこわい。"],
+    ["騎士","見張りは要らん。ここの犬は、よく吠える。"],
+    [N,"そう言って、騎士は剣を抱いて横になった。"],
+    [N,"……そして、すぐに、いびきをかきはじめた。"],
+    [N,"大きい。宿の犬よりも、たぶん大きい。"],
+    ["宿の主人","（窓から）騎士さま、うちの馬がおびえてますよ……"],
+    [N,"騎士は寝返りを一つ打った。いびきは、少しだけ小さくなった。"],
+    [N,"わたしはろうそくを一本出して、たき火から火を移した。"],
+    [N,"師匠の帳面を開く。革のにおい。白い頁。"],
+    [N,"ペン先を、三度ぬぐう。……師匠のまねだ。"],
+    [N,"――一日目。師匠が、四本の傷を負って見つかった。"],
+    [N,"――わたしが使者になった。封蝋が、ひどく厚い。"],
+    [N,"――門の外で、初めて角を見た。人に、よく似ていた。"],
+    [N,"――あの人は、誓ったから、門に入れなかった。"],
+    [N,"――騎士はパンを一つ、まるごと食べた。いびきが大きい。"],
+    [N,"書いてから、少し迷って、もう一行足した。"],
+    [N,"――「この手紙は、誰かを殺す」。誰を？"],
+    [N,"ろうそくを吹き消す。霧は、まだ見えない。"],
+    [N,"遠くで犬が一声吠え、騎士のいびきが、それに答えた。"]
+  ]);
+},
+/* 3 境・大きな獣 */
+async function(){
+  chap("二日目 ・ 境の道");setScene("road",.25);
+  await talk([[N,"二日目の朝。古い街道は、草に半分のまれていた。"],[N,"町の外で眠ったのは、生まれて初めてだった。"],[N,"背中が痛い。マントの裾が、夜露でしめっている。"],["騎士","起きたか。火は消した。歩きながら食え。"],[N,"騎士が、固いパンを半分に割って放ってよこした。"],[N,"受けそこねて、パンはわたしの額に当たった。"],["騎士","……書記どのは、手より目が先に動くのだな。"],[ME,"見てはいました。見ていただけです。"]]);
+  const slept=await choose([{t:"「よく眠れました」と言う",v:"ok"},{t:"「一睡もできませんでした」と言う",v:"no"}]);
+  S.f.x_slept=slept;
+  if(slept==="ok")await talk([[ME,"よく眠れました。たぶん。"],["騎士","嘘をつけ。夜中に三度、寝返りの音がした。"],["騎士","……まあいい。嘘がつけるうちは元気な証拠だ。"]]);
+  else await talk([[ME,"一睡もできませんでした。虫の声がずっとして。"],["騎士","正直だな。最初の夜は誰でもそうだ。"],["騎士","俺は初めての見張りの夜、木の影を敵と思って斬った。"]]);
+  await talk([["騎士","いくつか覚えておけ。水は、流れているものだけ飲め。"],["騎士","靴ひもは、きつく結べ。境の道はぬかるむ。"],["騎士","それから、霧が出たら俺から三歩以上はなれるな。"],[ME,"三歩、ですか。"],["騎士","霧の中では、それ以上はなれると声しか分からん。"],[N,"わたしは旅日記の端に「三歩」と小さく書いた。"],["騎士","……書くのか、それを。"],[ME,"書記の見習いなので。何でも書いておくんです。"],["騎士","書記というのは、つくづく妙な連中だ。"]]);
+  await talk([[N,"昼前、丘の向こうから、鈴の音が聞こえてきた。"],[N,"羊の群れだ。そのうしろに、杖をついた年寄りがいる。"],["羊飼い","おや、騎士さまと……ずいぶん若いお連れだ。"],["騎士","境の方から来たのか。"],["羊飼い","ああ。夏のあいだは、石標の手前の草地で飼うんでね。"],["羊飼い","霧の際の草は、よく育つ。羊が太るんだ。"],[ME,"怖くは、ないんですか。その……"+word()+"とか。"],["羊飼い","怖い？ そりゃ、獣は怖いさ。夜は火をたやさん。"],["羊飼い","だが角のある連中は、べつに怖かない。"],["羊飼い","向こうも羊は取らん。会釈すりゃ、会釈を返す。"],["羊飼い","去年は、迷った子羊を石標の上に置いといてくれた。"],["騎士","……町では、そんな話は聞かんぞ。"],["羊飼い","町の人は、境まで来ないからね。来ない人ほど、よくしゃべる。"]]);
+  const sh=await choose([{t:"パンを分けて、話の続きを聞く",v:"bread"},{t:"書記の男のうわさを知らないか聞く",v:"rumor"}]);
+  if(sh==="bread")await talk([[N,"朝もらったパンの残りを、半分さし出した。"],["羊飼い","こりゃどうも。固いが、いいパンだ。"],["騎士","俺のパンだがな。"],["羊飼い","はは。じゃあ、騎士さまにも礼を言っとこう。"]]);
+  else await talk([[ME,"数日前、境で書記が倒れていたと聞いて……"],["羊飼い","ああ、その話なら、市でもちきりさ。"]]);
+  await talk([["羊飼い","そういや、妙なうわさを聞いた。倒れてた書記さんのことだ。"],["羊飼い","村の年寄りの"+word()+"が、書記さんを抱えて歩いてたそうだ。"],["羊飼い","人間の道の方へ、よろよろとな。"],["羊飼い","さらって行くなら、逆へ行くだろうに。わしには分からんね。"],["騎士","……誰が見た。"],["羊飼い","さあ。うわさってのは、誰も見てないから、うわさなのさ。"],[N,"鈴の音を鳴らして、羊の群れは丘の向こうへ消えた。"],[ME,"……人間の道の方へ、ですか。"],["騎士","うわさだ。……書いておけ、とは言わん。"],[N,"騎士は言わなかった。だからわたしは、自分で書いた。"]]);
+  note("v3_rumor","うわさ: 村の年寄りの魔物は、師匠を抱えて人間の道の方へ歩いていた。");
+  setScene("border",.3);
+  await talk([[N,"昼すぎ、道の両わきに、苔むした石の柱が並んだ。"],[N,"その向こうに、崩れかけた見張り塔が立っている。"],[N,"塔の窓から、カラスが一羽、こちらを見下ろしていた。"],["騎士","境の石標だ。ここから先、王の兵は入らん。"],[ME,"取り決めの、三つ目の行ですね。"],["騎士","紙ではそうなっているらしいな。俺は紙は知らん。"],["騎士","俺が知っているのは、あの塔で三年、立っていたことだけだ。"],[ME,"見張りを、されていたんですか。"],["騎士","若いころにな。来る日も来る日も、霧を見ていた。"]]);
+  const askWar=await choose([{t:"「昔、ここで戦があったんですか」",v:"war"},{t:"「霧の向こうに、行ったことは？」",v:"mist"}]);
+  if(askWar==="war")await talk([["騎士","古参の兵どもは、そう言っていた。爺さんの、そのまた爺さんの代だと。"],["騎士","塔の石が黒いのは、そのころの火のあとだそうだ。"],["騎士","何のために戦ったのか、誰もはっきりとは知らん。"],["騎士","知らんまま、兵は霧をにらむのが仕事だと教わる。"]]);
+  else await talk([["騎士","ない。石標をまたぐなと、毎日言われた。"],["騎士","兵どもは言っていた。霧に何年もいると、角が生えるとな。"],["騎士","酒の席の作り話だと思っていたが……市の女を見たろう。"],[ME,"昔は、町の粉屋の娘だったと言っていました。"],["騎士","……一晩や二晩なら、どうということはない。俺がそうだった。"]]);
+  await talk([["騎士","百年前に手紙の取り決めができて、塔は空になった。"],["騎士","兵がいらなくなったのは、いいことだ。……たぶんな。"],[N,"騎士は塔を見上げ、それ以上は言わなかった。"]]);
+  await talk([[N,"石標の一本に、字が刻まれていた。風に削られて、ほとんど読めない。"],[ME,"……「この先」……「互いに」……あとは、読めません。"],["騎士","読めんのに、写すのか。"],[ME,"読めないから、写すんです。あとで読める人がいるかもしれない。"],[N,"紙を石に当てて、木炭でこすった。字の形が、白く浮かんだ。"],["騎士","……器用なものだ。娘に見せたら、喜びそうだな。"],[ME,"一枚、あげましょうか。"],["騎士","……いや。帰ったら、本物を見せに連れてくる。いつかな。"]]);
+  note("v3_border","境の石標から先へは、王の兵は入らない。百年前からの取り決め。");
+  setScene("road",.3);
+  await talk([[N,"石標をすぎると、足もとから白っぽい霧がわいてきた。"],[N,"よく見ると、うすく紫がかっている。"],["騎士","三歩だ。忘れるな。"]]);
+  await talk([[N,"道が下りになり、浅い沢に出た。"],[N,"水の上に、霧がたまっている。くぼみに、ミルクを注いだみたいだ。"],[N,"向こう岸が、見えない。"],["騎士","飛び石がある。俺の踏んだ石だけ踏め。"],[ME,"……見えません。騎士さまの足しか。"],["騎士","それでいい。足だけ見ていろ。"],[N,"一つ、二つ。石は冷たく、ぬるりとしていた。"],[N,"三つ目で、足がすべった。"],[ME,"わっ――"],[N,"腕をつかまれた。騎士の手は、鉄みたいに固かった。"],["騎士","……三歩以内で助かったな。"],[ME,"書いておいてよかったです。"],["騎士","書いたから助かったわけではないぞ。"]]);
+  await talk([[N,"向こう岸に着くと、騎士は流れの水を手ですくって飲んだ。"],["騎士","流れている水だ。飲んでおけ。"],[N,"冷たくて、少しだけ、鉄の味がした。"],[ME,"……騎士さま。霧の中って、こんなに静かなんですね。"],["騎士","鳥が鳴かなくなる。それが、境の奥に入ったしるしだ。"],[N,"言われてみれば、朝はあんなにいた小鳥の声が、ない。"],[N,"背中が、すうっと冷たくなった。"],[ME,"……三歩じゃなくて、二歩にしてもいいですか。"],["騎士","好きにしろ。踏むなよ、かかとを。"]]);
+  await talk([[N,"しばらく歩いたところで、騎士が足を止めた。"],["騎士","このあたりで、師匠どのは見つかった。"],[N,"道ばたの草が、なぎ倒されている。何かの跡が残っている。"],["騎士","俺は兵を呼びに走っただけで、よくは見ていない。"],["騎士","書記どのの目で見てくれ。俺は見張っている。"]]);
+  await say(N,"手がかりになりそうな跡が、三つある。気になるものから調べよう。");
+  const seen=new Set();
+  while(seen.size<3){
+    const c=await choose([{t:"土に残った足あとを見る",v:"foot",off:seen.has("foot")},{t:"木の幹の傷を見る",v:"claw",off:seen.has("claw")},{t:"落ちている灯りの燃えかすを見る",v:"lamp",off:seen.has("lamp")},{t:"先へ進む",v:"go",hide:seen.size===0}]);
+    if(c==="go")break;seen.add(c);
+    if(c==="foot"){await talk([[N,"大きな足あと。人の手のひらより、ずっと大きい。"],[N,"前足で土をかいた跡があり、そのすぐ先は、かいた足と逆の側へ跳んでいる。"],["騎士","……跳ぶ前に、土をかくのか。馬が前がきをするようなものか。"]]);S.f.footStudied=true;note("foot","獣は、前足で土をかいた側と逆へ跳ぶ。")}
+    if(c==="claw"){await talk([[N,"幹に、四本の深い爪あと。わたしの背より高い所だ。"],[N,"……師匠の傷と、同じ形だ。"],["騎士","四本……。剣や小刀では、こうはならんな。"]]);S.f.clawSeen=true;note("claw","師匠の傷は、四本の爪あと。言葉を話す魔物の傷ではない。獣の傷だ。");answer("what","師匠を傷つけたのは、言葉のない大きな獣かもしれない。")}
+    if(c==="lamp"){await talk([[N,"割れた手さげ灯り。師匠のものだ。書記局の印がある。"],[N,"燃えかすのまわりだけ、足あとがない。獣は火に近づかなかったらしい。"],["騎士","師匠どのは、夜にここへ来たのか。灯りを持って、一人で。"],[N,"……なぜ、夜に。"]]);note("lamp","獣は火をきらう。")}
+  }
+  await talk([[N,"跡を書きとめ終えて、わたしは道の先を見た。"],[N,"夜。灯りを一つ。師匠はここを、一人で歩いた。"],[N,"師匠は、暗い道がきらいだった。夜の使いは、いつもわたしに頼んだ。"],[N,"その師匠が、自分で来た。誰にも言わずに。"],["騎士","……顔色が悪いぞ。"],[ME,"考えていたんです。師匠は、何をしに来たのか。"],["騎士","会いに来たんだろう。誰かに。夜に、灯りを持ってな。"],["騎士","人に会うのでなければ、夜道に灯りはいらん。"],[ME,"……誰に、でしょう。"],["騎士","それを確かめに行くんだろう、俺たちは。"],[N,"騎士の言い方は、ぶっきらぼうで、少しだけやさしかった。"]]);
+  setScene("beast",.3);
+  await talk([[N,"霧の奥で、低いうなり声。"],[N,"土をふむ重い音が、ゆっくり近づいてくる。"],[N,"大きな獣が、道をふさいだ。熊よりも、まだ大きい。"],["騎士","下がれ！ こいつは言葉が通じん！"],[ME,"……足、です。足を見れば、分かるかもしれない。"]]);
+  await guide({tag:"出会い ② 大きな獣",title:"動きを読む",goal:"獣の跳びかかりを、3回よける",
+    how:["獣は跳ぶ前に、前足で土をかく。それが合図","下の線がなくなる前に「左へ」か「右へ」を押す","最初の1回は見本。時間は流れないので、よく見て"].concat(has("lamp")?["旅日記: 獣は火をきらう。「灯りをかざす」も使える"]:[]),
+    fail:"かすっても旅は続きます。"});
+  // 見本（時間なし）: かいた足と逆へ跳ぶことを、体で覚える
+  {const g0=game(`<h3>見本 ― 時間は流れない</h3><div id="tell0" style="min-height:1.6em">獣が<b>右</b>の前足で土をかいた……</div><div class="row"><button type="button" data-v="L">左へ</button><button type="button" data-v="R">右へ</button></div>`);
+   const p=await new Promise(res=>g0.querySelectorAll(".row button").forEach(b=>b.onclick=()=>res(b.dataset.v)));
+   $("tell0").textContent=p==="R"?"よけた！ 獣は、土をかいた右と逆の左へ跳んだ。だから右が安全だった。":"かすった……！ 獣は、土をかいた右と逆の左へ跳んだ。右へよければよかった。";
+   beep(p==="R"?700:120,.1);await wait(reduce?600:1800);
+   note("foot","獣は、前足で土をかいた側と逆へ跳ぶ。")}
+  // よける（本番）
+  const g=game(`<h3>本番 ― 線がなくなる前に</h3><div id="tell" style="min-height:1.6em"></div><div class="timer" id="tm" style="width:100%"></div><div class="row"><button type="button" data-v="L">左へ</button><button type="button" data-v="R">右へ</button><button type="button" data-v="F" ${has("lamp")?"":"hidden"}>灯りをかざす</button></div>`);
+  const pats=["L","R","L"];let hits=0,lampUsed=false;
+  for(let i=0;i<3;i++){
+    const scr=pats[i];const safe=scr==="L"?"L":"R"; // 左をかけば右へ跳ぶ＝左が安全
+    $("tell").textContent=`獣が${scr==="L"?"左":"右"}の前足で土をかいた……`;
+    const tm=$("tm");tm.style.transition="none";tm.style.width="100%";void tm.offsetWidth;const ms=S.f.footStudied?3400:2800;tm.style.transition=`width ${ms}ms linear`;tm.style.width="0%";
+    const pick=await new Promise(res=>{const to=setTimeout(()=>res("T"),ms);g.querySelectorAll(".row button").forEach(b=>b.onclick=()=>{clearTimeout(to);res(b.dataset.v)})});
+    if(pick==="F"){lampUsed=true;$("tell").textContent="灯りをかざすと、獣は目を細めてあとずさった。";beep(880,.2,"triangle");await new Promise(r=>setTimeout(r,1200));break}
+    if(pick===safe){$("tell").textContent="よけた！";beep(700,.08)}else{hits++;$("tell").textContent="かすった……！";beep(120,.25,"sawtooth",.05)}
+    await new Promise(r=>setTimeout(r,900));
+  }
+  game("");S.f.beastHits=hits;setScene("road",.3);
+  if(lampUsed)await talk([[N,"獣は火をきらって、霧の奥へ帰っていった。"],[N,"師匠の灯りの燃えかすが、教えてくれたのだ。"]]);
+  else await say(N,hits>=2?"腕に傷を負ったが、獣はやがて霧の奥へ去った。":"獣は何度か跳びかかったあと、霧の奥へ去った。");
+  await talk([[N,"手が、今ごろになってふるえだした。"],["騎士","……見事だ。俺の剣は、抜く間もなかった。"]]);
+  if(hits>=2)await talk([["騎士","腕を見せろ。……浅い。布を巻いておけ。"],["騎士","逃げずに足を見ていたな。兵でも、なかなかできん。"]]);
+  else await talk([["騎士","あの足の動きを、よく読んだ。俺は目で追うのがやっとだった。"],["騎士","書記というのは、妙な連中だと言ったな。取り消す。"]]);
+  await talk([[ME,"……三歩、はなれませんでしたよ。"],["騎士","ふん。……ああ、そうだな。"],[N,"騎士が、ほんの少しだけ口の端を上げた。初めて見る顔だった。"]]);
+  if(!S.f.clawSeen){await say(N,"去りぎわ、獣の前足が見えた。爪は四本。……どこかで見た形だ。");S.f.clawSeen=true;note("claw","師匠の傷は、四本の爪あと。獣の傷かもしれない。");answer("what","師匠を傷つけたのは、言葉のない大きな獣かもしれない。")}
+  await talk([[N,"岩に腰を下ろした。ひざが、じんじんする。"],[N,"見ると、すりむいて血がにじんでいた。よけたとき、転んだらしい。"],["騎士","見せろ。……砂が入っている。"],[N,"騎士は水袋の水で傷を洗い、腰の袋から布を出した。"],[ME,"いっ……！"],["騎士","我慢しろ。娘はこのくらいでは泣かん。"],[ME,"泣いてません。"],["騎士","そうか。目から汗が出ているだけか。"],[N,"布の巻き方が、驚くほど手なれていた。"],[ME,"……慣れて、いるんですね。"],["騎士","兵のころは、毎日だれかがどこかを擦りむいていた。"]]);
+  await talk([[N,"巻き終えると、騎士は盾を下ろし、石でこつこつと叩きはじめた。"],[N,"縁に、古い凹みがある。今日できたものではない。"],[ME,"それ、直しているんですか。"],["騎士","直らん。くせだ。考えごとをするときの。"],[ME,"何を、考えているんですか。"],["騎士","……さっきの羊飼いの話と、あの獣の爪だ。"],["騎士","この凹みのことは、話せば長い。また今度だ。"]]);
+  await talk([["騎士","日が落ちる前に、野営の場所を探す。歩けるか。"],[ME,"歩けます。"],[N,"霧の向こうで、もう一度だけ、遠いうなり声がした。"]]);
+},
+/* 4 騎士 */
+async function(){
+  chap("二日目 ・ 野営");setScene("knight",.3);
+  await talk([[N,"日が傾くころ、騎士は大きな岩のかげで足を止めた。"],["騎士","ここにする。風が当たらん。霧も、岩でいくらか止まる。"],["騎士","おまえは布を張れ。俺は薪を集める。"],[N,"油をしみこませた布と、縄が二本。それだけだ。"],[N,"……どこに、どう結べばいいのだろう。"],[N,"枝に縄を巻きつけて、ぎゅっと結んだ。蝶結びで。"]]);
+  const knot=await choose([{t:"できたことにして、待つ",v:"wait"},{t:"騎士に結び方を聞く",v:"ask"}]);
+  if(knot==="wait")await talk([[N,"薪をかかえて戻ってきた騎士が、布にふれた。"],[N,"布は、ふわりと地面に落ちた。"],["騎士","……これは、何だ。"],[ME,"……蝶結び、です。"],["騎士","祭りの飾りなら上出来だ。"]]);
+  else await talk([[ME,"あの……縄の結び方が、分かりません。"],["騎士","聞けるのは、いいことだ。兵の半分は、聞かずに布を飛ばす。"]]);
+  await talk([["騎士","見ていろ。輪を作って、端をくぐらせて、木のうしろを回す。"],["騎士","もう一度くぐらせて、引く。引けば引くほど、締まる。"],[N,"騎士の太い指が、生きもののように縄を動かした。"],[N,"師匠がペンを動かすときと、少し似ていた。"],[ME,"もう一回、お願いします。ゆっくり。"],["騎士","……書くのか、それも。"],[ME,"書きます。絵も描きます。"],[N,"三度目で、やっと結べた。引くと、ちゃんと締まった。"],["騎士","よし。ほどくときは、ここを引け。一度で解ける。"],["騎士","締まるのに、すぐ解ける。いい結び目というのは、そういうものだ。"]]);
+  await talk([[N,"夜。岩かげに火をおこした。霧は、火のまわりだけ薄い。"],[N,"騎士が鍋をかき回している。干し肉と、豆と、何かの草。"],["騎士","兵のころに覚えた。境の見張り汁だ。"],[N,"においは、正直に言って、あまりよくない。"]]);
+  const stew=await choose([{t:"ひと口飲んで「おいしい」と言う",v:"praise"},{t:"ひと口飲んで、正直な顔をする",v:"honest"}]);
+  S.f.x_stew=stew;
+  if(stew==="praise")await talk([[ME,"……おいしい、です。"],["騎士","そうか。目がうるんでいるが。"],[ME,"湯気のせいです。"],["騎士","嘘の下手なやつだ。……塩を入れすぎた。俺も分かっている。"]]);
+  else await talk([[N,"思わず、顔のまん中にしわが寄った。"],["騎士","……おまえは、本当に嘘がつけんのだな。"],["騎士","兵どもにも同じ顔をされた。十年、同じ顔だ。"],[N,"騎士は、肩をゆらして笑った。笑う人だとは思わなかった。"]]);
+  await talk([[N,"火がはぜる。しばらく、二人とも黙って食べた。"],[ME,"騎士さまは、どうして王さまに仕えているんですか。"],["騎士","さまはいらん。……父が、境の兵だった。"],["騎士","昼に見た盾の凹みな。あれは、父がこの境でつけたものだ。"],["騎士","獣の尾で、はね飛ばされたそうだ。父は生きて帰った。盾のおかげでな。"],["騎士","父の給金で、俺も妹たちも食べさせてもらった。"],["騎士","王の剣で食った飯の分は、王に返す。それだけだ。"],[ME,"今も、ご家族は町に？"],["騎士","市で話した娘がいる。七つだ。字を習いはじめた。"],["騎士","この旅のことを話したら、書記さまに会うのかと騒いでいた。"],[ME,"……見習いですけど。"],["騎士","娘には黙っておく。がっかりさせたくない。"],[N,"わたしは笑った。騎士も、少しだけ笑った。"]]);
+  await talk([[ME,"娘さんは、どんなお話が好きなんですか。"],["騎士","手紙を運ぶカラスの話だ。俺が作った。"],["騎士","カラスが、遠い国の子に手紙を届ける。毎晩、一つずつ国が増える。"],["騎士","今夜は七つ目の国のはずだった。……今ごろ、すねている。"],[ME,"七つ目の国は、どんな国なんですか。"],["騎士","まだ決めとらん。帰ってから考える。"],["騎士","娘は、カラスが運ぶ手紙を、自分で書きたがる。"],["騎士","まだ自分の名前しか書けん。それも、一字さかさまだ。"]]);
+  const dg=await choose([{t:"「七つ目の国を、いっしょに考えましょう」",v:"tale"},{t:"「名前の書き方、帰ったら教えましょうか」",v:"letters"}]);
+  if(dg==="tale")await talk([[ME,"霧の中の国、なんてどうですか。静かで、みんな長生きの。"],["騎士","……カラスが、迷子にならんか。"],[ME,"三歩以内を飛べば、だいじょうぶです。"],["騎士","ふん。……悪くない。使わせてもらう。"]]);
+  else await talk([[ME,"字のお手本なら、書けます。見習いですけど。"],["騎士","……書記さまに習ったと、一生自慢するぞ、あいつは。"],[ME,"見習いだって、ちゃんと言ってくださいね。"],["騎士","言わん。言ったら、がっかりする。"]]);
+  await talk([[N,"そのとき、霧の奥で、ぱきりと枝の折れる音がした。"],[N,"騎士の手が、音もなく剣の柄にかかった。"],["騎士","……動くな。火の内側にいろ。"],[N,"息を止めた。さく、さく、と、何かが落ち葉をふむ。"],[N,"霧の中に、二つの光る目が浮かんだ。"],[N,"――鹿だった。町の鹿より、ひと回り大きい。"],[N,"鹿は首をかしげてこちらを見ると、草をひと口食べて、去っていった。"],["騎士","……霧の際で暮らしている鹿だろう。少し大きくなる。"],[ME,"心臓が、口から出るかと思いました。"],["騎士","俺もだ。……今のは、書かんでいい。"],[ME,"書きます。"],["騎士","……書くな。"]]);
+  await talk([[N,"火が小さくなった。騎士は薪をくべ、声を落とした。"],["騎士","言っておく。師匠どのを襲ったのは、泉の手前の村の"+word()+"だ。"],["騎士","血まみれで師匠どのを抱えているのを、見た者がいる。"],["騎士",word()+"は、角を生やして、何百年も生きるという。"],["騎士","そんなものが、人間と同じ心でいるとは、俺には思えん。"],["騎士","明日、その村を通る。……気を抜くな。"]]);
+  note("accuse","騎士は、泉の手前の村の魔族が師匠を襲ったと言う。");
+  // 日記で言い返す
+  const evid=S.diary.filter(d=>["claw","lamp","vow1","foot","seal"].includes(d.id));
+  await guide({tag:"出会い ③ 騎士",title:"言い返す",goal:"騎士の決めつけに、旅日記の1行で答える",
+    how:["旅日記に書いたことが、そのまま選べる","いちばん確かな1行を選ぶと、騎士の見方が変わる"],
+    fail:"何を選んでも旅は続きます。騎士があなたをどれだけ信じるかが変わります。"});
+  const g=game(`<h3>旅日記から、言い返す1行を選ぶ</h3><div class="choices pick" id="ev"></div>`);
+  const pick=await new Promise(res=>{const box=$("ev");
+    [...evid,{id:"none",text:"（何も言わない）"}].forEach(d=>{const b=document.createElement("button");b.type="button";b.textContent=d.text;b.onclick=()=>res(d.id);box.appendChild(b)})});
+  game("");
+  if(pick==="claw"){S.f.knightTrust+=2;await talk([[ME,"師匠の傷は、四本の爪あとでした。"],[ME,"今日の道で会った獣の爪と、同じ形です。"],["騎士","……獣、だと？"],[N,"騎士は長いあいだ、火を見つめていた。"],["騎士","俺も、腑に落ちなかった。"],["騎士","抱えていた"+word()+"は、ひどく老いていたそうだ。"],["騎士","襲った者が、なぜ逃げずに抱えていた。"]]);note("knightdoubt","騎士も、話のおかしさに気づいていた。")}
+  else if(pick==="lamp"||pick==="foot"){S.f.knightTrust+=1;await talk([[ME,"獣の跡が、あのあたりにたくさんありました。"],["騎士","……獣のしわざかもしれん、か。"],["騎士","だが、見た者がいる。それは消えん。"]])}
+  else if(pick==="seal"){S.f.knightTrust+=1;await talk([[ME,"師匠は、最後に「封を」と言いました。"],["騎士","封を……開けるな、か。それとも、開けろ、か。"]])}
+  else if(pick==="none")await talk([[N,"言葉が、出てこなかった。"],["騎士","……そうか。"]]);
+  else await talk([[ME,word()+"は誓いを破れない。取り決めを結んだ相手を、軽々しく襲うとは思えません。"],["騎士","理屈だな。だが理屈で人は斬れる。"]]);
+  await talk([[N,"しばらく、どちらも口をきかなかった。"],[ME,"……妹さんたちは、今は。"],["騎士","二人とも嫁いだ。上は粉ひき、下は織物屋だ。"],["騎士","下の妹は口が悪い。この旅のことを話したら、こう言った。"],["騎士","兄さんは字が読めないんだから、だまされないでね、とな。"],[ME,"……読めないんですか？"],["騎士","読める。遅いだけだ。娘のほうが、もうすぐ速くなる。"],["騎士","だから、紙のことは書記に任せる。……任せていいのか、分からんがな。"]]);
+  await talk([[N,"騎士は、わたしの荷の中の手紙に目をやった。"],["騎士","手紙は、俺が見張っている。それが役目だ。"],["騎士","……だが、おまえが封を開けるなら、"],["騎士","俺は火の番をしていて、見ていなかったことにしてやる。"]]);
+  const c=await choose([{t:"封を開けて、手紙を読む",v:true,note:"中身を知る。もう元には戻せない"},{t:"開けない。使者は中身を見ない",v:false}]);
+  if(c){S.f.sealOpened=true;S.f.knightTrust+=1;
+    await talk([[N,"ろうそくの火で、そっと封蝋をあたためて、はがした。"],[N,"師匠の字だ。きれいな、ゆるみのない清書。"],["王の手紙","長〇〇よ、自らの手で、人間を傷つけた魔族を引き渡せ。さもなくば、手紙はこれが最後。"],["騎士","……引き渡し、か。いつもは長の下の者がやることだ。"],["騎士","なぜ、わざわざ『自らの手で』と書く。"],[N,"わたしにも、まだ分からない。でも、師匠のペンが止まったのは、きっとこの行だ。"]]);
+    note("letter","手紙:「長よ、自らの手で、人間を傷つけた魔族を引き渡せ。さもなくば、手紙はこれが最後」");answer("seal","封を開けて、中を見ろ。……たぶん、そう言いたかった。");}
+  else{await talk([[N,"わたしは、封蝋から手をはなした。"],["騎士","……そうか。おまえは、まっすぐだな。"],["騎士","その分、明日は目を開けておけ。"]]);}
+  await talk([[N,"火が、ぱちりと鳴った。騎士は剣を抱いて、横になった。"],[N,"火の輪の外で、紫の霧がゆっくり動いている。"],[N,"旅日記を開こうとして、まぶたが重くなった。"]]);
+  setScene("desk",0);
+  await talk([[N,"――書記の部屋。冬で、窓の外は白かった。"],[N,"わたしはまだ小さくて、椅子の上にひざで立っていた。"],["師匠","ペンは、つまむように持つ。にぎるんじゃない。"],["師匠","インクは、少しでいい。たっぷりつけると、紙が泣く。"],[ME,"紙が、泣くんですか。"],["師匠","にじむことを、わたしたちはそう言う。"],[N,"最初に書いたのは、自分の名前だった。一字、さかさまだった。"],["師匠","いいさ。さかさまでも、きみの名前だと、わたしには読める。"],["師匠","字は、読む人のために書く。覚えておくといい。"],["師匠","それから――一字ちがえば、意味が変わる。"],["師匠","だから書記は、書くより先に、よく読むんだ。"],[N,"ろうそくの火が、師匠の眼鏡に二つ映っていた。"]]);
+  if(S.f.sealOpened)await say(N,"……「自らの手で」。あの一行を、師匠はどんな顔で読んだのだろう。");
+  else await say(N,"……開けなかった手紙を、師匠はきっと、誰よりもよく読んだ。");
+  setScene("knight",.3);
+  await talk([[N,"薪がくずれる音で、目がさめた。騎士が火をつついている。"],["騎士","うなされては、いなかったな。"],[ME,"……いい夢でした。"],["騎士","そうか。なら、もう少し寝ろ。見張りは俺がする。"],[N,"わたしは、ろうそくの残りで旅日記を開いた。"],[N,"――二日目。獣を見た。騎士は塩を入れすぎる。"],[N,"――鹿は大きい。騎士は鹿がこわい。（本人は書くなと言った）"],[N,"――明日は、泉の手前の村へ。"],[N,"火の向こうで、騎士が小さく何かを口ずさんでいた。"],[N,"カラスが国から国へ飛ぶ、子どもの歌だった。"]]);
+},
+/* 5 泉の手前の村・古い友 */
+async function(){
+  chap("三日目 ・ 泉の手前の村");setScene("forest",.5);
+  // 道中: 夜明けの霧の森。世界が静かに、少しずつ違っていく
+  await talk([[N,"夜明け前に、野営をたたんだ。"],[N,"森へ入ると、霧がうす紫に変わった。"],[N,"鳥の声がしない。足音だけが、やけに大きく聞こえる。"],["騎士","……静かすぎる。境の向こうは、いつもこうだ。"],
+    [N,"木の幹が、町の木よりずっと太い。葉が、手のひらほどもある。"],[ME,"この木も、霧で大きくなったんでしょうか。"],["騎士","獣と同じだな。ここでは何でも、育ちすぎる。"],
+    [N,"騎士は、剣の柄から手を離さない。"],["騎士","……正直に言う。俺は、霧の中が好かん。"],["騎士","子どものころ、親父に言われた。霧に入ると角が生える、とな。"],[ME,"短い旅なら平気だと、師匠は言っていました。"],["騎士","知っている。頭では、な。"]]);
+  const fc=await choose([{t:"「お父さんも、騎士だったんですか」",v:"dad"},{t:"「わたしも、少し怖いです」",v:"fear"},{t:"黙って並んで歩く",v:"quiet"}]);
+  if(fc==="dad")await talk([["騎士","いや、粉ひきだ。俺が剣を持つと言ったら、三日口をきかなかった。"],["騎士","王の兵になれば、弟や妹が食える。……それだけだった。"]]);
+  else if(fc==="fear")await talk([["騎士","そうか。……怖いと言えるのは、悪くない。"],["騎士","怖くないと言うやつから、先に倒れる。"]]);
+  else await talk([[N,"しばらく、二人の足音だけが続いた。"],["騎士","……おまえは、余計なことを言わんな。助かる。"]]);
+  await talk([[N,"木の間に、細い煙が見えた。パンの焼ける匂いがする。"],["騎士","村だ。……例の"+word()+"がいる村だ。"]]);
+  // 村: 魔族の静かな暮らし
+  setScene("village",.5);
+  await talk([[N,"村の入口で、角のある男が、ゆっくりと頭を下げた。"],["村の男","霧の朝に、よくお越しくださった。旅の方。"],[N,"男は胸に手を当てたまま、しばらく動かない。"],["騎士","（小声で）……何をしている。"],[ME,"あいさつ、だと思います。待っているんです。"]]);
+  const gr=await choose([{t:"同じように胸に手を当てて、ゆっくり頭を下げる",v:"bow"},{t:"「おはようございます」と言う",v:"hi"}]);
+  if(gr==="bow")await talk([[N,"わたしも胸に手を当て、ゆっくり三つ数えた。"],["村の男","……作法をご存じか。ありがたい。"],["村の男","ここでは、急ぐ者はおりませぬ。時は、たっぷりありますゆえ。"]]);
+  else await talk([["村の男","……おはよう、ございます。"],[N,"男はかすかに笑い、もう一度、ゆっくり頭を下げた。"],["村の男","人間の方は、早口でいらっしゃる。お気になさらず。"]]);
+  await talk([["村の男","使者どのとお見受けする。泉へは、日の暮れまでに。"],["村の男","ただ、剣は鞘のままで願いたい。村には、子がおるのです。"],["騎士","……抜くつもりはない。今は、な。"],
+    [N,"村の中は、人間の町よりずっと物音が少ない。誰も声を張りあげない。"],[N,"戸口で、老いた夫婦が並んで機を織っている。"],["機織りの老人","この布は、三十年かけて織っておる。"],["機織りの老女","あと二十年で仕上がりますよ。孫の、そのまた孫の婚礼に。"],[ME,"……五十年、ですか。"],["機織りの老女","わたしらには、ほんの少しの間ですよ。"],
+    [N,"道の真ん中で、小さな角の子が一人、石を並べて遊んでいる。"],["機織りの老人","あれは、この村で十年ぶりに生まれた子でな。"],["機織りの老人","皆で育てておる。村じゅうが、あの子の親だ。"],["騎士","……十年に、一人か。"],
+    ["村の子","あっ、人間だ！ 耳が、まるい！"],[ME,"……まるいです。"],["村の子","角は？ 落としちゃったの？"],[N,"騎士が、こらえきれずに小さく吹き出した。"],["騎士","……落としてはおらん。はじめから、ないのだ。"]]);
+  await talk([["村の女","人間の子がめずらしいかい。"],["村の女","……わたしらも、もとは人間さ。霧のそばで長く暮らすと、こうなる。"],["村の女","角が生えても、パンの焼き方は忘れないよ。"],
+    [N,"女は焼きたてのパンを割って、わたしと騎士に半分ずつくれた。"],["騎士","……町のパン屋のと、同じ味だ。"],["村の女","そりゃそうさ。わたしの母さんは、あんたらの町のパン屋だった。"],["村の女","百五十年も前の話だけどね。"]]);
+  // 魔族の家族と、ゆっくりした食卓
+  await talk([["村の女","泉へ行くなら、少し休んでいきな。"],["村の女","霧の道は、足より胸が疲れるんだ。"],
+    [N,"低い天井の家だった。炉のそばに、角の短い男と、小さな女の子がいた。"],[N,"三人は並んで胸に手を当て、ゆっくりと頭を下げた。"],["村の女の夫","霧の朝に、ようこそ。"],["村の女の夫","この家の戸は、旅の方のためにも開いております。"],
+    [N,"今度は騎士も、ぎこちなく胸に手を当てた。"],[N,"一つ、二つ、三つ。騎士の肩が、もぞもぞ動く。"],["騎士","（小声で）……長い。"],[ME,"（小声で）まだです。"],[N,"四つ、五つ。夫がようやく顔を上げ、にこりと笑った。"],["村の女の夫","人間の方が、最後まで待ってくださった。今日はよい日だ。"],
+    [N,"食卓には、パンと、木の実の入った汁と、蜂蜜の小皿。"],[N,"食べる前に、家族は目を閉じて、何かを小さくつぶやいた。"],[ME,"……お祈り、ですか。"],["村の女","祈りじゃないよ。今日の糧を、誰から受けたか言うのさ。"],["村の女","麦は、境の畑のじいさま。蜂蜜は、川向こうの姉さん。"],["村の女","わたしらは、書いて残さない。そのかわり、口で何度でも言う。"],
+    ["騎士","……書かずに、忘れんのか。"],["村の女の夫","忘れるほど、急いでおりませぬゆえ。"],[N,"わたしは、町の書記局の、天井まで積まれた帳簿の山を思い出した。"],
+    [N,"女の子が、騎士の籠手をじっと見ている。"],["女の子","それ、重い？"],["騎士","……重い。"],["女の子","じゃあ、なんで着てるの？"],[N,"騎士は答えに詰まり、パンを口に押しこんだ。"],["騎士","……こわい者が、いるからだ。"],["女の子","ここには、いないよ？"],
+    [N,"騎士は、しばらく黙っていた。"],[N,"それから籠手を片方だけ外して、卓の上に置いた。"],[N,"女の子は満足そうにうなずいて、蜂蜜の皿を騎士のほうへ押した。"],["騎士","……甘いな。"],["村の女","川向こうの姉さんに、伝えておくよ。人間の騎士が甘いと言ったって。"]]);
+  answer("what","「魔物」と呼ばれる人たちは、霧のそばで長く暮らした人間だった。自分たちを魔族と呼ぶ。");
+  note("origin","魔族は、霧のそばで長く暮らした人間。心も言葉も人間のまま。");
+  // 樽屋の老人: 若い書記だった師匠を覚えている
+  await talk([[N,"家を出ると、隣の軒先で、年老いた魔族が樽のたがを打っていた。"],[N,"トン……トン……と、ひどくゆっくりした拍子だった。"],["樽屋の老人","……その鞄。書記局の革だね。"],[ME,"分かるんですか。"],["樽屋の老人","わしは昔、あんたらの町で樽を作っておった。"],["樽屋の老人","五十年ほど前かな。借金がかさんで、町にいられなくなってね。"],["樽屋の老人","霧のそばへ逃げてきて、気づいたら角が生えておったよ。"],
+    ["騎士","……町の者だったのか。"],["樽屋の老人","粉ひき通りの、三つ目の角だ。あの井戸は、今もあるかね。"],[N,"騎士の顔が、少し変わった。"],["騎士","……ある。俺の家の、すぐ裏だ。"],["樽屋の老人","ほう。では、あんたの家の樽も、わしが作ったかもしれんな。"],
+    ["騎士","親父の粉の樽に、焼き印があった。輪の中に、小さな鳥だ。"],[N,"老人の手が、止まった。"],["樽屋の老人","……それは、わしの印だ。"],["騎士","樽は、まだ使っている。水が漏れたことは、一度もない。"],["樽屋の老人","そうか。……それは、うれしいね。"],
+    ["樽屋の老人","書記局といえば、若い書記がおったよ。"],["樽屋の老人","字の読めん者のために、ただで手紙を書いてくれた。"],["樽屋の老人","わしが母に送った最後の手紙も、あの若者が書いた。"],["樽屋の老人","「言いたいことを、言いたいとおりに書きます」と言ってな。"],
+    [N,"胸の奥が、きゅっとした。"],[ME,"……それ、きっと師匠です。"],[ME,"今も、弟子のわたしに同じことを言います。"],["樽屋の老人","そうか。あの若者が、師匠に。……人間は、早いねえ。"],["樽屋の老人","わしには、ついこの間のことなのに。"],
+    [N,"老人は、たがを一つ打った。トン。"],["樽屋の老人","あの若者が霧の村へ来るようになったのは、それから何年かあとだ。"],["樽屋の老人","外れの家の人と、夜おそくまで、泉の話をしておった。"],
+    [N,"村を歩きながら、騎士がぽつりと言った。"],["騎士","……町では、霧の向こうには化け物しかいないと聞かされてきた。"],["騎士","樽屋の親父がいるとは、誰も言わなかった。"],[ME,"言わなかったのは、知らなかったからだと思います。"],["騎士","……書いてあればよかったのにな。おまえたちの、帳簿にでも。"]]);
+  await talk([["村の女","外れの家の人に、会いに来たんだろう。"],["村の女","あの人は、あの晩から急に年をとった。……わたしらは、誰も責めていないよ。"]]);
+  // 古い友
+  await talk([[N,"村の外れ。崩れかけた家の前に、その"+word()+"は座っていた。"],[N,"体は痩せ、髪は真っ白。急に年をとったように見える。"],[N,"杖を持つ手に、乾いた血のあとが黒く残っていた。"],["騎士","……こいつか。"],[N,"騎士の手が、剣の柄にかかる。"],["古い友","……あの男の弟子か。話すことは、何もない。"]]);
+  note("old","村の魔族は、何十年も前から師匠を知っているらしい。急に老いた姿をしている。");
+  await talk([[ME,"師匠は、生きています。まだ目を覚ましませんが。"],[N,"古い友の肩が、ほんの少しだけ動いた。"],["古い友","……そうか。"],["古い友","帰れ。わしは、何も言えん。"],[N,"「言わない」ではなく、「言えない」。"],[N,"この人は、何かに縛られて話せないのかもしれない。"],[N,"それなら、答えられる問いを組み立てよう。"]]);
+  await guide({tag:"出会い ④ 古い友",title:"問いを組み立てる",goal:"話せない相手から、本当のことを聞き出す",
+    how:["「だれが」と「何を」を1つずつ選んで、問いをする（6回まで）","相手はうなずくか、首を振るだけ。話せないことを聞くと、体がほどけかける","例:「獣は」＋「師匠を傷つけた」"],
+    fail:"聞き出せなくても旅は続きます。ただ、古い友を信じる道は閉じます。"});
+  // 問いを組み立てる
+  const subj=[["獣は","b"],["あなたは","y"],["師匠は","m"]],act=[["師匠を傷つけた","hurt"],["誰かを守った","prot"],["誰かに会いに来た","meet"]];
+  const truth={"b-hurt":"yes","y-prot":"yes","m-meet":"bind","y-hurt":"no","b-prot":"no","m-hurt":"no","y-meet":"yes","b-meet":"no","m-prot":"no"};
+  const key={"b-hurt":1,"y-prot":1,"m-meet":1};const found=new Set();let left=6;
+  const g=game(`<h3>問いを組み立てる（あと <span id="left">6</span> 回）</h3><div class="found" id="found">見抜いたこと ○○○</div><div style="font-size:.8rem;color:var(--muted)">だれが</div><div class="row pick" id="s"></div><div style="font-size:.8rem;color:var(--muted)">何を</div><div class="row pick" id="a"></div><button type="button" id="ask">この問いをする</button><ol class="log" id="qlog"></ol>`);
+  let s=null,a=null;
+  const mk=(id,arr,set)=>{arr.forEach(([t,v])=>{const b=document.createElement("button");b.type="button";b.textContent=t;b.onclick=()=>{set(v);$(id).querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b))};$(id).appendChild(b)})};
+  mk("s",subj,v=>s=v);mk("a",act,v=>a=v);
+  while(left>0&&found.size<3){
+    await new Promise(res=>{$("ask").onclick=()=>{if(s&&a)res()}});
+    left--;$("left").textContent=left;const k=s+"-"+a;const q=subj.find(x=>x[1]===s)[0]+act.find(x=>x[1]===a)[0]+"のですか？";
+    $("game").hidden=true;
+    await say(ME,q);
+    const r=truth[k];
+    const lg=document.createElement("li");lg.textContent=q+" → "+(r==="yes"?"うなずいた":r==="no"?"首を振った":"体がほどけかけた");
+    if(r==="yes")await say(N,"……古い友は、ゆっくりうなずいた。");
+    else if(r==="no")await say(N,"古い友は、首を横に振った。");
+    else{await talk([[N,"古い友は口を開きかけた。とたんに、その指先がほどけはじめた。"],[N,"友はあわてて口を閉じ、目をそらした。糸が、指にもどっていく。"]]);note("bind","友は、師匠が何をしに来たかを話そうとすると、体がほどける。話せない誓いがある。")}
+    if(key[k]&&!found.has(k)){found.add(k);if(k==="b-hurt")note("t1","師匠を傷つけたのは獣だった。");if(k==="y-prot")note("t2","古い友は、師匠を守った側だった。");if(k==="m-meet")note("t3","師匠は、古い友に会いに来た。そのことは、友の口からは話せない。")}
+    $("game").hidden=false;$("qlog").appendChild(lg);$("found").textContent="見抜いたこと "+"●".repeat(found.size)+"○".repeat(3-found.size);
+  }
+  game("");S.f.friendTruths=found.size;S.f.friendTrusted=found.has("y-prot")&&(found.has("b-hurt")||S.f.clawSeen);
+  if(S.f.friendTrusted){
+    await talk([[ME,"あなたは師匠を守って、獣と戦った。"],[ME,"そのせいで、急に老いた。"],[ME,"でも、それを話せば、師匠が夜に魔族に会いに行ったことが知れてしまう。"],[N,"古い友は何も言わない。けれど、その目が少しだけゆるんだ。"],
+      ["騎士","……待て。それでは、話が逆だ。"],["騎士","抱えていたのは、助けるためだったと言うのか。"],[N,"古い友は騎士を見なかった。ただ、霧の空を見上げた。"],
+      ["古い友","……あの男は、昔から無茶ばかりした。"],["古い友","若いころ、境で迷っていた書記の小僧を、わしが拾った。それが、あの男だ。"],["古い友","「おまえを守る」と誓った。わしの最初の誓いではない。二つ目だ。"],["古い友","重い誓いほど、大きな力が出る。そのぶん、命が削れる。"],["古い友","それだけのことだ。"],
+      [ME,"……悔いては、いないんですか。"],["古い友","誓ったのだ。悔いる場所など、どこにもない。"],["古い友","わしの名は、ヴェル。あの男が目を覚ましたら、伝えてくれ。"],["古い友","無茶はやめろ、とな。"]]);
+    note("cost","誓いの力を使うと、命が削れる。古い友は師匠を守るために、それを使った。");
+    note("name1","古い友の名は、ヴェル。");
+    await talk([["騎士","……俺は、見た者の話をそのまま信じていた。"],["騎士","自分の目で、確かめもせずにな。"],[N,"騎士は剣の柄から手を離し、ヴェルに浅く頭を下げた。"]]);
+  }else{
+    await talk([[N,"古い友は、もう何も答えなかった。目を閉じ、杖に額をあずけている。"],["騎士","……やはり、こいつが。"],[ME,"まだ、決まったわけではありません。"],["騎士","では、なぜ黙る。やましくない者は、しゃべるものだ。"],
+      [N,"本当にそうだろうか。言えないことを抱えた人を、わたしは一人知っている。"],[N,"寝台の上の師匠。「封を……」で止まった声。"],[N,"本当にそうだろうか。わたしには、まだ分からない。"]]);
+  }
+  // 井戸のそばで、旅日記を書く
+  await talk([[N,"騎士が水袋を満たしに行くあいだ、わたしは村の井戸に腰かけた。"],[N,"鞄から旅日記を出す。インク壺のふたが、霧で少し湿っていた。"],[N,"ペン先をひたす。書く前に、一度だけ息を止める。"],[N,"師匠の癖が、いつのまにか、うつっていた。"],[N,"……何から書こう。"]]);
+  const dw=await choose([{t:"古い友のことを書く",v:"vel"},{t:"村の暮らしのことを書く",v:"life"},{t:"騎士のことを書く",v:"kn"}]);
+  if(dw==="vel"){
+    if(S.f.friendTrusted)await talk([[N,"『古い友は、師匠を守った。名は、ヴェル。』"],[N,"書いてから、手が止まった。"],[N,"これを誰かが読めば、師匠が夜に境へ来たことが知れてしまう。"],[N,"わたしはその行に、細く一本、線を引いた。"],[N,"読めるけれど、清書には写さない。書記の、内緒の印だ。"]]);
+    else await talk([[N,"『古い友は、何も言わなかった。言えなかったのかもしれない。』"],[N,"「かもしれない」を消そうとして、やめた。"],[N,"分からないことは、分からないと書く。それも、師匠の教えだった。"]]);
+  }else if(dw==="life")await talk([[N,"『五十年かけて織る布。十年ぶりの子。口で言う、今日の糧。』"],[N,"町に帰って、これを読む人はいるだろうか。"],[N,"いなくても、書いておく。書いておけば、なかったことにはならない。"]]);
+  else await talk([[N,"『騎士は、籠手を片方外した。蜂蜜が甘いと言った。』"],[N,"それだけ書いて、なんだかおかしくなって、少し笑った。"],[N,"三日前のわたしが読んだら、きっと信じないだろう。"]]);
+  await talk([["村の子","なに書いてるの？"],[N,"いつのまにか、あの小さな角の子が、井戸のふちによじのぼっていた。"],[ME,"今日あったこと。忘れないように。"],["村の子","忘れちゃうの？ 人間って、たいへんだね。"],["村の子","じゃあ、ぼくのことも書いて。耳がまるい人に会ったって。"],
+    [N,"わたしは笑って、一行書き足した。『角の子に、耳がまるいと言われた。』"],[N,"字を見せると、子は読めないまま、その上を指でそっとなぞった。"],["村の子","これ、何年もつ？"],[ME,"紙が無事なら、百年でも。"],["村の子","じゃあ、ぼくが大人になっても、まだある？"],[ME,"ありますよ。"],
+    [N,"……この子が大人になるころ、わたしは、もういない。"],[N,"それでも、この字は残る。"],[N,"そう思うと、少しだけ、手紙というものが分かった気がした。"],[N,"会えない相手にも、会えない時の先にも、言葉は届く。"],
+    ["騎士","おい、行くぞ。……何を笑っている。"],[ME,"なんでもありません。"]]);
+  await talk([[N,"村を出るとき、あの小さな子が、石の上から手を振っていた。"],["騎士","……耳がまるいと言われたのは、生まれて初めてだ。"]]);
+},
+/* 6 鉱山の生き残り */
+async function(){
+  chap("三日目 ・ 古い鉱山");setScene("forest",.6);
+  // 道中: 鉱山への道。王国の古い道具が残っている
+  await talk([[N,"村を出ると、道は山の斜面をのぼりはじめた。"],[N,"霧の中に、錆びた鉄の線が二本、まっすぐ伸びている。"],["騎士","鉱石を運んだ車の道だ。……王国の古い地図に、まだ載っている。"],[ME,"地図に？ 今も、ですか。"],["騎士","ああ。書庫の地図は、捨てられんらしい。"],["騎士","……王は今でも、この山を自分のものだと思っているのだろう。"],[N,"人間は、何でも書いて残す。わたしの師匠も、わたしも。"]]);
+  // 霧が濃くなる
+  await talk([[N,"のぼるほどに、霧が濃くなっていく。"],[N,"十歩先の騎士の背中が、うすく、にじんで見える。"],["騎士","離れるな。……縄でもあればよかったな。"],[ME,"では、話していてください。声で、どこにいるか分かります。"],["騎士","話す？ 何をだ。"],[ME,"なんでも。好きな食べ物とか。"],
+    ["騎士","……豆の煮たのだ。母が、塩漬けの肉を少しだけ入れる。"],["騎士","祭りの日だけは、肉が少しじゃなくなる。"],[ME,"おいしそうです。"],["騎士","うまい。町に戻ったら……いや、なんでもない。"],
+    [N,"息を吸うと、胸の奥が少しだけ、ひやりとする。"],[N,"足もとの草が、膝の高さまである。葉のふちが、かすかに光っていた。"],[N,"道ばたに、石を積んだ小さな塚が、いくつも並んでいた。"],[ME,"……これは。"],["騎士","道しるべだ。霧の中で、迷わないための。"],["騎士","人間の兵なら、杭に字を書く。……ここの者は、石を積むんだな。"],
+    [N,"いちばん新しそうな塚の上に、野の花が一輪、のせてあった。"],[N,"誰かが、今も、この道を歩いている。"]]);
+  const mq=await choose([{t:"花の横に、小石を一つ積む",v:"stone"},{t:"そのまま通りすぎる",v:"pass"}]);
+  if(mq==="stone")await talk([[N,"わたしは、小石を一つ、そっと積んだ。"],["騎士","……何のまねだ。"],[ME,"分かりません。でも、通ったって、伝えたくて。"],[N,"騎士は少し迷ってから、自分も小石を一つ、のせた。"]]);
+  else await talk([[N,"花を倒さないように、塚をよけて歩いた。"],[N,"振り返ると、霧の中で、花の色だけがぼんやり残っていた。"]]);
+  setScene("mine",.7);
+  await talk([[N,"崩れた鉱山の入口に、白い髪の魔族が座っていた。"],[N,"角は長く、ねじれている。瞳の光は、ろうそくのように弱い。"],["生き残り","……人間の使者か。めずらしい。"],["生き残り","わしは、ここで働かされていた者の生き残りだ。"],["生き残り","数百年前のな。年を数えるのは、とうにやめた。"],["騎士","数百年……。"],["生き残り","来なさい。見せたいものがある。"],
+    [N,"坑道の入口に、太い鎖が打ちつけられたまま残っていた。"],["生き残り","この鎖は、わしらをつなぐものではなかった。"],["生き残り","つなぐ必要が、なかったのだ。わしらは誓わされておったからな。"],["生き残り","これは、人間の見張りが夜に戸を閉じるための鎖だ。……怖かったのだろう。"],
+    [N,"脇には、車輪の欠けた手押し車が横倒しになっている。"],["生き残り","一日に、これを四十往復。霧が濃くなるほど、体は強くなった。"],["生き残り","人間のままなら、とうに死んでおった。皮肉なものだ。"],
+    [N,"岩壁に、細い線が何百本も刻まれていた。五本ずつ、束ねてある。"],[ME,"これは……日を数えたんですか。"],["生き残り","一年だ。一年働けば自由になれる。皆、そう信じて刻んだ。"],["生き残り","線は、一年を過ぎても増え続けた。"],
+    [N,"生き残りは、岩壁の線の一本に、そっと爪先をあてた。"],["生き残り","ここが、わしの線だ。毎朝、坑道に入る前に一本。"],["生き残り","隣の、少し曲がった線は、粉屋のせがれのだ。字が書けなくてな。"],["生き残り","線なら、誰でも引ける。書けん者にも、日は数えられる。"],
+    [N,"線の束の途中に、ところどころ、小さな丸が刻まれていた。"],[ME,"この丸は……？"],["生き残り","誰かが、いなくなった日だ。"],["生き残り","連れていかれた者、倒れた者。名は彫れんかった。見張りに消されるからな。"],["生き残り","だから丸だけ。……丸の数は、わしが覚えておる。"],
+    [N,"騎士が、黙って兜を脱いだ。"],[N,"わたしは、ひとつだけ丸を数えようとして、途中でやめた。"],
+    ["生き残り","奥に、見張り小屋の跡がある。人間の残した紙が、まだ少しある。"],["生き残り","……使者。あんたは、字が読めるな。"],[ME,"はい。書記の見習いです。"],["生き残り","では、ひとつ頼みがある。"]]);
+  // 帳簿の頁を読み上げる
+  await talk([[N,"崩れた小屋の棚に、湿って波打った帳簿が一冊、残っていた。"],[N,"革の表紙に、王国の印。わたしが毎日見ている、あの印だ。"],["生き残り","わしは、人間だったころ、字を習う前にここへ来た。"],["生き残り","魔族になってから習おうにも、教える者がおらん。"],["生き残り","何百年、そばにありながら、そこに何が書いてあるか知らんのだ。"],["生き残り","……読んでくれんか。どの頁でもいい。"]]);
+  const lp=await choose([{t:"開いたままの頁を読む",v:"open"},{t:"最初の頁を読む",v:"first"}]);
+  if(lp==="open")await talk([[N,"指でそっと紙をはがし、声に出して読んだ。"],[ME,"「霜の月、七日。掘り手三十一。鉱石、車に二十。」"],[ME,"「一名、坑道にて倒る。名、記さず。代わりを求む。」"],[N,"読みながら、声がふるえた。"],[N,"「名、記さず」。人間は、何でも書いて残すはずなのに。"],["生き残り","……そうか。代わりを、求めたか。"],["生き残り","あの日のことだ。壁に、丸を彫った日だ。"]]);
+  else await talk([[N,"表紙をめくり、最初の頁を声に出して読んだ。"],[ME,"「霧の鉱山 掘り手の帳。各々の誓い、ここに記す。」"],[ME,"「誓いの言葉は、一字もたがえず写すべし。」"],[N,"一字もたがえず。書記局で、わたしが最初に習った言葉だった。"],["生き残り","……わしらの誓いを、一字もたがえず、か。"],["生き残り","几帳面なことだ。人間らしい。"]]);
+  await talk([["生き残り","ありがとう。……何百年ぶんの、答えをもらった。"],["生き残り","わしは、字というものを、ずっと鎖だと思っておった。"],["生き残り","だが、あんたの声で聞くと、ただの言葉だな。"],["生き残り","書いた者しだいで、鎖にも、灯りにもなるのだろう。"],
+    [N,"わたしは、帳簿をそっと閉じた。指に、古いインクの粉がついた。"],[N,"わたしの指にいつもついているのと、同じ色だった。"]]);
+  await talk([
+    ["生き残り","王国はな、わしらが誓いを破れないと知っていた。だから、言葉でだましたのだ。"],["生き残り","見るか。昔、わしの仲間が立てさせられた誓いだ。"]]);
+  note("mine","いちばん古い魔族は、昔、王の命令で鉱山で働かされた人間だった。");answer("mine","王は、魔族が誓いを破れないことを利用して、言葉でだまして鉱山で働かせた。");
+  await guide({tag:"出会い ⑤ 鉱山の生き残り",title:"罠の言葉",goal:"昔の誓いの文から、魔族を縛り続けた言葉を1つ押す",
+    how:["誓いは、言葉どおりにしか縛らない","約束されたように見えて「誓いの外」にある言葉と、本当に縛っている言葉を見比べる","3回まで押せる"],
+    fail:"外しても、生き残りが答えを教えてくれます。"});
+  // 罠の言葉を見つける
+  const words=["わたしは","この鉱山で","一年","働けば","自由になると","知った。","ゆえに","鉱山の主が","許すまで","ここを出ないと","誓う。"];
+  const trap=8;let tries=3;
+  const g=game(`<h3>誓いの文から、罠になった言葉を押す（あと <span id="tr">3</span> 回）</h3><div class="oath" id="oath"></div><div id="hint" style="font-size:.85rem;color:var(--muted)"></div>`);
+  const o=$("oath");
+  const ok=await new Promise(res=>{words.forEach((w,i)=>{const sp=document.createElement("span");sp.textContent=w;sp.tabIndex=0;sp.setAttribute("role","button");
+    const hit=()=>{if(sp.classList.contains("miss"))return;if(i===trap){sp.classList.add("hit");beep(880,.2,"triangle");res(true)}else{sp.classList.add("miss");tries--;$("tr").textContent=tries;beep(150,.15,"sawtooth",.03);if(tries===1)$("hint").textContent="誓いは、言葉どおりにしか縛らない。「一年」は、誓いの言葉の中に入っているだろうか。";if(tries<=0)res(false)}};
+    sp.onclick=hit;sp.onkeydown=e=>{if(e.key==="Enter")hit()};o.appendChild(sp)})});
+  game("");
+  if(ok){S.f.puzzleSolved=true;await talk([["生き残り","そうだ。「一年」は誓いの外にある。"],["生き残り","縛るのは「主が許すまで出ない」だけ。主は、一度も許さなかった。"]]);note("literal","誓いは、言葉どおりにしか縛らない。書いていないことは、守らなくていい。")}
+  else await talk([["生き残り","「主が許すまで」だ。一年働けば自由になる、とはどこにも誓っておらん。"],["生き残り","主は、一度も許さなかった。"]]);
+  await talk([[N,"岩壁の線を、もう一度見た。とても数えきれない。"],["騎士","……ひどい話だ。剣で脅すより、たちが悪い。"]]);
+  if(S.f.sealOpened){
+    await say(N,"わたしは、あの手紙の文を思い出した。");
+    const g2=game(`<h3>手紙の文から、長を殺す言葉を押す</h3><div class="oath" id="oath2"></div>`);
+    const lw=["長〇〇よ、","自らの手で、","人間を傷つけた","魔族を","引き渡せ。","さもなくば、","手紙はこれが最後。"];
+    await new Promise(res=>{lw.forEach((w,i)=>{const sp=document.createElement("span");sp.textContent=w;sp.tabIndex=0;sp.setAttribute("role","button");const hit=()=>{if(i===1){sp.classList.add("hit");beep(880,.2,"triangle");res()}else sp.classList.add("miss")};sp.onclick=hit;sp.onkeydown=e=>{if(e.key==="Enter")hit()};$("oath2").appendChild(sp)})});
+    game("");S.f.trapFound=true;
+    await talk([["生き残り","……「自らの手で」。昔と、同じやり口だ。"],["生き残り","王国の書記は、言葉を選ぶのがうまい。今も変わらんな。"],["騎士","……俺は、そんなものを運んでいるのか。"]]);
+  }
+  await talk([["生き残り","今の長はな、わしと一緒にここで働いていた。"],["生き残り","まだ少年だったが、もう魔族になっていた。"],["生き残り","ある日、仲間が人間に連れていかれた。帳簿に、最初の誓いを書かれてな。"],["生き残り","泣きもせず、あの子は言った。"],["生き残り","「仲間を二度と人間に渡さないと、誓う」。"],["生き残り","それが、あの子の最初の誓いだ。"]]);
+  note("chiefvow","長の最初の誓いは「仲間を二度と人間に渡さない」。");
+  if(S.f.sealOpened){await talk([[N,"背筋が冷えた。手紙は、長に自分の手で仲間を渡せと言っている。"],[N,"渡せば、長は最初の誓いを破って死ぬ。"]]);note("trap","手紙は罠だ。長が自分の手で仲間を渡せば、長は死ぬ。断れば、取り決めが終わる。");answer("kill","手紙は、長に最初の誓いを破らせて殺す罠だった。");}
+  else{await talk([[N,"師匠の言葉がよみがえる。「この手紙は、誰かを殺す」。"],[N,"……もしかして。"]]);answer("kill","手紙は、長の最初の誓いを破らせるものかもしれない。");}
+  // 生き残りの、今の人間への思い
+  await talk([[ME,"……人間を、憎んでいますか。"],["生き残り","憎んだよ。百年ほどは。"],["生き残り","だが憎しみも、霧と同じでな。長く浴びると、自分の形が変わる。"],
+    ["生き残り","ある年、境で迷った人間の子を見つけた。震えて、泣いておった。"],["生き残り","わしは、その子を境の外まで負ぶっていった。"],["生き残り","わしが人間だったころの、弟と同じくらいの歳だった。"],
+    ["生き残り","人間は、変わるのが早い。悪くもなるが、良くもなる。"],["生き残り","わしらは変わるのが遅い。だから、待つことはできる。"],["生き残り","行きなさい、使者。泉は、もうすぐそこだ。"],
+    [N,"坑道を出ると、霧が夕日の色に染まりはじめていた。"]]);
+},
+/* 7 泉・長 */
+async function(){
+  chap("三日目 ・ 泉 ・ 手紙の日");setScene("forest",.8);
+  // 道中: 夕暮れの最後の坂
+  await talk([[N,"鉱山から泉へは、ゆるい下り坂がつづいていた。"],[N,"霧の向こうで、日が傾いていく。うす紫が、少しずつ赤みを帯びる。"],["騎士","……日の暮れまで、あとどれくらいだ。"],[ME,"影の長さからすると、半刻ほどです。"],["騎士","書記は、影でも時を読むのか。"],[ME,"ろうそくが買えない月は、そうしていました。"],
+    [N,"騎士が、ふっと笑った。三日前なら、聞けなかった笑い方だった。"],["騎士","……なあ。正直に言ってくれ。"],["騎士","俺が運んでいるのは、本当に手紙か。それとも、刃物か。"],[N,"わたしは、すぐには答えられなかった。"]]);
+  const dk=await choose([{t:"「手紙です。どう使うかは、渡す人しだいです」",v:"letter"},{t:"「まだ、分かりません」",v:"unknown"}]);
+  if(dk==="letter")await talk([["騎士","……渡す人しだい、か。"],["騎士","では、渡すのはおまえだ。俺は、横に立つ。"]]);
+  else await talk([["騎士","……分からんか。正直だな。"],["騎士","分からんまま運ぶのが、俺の仕事だった。……今日までは。"]]);
+  await talk([[N,"坂の下に、木の門が見えた。門といっても、柱が二本立っているだけだ。"],[N,"柱の脇に、若い魔族が一人、灯りを持って立っていた。"],["長の付き人","手紙の日の使者どのとお見受けします。"],[N,"付き人は胸に手を当て、深く頭を下げた。わたしも騎士も、同じように返した。"],[N,"今度は、騎士も最後まで数えていた。"],
+    ["長の付き人","長は、朝からお待ちでした。"],["長の付き人","毎年、手紙の日は、長はこの門の方角ばかり見ておられます。"],["長の付き人","……今年は、来ないのではと、少し案じておられました。"],[ME,"遅くなって、すみません。"],["長の付き人","いいえ。日はまだ、沈んでおりませぬ。"],
+    ["長の付き人","剣は、そのままで。長は、人間の剣を恐れませぬ。"],["騎士","……そうか。では、俺も、恐れんことにしよう。"]]);
+  setScene("spring",.95);
+  await talk([[N,"手紙の日の夕方。霧のいちばん奥に、泉はあった。"],[N,"水面は鏡のように動かない。風の音も、虫の声もしない。"],[N,"ただ底のほうで、うす紫の光がゆっくりと息をしている。"],["騎士","……息が重いな。長くはいられん。"],
+    [N,"ほとりに、小さな小屋が一つ。村のどの家よりも質素だった。"],[N,"戸口に、背の高い魔族が立っていた。長い角に、金の帯。"],[N,"人間の呼び名では、魔王。"],[N,"けれど目の前にいるのは、村の長のような、静かな人だった。"],
+    [N,"長は胸に手を当て、深く、ゆっくりと頭を下げた。"],["長","よく来た、使者。霧の道は、つらかったろう。"],["長","……いつもの書記どのでは、ないのだな。"],["騎士","師匠どのは、けがで伏せっている。この見習いが代わりだ。"],["長","そうか。……あの方の字を、毎年楽しみにしていた。"],["長","早く良くなるよう、祈っている。"]]);
+  if(S.f.friendTrusted){note("name2","長の名は、オルド。");await say("長","名乗りが遅れた。わたしは、オルドという。");}
+  await talk([[N,"長は小屋から、湯気の立つ椀を二つ持ってきた。"],["長","泉の水を沸かしたものだ。人間の体にも、毒ではない。"],["騎士","……いただこう。"],[N,"騎士が先に口をつけた。わたしのぶんの毒見のつもりらしい。"],
+    [N,"湯は、ほんのり草の香りがした。冷えた指先に、熱がもどってくる。"],[N,"小屋の壁には、棚が一つ。そこに、紙の束が丁寧に重ねてあった。"],[ME,"……あれは。"],["長","百年ぶんの、王の手紙だ。"],["長","わたしらは書いて残さぬが、もらったものは捨てられぬ。"],
+    [N,"長は束のいちばん上の一通を取り、広げて見せた。"],[N,"見覚えのある字だった。細く、まっすぐで、行の終わりが少しだけ上がる。"],[ME,"師匠の字です。"],["長","うむ。三十年ほど前から、この字になった。"],
+    ["長","最初の年、手紙の終わりに、王の言葉とは別に一行あった。"],["長","「霧の道は遠く、今年も無事に届くことを願う。書記」とな。"],["長","王の手紙に、書記が勝手に書き足してよいものか、と思った。"],["長","次の年も、その次の年も、一行あった。"],["長","「泉のほとりは、寒くありませんか」。「今年は、麦がよく実りました」。"],
+    [N,"知らなかった。師匠は、そんなことを一度も話さなかった。"],["長","人間の一年は、わたしらの一日のようなものだ。"],["長","それでも、毎年の一行を、わたしは楽しみに待った。"],["長","……あの方は、どんな人だ。わたしは、字しか知らぬ。"]]);
+  const mm=await choose([{t:"「字に厳しくて、自分には甘い人です」",v:"strict"},{t:"「誰の手紙でも、ただで書く人です」",v:"kind"},{t:"「無茶ばかりする人です」",v:"reckless"}]);
+  if(mm==="strict")await talk([["長","ほう。"],[ME,"一字まちがえると、紙を一枚まるごと書き直させます。"],[ME,"なのに、自分はインクをこぼしても、笑ってごまかすんです。"],[N,"長は、声を立てずに笑った。肩が、小さくゆれていた。"],["長","……思っていたとおりの方だ。"]]);
+  else if(mm==="kind")await talk([[ME,"字の読めない人のために、市でも、牢でも、手紙を書きます。"],[ME,"「言いたいことを、言いたいとおりに書く」のが、書記の仕事だと。"],["長","……そうか。それで、あの一行か。"],["長","王の言いたいことのほかに、自分の言いたいことも、書いたのだな。"]]);
+  else await talk([[ME,"夜中に、一人で、境まで行ってしまうような人です。"],[N,"言ってから、はっとした。長は、しばらくわたしの顔を見ていた。"],["長","……そうか。"],["長","深くは聞くまい。聞かぬほうがよいことも、あるのだろう。"],["長","ただ、その無茶が、誰かのためであったなら、わたしはうれしい。"]]);
+  await talk([["長","目を覚ましたら、伝えてくれ。"],["長","泉のほとりは、今年も寒くない、と。"],[N,"わたしはうなずいた。声を出すと、何かがこぼれそうだった。"],["長","日が沈めば、手紙の日は終わる。急かしはせぬが……"],[N,"わたしは懐の手紙に触れた。封蝋が、指に冷たい。"]]);
+  await guide({tag:"手紙の日",title:"最後の選択",goal:"この手紙をどうするか、決める",
+    how:["旅で見抜いたことの数だけ、選べる道が増える","旅日記の「まだ分からないこと」が残っていても、選べる"],
+    fail:"どの道にも、それぞれの結末があります。"});
+  await say(N,"手紙を、どうする。");
+  const canAll=S.f.puzzleSolved&&S.f.friendTrusted&&S.f.clawSeen;
+  const c=await choose([
+    {t:"そのまま手紙を渡す",v:"give"},
+    {t:"手紙を渡さない",v:"keep"},
+    {t:"書き換えた手紙を渡す",v:"rewrite",hide:!S.f.sealOpened,note:"封を開けたので、中身を知っている"},
+    {t:"長と一緒に、手紙を言葉どおりに読む",v:"literal",hide:!canAll,note:"旅日記: 誓いは言葉どおりにしか縛らない／傷つけたのは獣"}
+  ]);
+  S.f.final=c;
+  if(c==="give"){
+    await talk([[N,"わたしは、手紙を差し出した。"],[N,"長は封を切り、手紙を読んだ。長いあいだ、黙っていた。"],[N,"泉の光だけが、ゆっくりと明るくなり、暗くなる。"],["長","……『自らの手で』、か。"],["長","王は、わたしの最初の誓いを知っているのだな。"],["長","帳簿に書いてあるのだろう。人間は、何でも書いて残す。"],["騎士","……長どの。"]]);
+    const d=await choose([{t:"「断ってください」と言う",v:"refuse"},{t:"何も言えない",v:"silent"}]);
+    S.f.final=d==="refuse"?"refuse":"handover";
+    if(d==="refuse")await talk([[ME,"断ってください。お願いです。"],["長","……使者が、それを言うのか。"],[N,"長は、少しだけ笑ったように見えた。"],["長","断れば、取り決めは終わる。兵が来るだろう。"],["長","……それでも、仲間を渡すよりはいい。"],["長","返事は、こう書こう。『今年の手紙は、受け取れない』と。"],[N,"長は筆をとり、ゆっくりと書いた。その手は、震えていなかった。"],["騎士","……これを、俺が王に届けるのか。"],
+      ["長","すまぬな、騎士どの。重い荷を持たせる。"],["騎士","……重いのは、慣れている。籠手と同じだ。"],
+      [N,"長は書き終えると、筆を置き、棚の手紙の束を見上げた。"],["長","百年ぶんの手紙も、これで終わりか。"],["長","……来年から、あの一行が読めぬのは、少しさびしい。"],
+      [ME,"わたしが書きます。王の手紙がなくても。"],[ME,"境の石標の下に、毎年、置きに来ます。"],["長","……誓うか？"],[N,"わたしは、言葉に詰まった。人間は、誓いを破れる。"],[N,"だからこそ、軽く口にしてはいけない気がした。"],[ME,"誓いません。でも、書いて残します。人間は、そうするので。"],
+      ["長","……それでよい。"],["長","わたしらの誓いは、破れぬ。おまえたちの約束は、破れる。"],["長","だから、守られたとき、おまえたちの約束は美しいのだろう。"],
+      [N,"小屋を出ると、日はもう沈んでいた。"],[N,"泉の光だけが、霧の底で、ゆっくりと息をしていた。"]]);
+    else await talk([[N,"わたしは、何も言えなかった。言葉が、喉で固まった。"],["長","渡さねば、取り決めは終わり、兵が来る。"],["長","渡せば、わたしが死ぬだけだ。"],["長","……百年、先の長たちが守ってきた。最後まで、長らしくあろう。"],["騎士","待ってくれ。ほかに、道は……"],["長","あれば、とうに選んでいる。"],["長","次の長が決まるまで、皆を頼む。"],
+      [N,"村から、古い友が連れてこられた。"],["古い友","やめろ。わしの命など、もう残り少ない。"],["長","だからこそ、だ。おまえ一人に背負わせはせん。"],[N,"長は、古い友の手を取った。"],[N,"その瞬間、長の体がほどけはじめた。"],
+      ["騎士","……おい、やめろ！ 長どの！"],[N,"騎士が駆け寄ろうとした。付き人が、黙ってその腕を押さえた。"],["長の付き人","……長の、お決めになったことです。"],
+      [N,"長の指先から、うす紫の糸が、するすると空へほどけていく。"],[N,"長は、痛がるそぶりを見せなかった。ただ、少し驚いたように自分の手を見ていた。"],["長","……ほう。ほどけるとは、こういうものか。"],["長","百年、誓いを守ってきて、初めて知った。"],
+      ["長","使者。……あの方に、伝えてくれるか。"],["長","泉のほとりは、今年も寒くなかった、と。"],[N,"わたしは、うなずくことしかできなかった。"],
+      ["古い友","オルド……！"],["長","泣くな、ヴェル。おまえは、いつも泣かぬ顔で、無茶をする。"],["長","……皆を、頼む。"],
+      [N,"ほどけた糸は、泉の光の中へ、静かに消えていった。"],[N,"あとには、金の帯だけが、ほとりの草の上に落ちていた。"],[N,"わたしの懐で、空になった封筒が、かさりと鳴った。"]]);
+  }
+  if(c==="keep")await talk([[N,"わたしは手紙を胸にしまったまま、動けなかった。"],["騎士","……おい。渡さんのか。"],[N,"答えられなかった。渡せば、誰かが死ぬ。それだけは分かった。"],[N,"わたしは、泉を見ていた。日が、霧の向こうに沈んでいく。"],["長","……そうか。届けぬことにしたか。"],["長","責めはせん。おまえの顔を見れば、分かる。"],["長","……手紙の日が、終わるな。"],
+    [N,"最後の光が、水面から消えた。"],[N,"王の手紙が届く限り、人間を殺さない。"],[N,"長の誓いの条件が、いま消えた。"],["長","案ずるな。誓いが消えても、わたしは人を殺さぬ。"],["長","ただ、もう、それを誓ってやれぬだけだ。"],
+    [N,"わたしは、懐の手紙を握りしめた。封蝋が、手のひらに食いこんだ。"],[ME,"……ごめんなさい。"],[ME,"渡せば、誰かが死ぬと思ったんです。でも、渡さなくても……"],["長","分かっておる。"],["長","正しい道が、どこにもないときもある。おまえは、その中で一つ選んだ。"],["長","選んだ者を、わたしは責めぬ。"],
+    ["騎士","……王には、何と言う。"],[N,"騎士の声は、怒っていなかった。ただ、ひどく疲れていた。"],[ME,"本当のことを、言います。"],["騎士","……そうか。"],
+    [N,"長は、棚の手紙の束から、師匠の字の一通を抜き出した。"],["長","これを、持っていきなさい。あの方の、最初の年の手紙だ。"],["長","いつか、また手紙が届く日が来たら、そのときに返してくれればよい。"],["長","わたしは、待つのは得意だ。"],
+    [N,"泉の光が、暗い水の底で、ひとつ、ゆっくりと瞬いた。"]]);
+  if(c==="rewrite")await talk([[N,"わたしは野営の夜に、師匠の字をまねて手紙を書き直していた。"],[N,"「互いの者を傷つけた者は、互いに調べて決める」。"],[N,"封と印は、王のもの。中身だけが、わたしの字だ。"],[N,"手が震えないように、両手で差し出した。"],[N,"騎士は何も言わなかった。今度も、見ていなかったことにしてくれるらしい。"],
+    ["長","……今年の手紙は、ずいぶん穏やかだな。"],[N,"長は、紙の字を指でなぞった。一瞬、その指が止まった。"],["長","……承った。王に、よろしく伝えてくれ。"],[N,"長は、気づいたのかもしれない。けれど、何も言わなかった。"],
+    [N,"長は手紙をたたみ、棚の束のいちばん上に、そっと重ねた。"],[N,"師匠の字の手紙たちの上に、わたしの字の手紙が一通。"],[N,"それを見たとき、急に胸が痛くなった。"],
+    ["長","……使者。この字は、まだ若いな。"],[N,"心臓が、跳ねた。"],["長","あの方の字に、よく似ている。よく、練習したのだろう。"],["長","来年も、この字で届くのを、待っている。"],[N,"それ以上、長は何も聞かなかった。"],
+    [N,"小屋を出ると、騎士が、わたしの肩に手を置いた。"],["騎士","……おまえ一人の罪にはせん。俺も、見ていた。"],[ME,"見ていなかったことに、してくれたんじゃなかったんですか。"],["騎士","……見ていなかったことにした、のを、見ていた。"],[N,"わたしは、泣き笑いのような顔になった。"],[N,"霧の向こうで、最後の夕日が消えていった。"]]);
+  if(c==="literal"){await talk([[ME,"長。手紙を、一緒に読ませてください。"],["長","……使者が、手紙を？"],[N,"長は封を切り、わたしにも見えるように広げた。"],[ME,"この手紙が求めているのは「人間を傷つけた魔族」です。"],["長","そうだ。だから、わたしは仲間を……"],
+    [ME,"師匠を傷つけたのは、獣でした。"],[ME,"爪あとは四本、獣と同じ。古い友は、師匠を守っただけです。"],[N,"長の目が、ゆっくりと見開かれた。"],["長","……では、人間を傷つけた魔族は、ここには一人もいない。"],["長","いない者は、渡せない。"],["長","それは断ることではない。取り決めの文を、文のとおりに果たしただけだ。"],[N,"泉の光が、ひときわ明るくなった気がした。"]]);
+    if(S.f.knightTrust>=2)await talk([["騎士","俺が証人になろう。爪あとは、俺もこの目で見た。"],["騎士","王の前で、そう言う。騎士の名にかけて。"]]);
+    else await say("騎士","……王が、それで引き下がるかは分からんぞ。");
+    await talk([["長","使者。……たしかに、あの書記どのの弟子だな。"],["長","言葉で殺そうとする者がいるなら、言葉で守る者もいる。"],
+      [N,"長は、手紙の余白に、ゆっくりと返事を書きはじめた。"],["長","「取り決めの文に従い、人間を傷つけた魔族を探した。」"],["長","「一人も、いなかった。ゆえに、渡す者はない。」"],["長","「来年も、手紙を待つ。」"],
+      [N,"長は筆を置くと、わたしのほうへ紙を向けた。"],["長","人間の書記どの。この返事に、まちがいはないか。"],["長","わたしらは、書くのに慣れておらぬ。言葉どおりに、伝わるだろうか。"],
+      [N,"わたしは、一字一字、声に出して読んだ。"],[N,"師匠が毎晩、ろうそくの下でそうしていたように。"],[ME,"……まちがいは、ありません。"],[ME,"言いたいことが、言いたいとおりに書いてあります。"],
+      ["長","そうか。"],[N,"長は胸に手を当て、わたしに向かって、深く、ゆっくりと頭を下げた。"],[N,"一つ、二つ、三つ。四つ、五つ。"],[N,"わたしも、同じだけ頭を下げた。顔を上げると、騎士も、まだ頭を下げていた。"],
+      ["長の付き人","……長が、人間に、あれほど長く。"],[N,"付き人のつぶやきが、霧の中に溶けていった。"],[N,"日が、沈んだ。手紙の日は、終わった。"],[N,"王の手紙は、たしかに届いていた。"]]);
+  }
+},
+/* 8 結末 */
+async function(){
+  chap("結末");const f=S.f;const E=ending(f);setScene(E.art,E.mist);
+  for(const l of E.lines)await say(N,l);
+  for(const l of epilogue(f))await say(N,l);
+  note("end","結末:「"+E.title+"」");
+  await say(N,"ろうそくを消す前に、わたしは旅日記の最後の頁を開いた。");
+  const open=S.qs.filter(q=>!q.ans).length;if(open)await say(N,"旅日記には、答えの出なかった問いが "+open+" つ残っている。");
+  await say(N,"――「"+E.title+"」");
+  const c=await choose([{t:"旅日記を読み返す",v:"d"},{t:"はじめから旅をする",v:"n"}]);
+  if(c==="d")$("btnDiary").click();
+  if(c==="n")newGame();
+}
+];
+
+/* ===== 結末の決まり（自己試験の対象） ===== */
+function ending(f){
+  switch(f.final){
+    case "literal": return f.knightTrust>=2?{title:"誓いの世界",art:"dawn",mist:.3,lines:["騎士は王の前で、爪あとのことを話した。","罪人のいない引き渡しは、求められない。","王は名を失わずに手紙を止める理由を、なくした。","春の終わり、師匠が目を覚ました。最初に言ったのは「封を開けたか」だった。","次の年も、手紙は泉へ届いた。届けたのは、目を覚ました師匠と、その弟子だった。","「泉のほとりは、今年も寒くない」。長の言葉を伝えると、師匠は黙って目を閉じた。","泉のほとりで、長はまた、ゆっくりと頭を下げた。"]}
+      :{title:"言葉の盾",art:"spring",mist:.6,lines:["長は「傷つけた魔族はいない」と返事を書いた。","王は黙った。だが、次の罪人を作る機会を待っているのかもしれない。","騎士は町に戻ると、何も言わずに剣を磨いていた。","取り決めは、今年も続いた。","わたしは、長の返事の写しを、旅日記の最後にはさんだ。","来年のことは、まだ誰にも分からない。"]};
+    case "rewrite": return {title:"写しの残る国",art:"spring",mist:.6,lines:["穏やかな手紙のおかげで、今年は誰も死ななかった。","長の返事は、王の机の上で、しばらく開かれずにいたという。","けれど王の書庫には、元の手紙の写しが残っている。","人間は、何でも書いて残すのだ。いつか偽りが知れる日が来る。","そのとき、罰を受けるのはわたしだ。……それでいい、と今は思う。","師匠が目を覚ましたら、まず、このことを話そう。"]};
+    case "keep": return f.knightTrust>=2?{title:"騎士の罪",art:"knight",mist:.4,lines:["手紙の日は過ぎた。騎士は王に「手紙は、俺が道で失った」と言った。","わたしをかばう嘘だった。","騎士は職を解かれた。取り決めは一年止まり、境にはまた兵が並んだ。","けれど、長は生きている。","町を出ていく日、騎士は「粉ひきに戻るさ」と笑った。","粉の樽には、輪の中に小さな鳥の焼き印がある。"]}
+      :{title:"届かなかった手紙",art:"dark",mist:0,lines:["手紙の日は過ぎた。","「使者が手紙を届けなかった」。王はそれを理由に、取り決めを止めた。","わたしは罪人として町に戻った。","牢の窓から、師匠の部屋のろうそくが見える。","境の霧の向こうで、兵の足音が聞こえる。","懐には、長から預かった師匠の手紙が、一通だけ残っている。"]};
+    case "refuse": return {title:"冷たい平和",art:"spring",mist:.8,lines:["長は手紙を断った。取り決めは終わった。","王は名を失わずに、鉱山を取り戻す口実を得た。","長は生きている。仲間も、誰も渡されなかった。","けれど次の春、境に兵が並んだ。","わたしは毎年、境の石標の下に、手紙を一通置きに行く。","霧の向こうとこちらで、また長い冬がはじまる。"]};
+    default: return {title:"誓いを破った長",art:"dark",mist:0,lines:["長は、自分の手で仲間を渡し、最初の誓いを破って死んだ。","泉のほとりには、ほどけた糸の一本も残らなかった。","長を失った魔族はまとまりを失い、取り決めは止まった。","王の兵が、霧の中へ入っていった。","師匠の言ったとおり、手紙は誰かを殺した。","それを届けたのは、わたしだった。","ほとりの草の上の金の帯は、今も、誰にも拾われずにあるという。"]};
+  }
+}
+function epilogue(f){
+  const out=[];
+  if(f.childOath==="help"){
+    if(f.final==="literal"||f.final==="rewrite")out.push("何年かあと、門の外の市で、角のある若者が使者の荷を黙って運んでくれた。","礼を言うと、若者は少し照れて「誓ったから」とだけ言った。","あの日、門の中でにぎった小さな手を、わたしは思い出した。");
+    else out.push("境に兵が並んだ夜、角のある子が、わたしを霧の外へ連れ出してくれた。","「助けると、誓ったから」。","子の手は、あの日と同じように温かかった。");
+  }
+  if(f.childOath==="hate")out.push("門の外の市から、あの子の姿は消えた。","母は、今も市で布を売っている。子のことを聞くと、黙って首を振る。","人間を許さないと誓った子が、どこで何をしているのか、わたしは知らない。");
+  if(f.childOath==="none")out.push("あの子は、まだ一度も誓っていない。","市で会うと、母の後ろから、こっそり手を振ってくる。","最初の誓いが、どうかやさしいものでありますように。");
+  if(f.friendTrusted&&f.final!=="handover")out.push("古い友ヴェルは、村で静かに暮らしている。削れた命は、もう戻らない。","師匠からの「無茶はやめろ」の返事は、まだ届いていないそうだ。");
+  return out;
+}
+/* ===== 進行 ===== */
+let running=false;
+async function run(){
+  if(running)return;running=true;
+  while(S.ch<CH.length){save();await CH[S.ch]();S.ch++;save()}
+  running=false;
+}
+function newGame(){try{localStorage.removeItem(KEY)}catch(e){}location.reload()}
+$("btnNew").onclick=()=>{$("btnNew").textContent="もう一度押すと はじめから";if($("btnNew").dataset.arm){newGame()}$("btnNew").dataset.arm="1";setTimeout(()=>{$("btnNew").textContent="はじめから";delete $("btnNew").dataset.arm},3000)};
+
+/* ===== 自己試験 ===== */
+$("runTests").onclick=()=>{
+  const r=[];const T=(name,ok)=>r.push((ok?"✅ ":"❌ ")+name);
+  const base=()=>FRESH().f;
+  let f=base();f.final="literal";f.knightTrust=2;T("言葉どおりに読む＋騎士の信頼 → 誓いの世界",ending(f).title==="誓いの世界");
+  f.knightTrust=1;T("言葉どおりに読む・騎士の信頼が足りない → 言葉の盾",ending(f).title==="言葉の盾");
+  f=base();f.final="rewrite";T("書き換え → 写しの残る国",ending(f).title==="写しの残る国");
+  f=base();f.final="keep";T("届けない → 届かなかった手紙",ending(f).title==="届かなかった手紙");
+  f.knightTrust=3;T("届けない＋騎士の信頼 → 騎士の罪",ending(f).title==="騎士の罪");
+  f=base();f.final="refuse";T("断る → 冷たい平和",ending(f).title==="冷たい平和");
+  f=base();f.final="handover";T("渡す → 誓いを破った長",ending(f).title==="誓いを破った長");
+  f=base();f.childOath="help";f.final="literal";T("子の誓い（助ける）が結末に出る",epilogue(f).some(l=>l.includes("誓ったから")));
+  f=base();f.childOath="hate";T("子の誓い（許さない）が結末に出る",epilogue(f).some(l=>l.includes("許さない")));
+  T("章の数は9（序・夜〜結末）",CH.length===9);
+  T("人物の絵が10人分ある",Object.keys(ROLES).every(r=>{const c=figSprite(r);return c.width>10&&c.height>30})&&Object.keys(ROLES).length===10);
+  {const keep=JSON.stringify(S);S=FRESH();ask("tq","試験の問い");T("問いが旅日記に入る",S.qs.length===1&&!S.qs[0].ans);answer("tq","試験の答え");T("問いに答えが付く",S.qs[0].ans==="試験の答え");answer("tq","別の答え");T("答えは上書きされない",S.qs[0].ans==="試験の答え");S=JSON.parse(keep);renderDiary();$("toast").hidden=true}
+  T("出会い5つと手紙の日に、やり方カードがある",(CH.map(String).join("").match(/guide\(/g)||[]).length===6);
+  T("冒頭の取り決めの写しに3行ある",String(CH[0]).includes("一、")&&String(CH[0]).includes("三、"));
+  T("答えの出る問いはどれも、先に問われている",["vow","mine","kill","what","seal"].every(id=>CH.slice(0,2).map(String).join("").includes('"'+id+'"')));
+  T("どの結末にも題名と文がある",["literal","rewrite","keep","refuse","handover"].every(v=>{const e=ending({...base(),final:v});return e.title&&e.lines.length>0&&ARTS[e.art]}));
+  $("tests").textContent=r.join("\n")+"\n"+r.filter(x=>x.startsWith("✅")).length+"/"+r.length+" 合格";
+};
+
+/* ===== 起動 ===== */
+const saved=load();
+if(saved){S=saved;S.f={...FRESH().f,...S.f};if(!Array.isArray(S.qs))S.qs=[]}
+renderDiary();
+if(saved&&saved.ch>0&&saved.ch<CH.length){setScene("dark");say(N,"続きから旅を再開する。").then(run)}else{if(saved&&saved.ch>=CH.length)S=FRESH();run()}
+</script>
+</body>
+</html>

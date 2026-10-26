@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="3D の形のファイル（STL）を回して見るだけの道具。ファイルは端末の中で読むだけで、どこにも送らない。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="frickey の工房">
+<meta property="og:title" content="STL ビューア">
+<meta property="og:description" content="3D の形のファイル（STL）を回して見るだけの道具。ファイルは端末の中で読むだけで、どこにも送らない。">
+<meta property="og:url" content="https://frickey104.github.io/stl-viewer/">
+<meta property="og:image" content="https://frickey104.github.io/img/og-stl-viewer.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+.fk-bar{all:initial;display:flex;align-items:center;justify-content:space-between;gap:12px;box-sizing:border-box;width:100%;min-height:34px;padding:6px max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px));background:#16283c;color:#e9eef4;font:600 13px/1.3 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",sans-serif;position:relative;z-index:2147483647}
+.fk-bar a{all:initial;color:#e9eef4;font:inherit;cursor:pointer;text-decoration:none}
+.fk-bar a:hover,.fk-bar a:focus-visible{text-decoration:underline;outline:none}
+.fk-bar span{all:initial;color:#9fb3c8;font:500 12px/1.3 ui-monospace,Consolas,monospace}
+</style>
+</head>
+<body>
+<nav class="fk-bar" aria-label="作品集"><a href="../">← frickey の工房</a><span>道具</span></nav>
+<meta charset="utf-8">
+<title>STL ビューア</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+  /* 1画面の道具: 上に操作の帯、その下を 3D の表示がうめる */
+  :root { --bg:#eef0f1; --panel:#ffffff; --text:#1f2428; --sub:#5d666e; --line:#d3d8dc; --accent:#2f6fde; --on-accent:#ffffff; --canvas:#e6e9eb; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#191c1f; --panel:#24282c; --text:#e8eaec; --sub:#a3abb2; --line:#3a4046; --accent:#6ea0ff; --on-accent:#0d1420; --canvas:#1e2225; color-scheme:dark; } }
+  :root[data-theme="dark"] { --bg:#191c1f; --panel:#24282c; --text:#e8eaec; --sub:#a3abb2; --line:#3a4046; --accent:#6ea0ff; --on-accent:#0d1420; --canvas:#1e2225; color-scheme:dark; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; height:100%; }
+  body { display:flex; flex-direction:column; background:var(--bg); color:var(--text); font-family:system-ui, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", sans-serif; }
+  .pad { padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); }
+  header { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding-block:10px; background:var(--panel); border-bottom:1px solid var(--line); }
+  header h1 { font-size:16px; margin:0 8px 0 0; }
+  button, label.btn { font:inherit; font-size:14px; padding:6px 12px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--text); cursor:pointer; }
+  button:focus-visible, label.btn:focus-within { outline:2px solid var(--accent); outline-offset:2px; }
+  label.btn { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
+  #info { font-size:13px; color:var(--sub); padding-block:6px; min-height:1.6em; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+  #stage { position:relative; flex:1; min-height:300px; background:var(--canvas); }
+  canvas { width:100%; height:100%; display:block; touch-action:none; }
+  #drop { position:absolute; inset:16px; border:2px dashed var(--line); border-radius:12px; display:flex; align-items:center; justify-content:center; text-align:center; color:var(--sub); pointer-events:none; line-height:1.8; padding:16px; }
+  #stage.over #drop { border-color:var(--accent); color:var(--accent); }
+  details { padding-block:6px 12px; font-size:13px; color:var(--sub); }
+  [hidden] { display:none !important; }
+</style>
+<header class="pad">
+  <h1>STL ビューア</h1>
+  <label class="btn">STL を開く<input id="file" type="file" hidden></label>
+  <button data-view="front">正面</button>
+  <button data-view="side">横</button>
+  <button data-view="top">上</button>
+  <button id="up">上の向き: Z</button>
+  <button id="test">自己試験</button>
+</header>
+<div id="info" class="pad">ファイルはこの端末の中で読むだけです（ネットに送りません）。</div>
+<div id="stage">
+  <canvas id="c"></canvas>
+  <div id="drop">ここに STL ファイルをドラッグ＆ドロップ<br>または「STL を開く」<br><small>ドラッグで回す・ホイール（2本指）で拡大</small></div>
+</div>
+<details class="pad"><summary>使い方</summary>
+  <p>ドラッグで回す／ホイールかピンチで拡大縮小／ボタンで正面・横・上から見る。寝てしまう形は「上の向き」を切り替える。大きさは STL の数値のまま（Meshy の STL は mm）。</p>
+</details>
+<script>
+"use strict";
+// ---- STL を読む（バイナリと文字の両方） ----
+function parseSTL(buf) {
+  const dv = new DataView(buf);
+  if (buf.byteLength >= 84) {
+    const n = dv.getUint32(80, true);
+    if (84 + n * 50 === buf.byteLength) {
+      const pos = new Float32Array(n * 9);
+      for (let i = 0; i < n; i++) {
+        const o = 84 + i * 50 + 12;
+        for (let k = 0; k < 9; k++) pos[i * 9 + k] = dv.getFloat32(o + k * 4, true);
+      }
+      return pos;
+    }
+  }
+  const text = new TextDecoder().decode(buf);
+  const m = text.match(/vertex\s+[-+\d.eE]+\s+[-+\d.eE]+\s+[-+\d.eE]+/g) || [];
+  if (!m.length || m.length % 3) throw new Error("STL として読めませんでした");
+  const pos = new Float32Array(m.length * 3);
+  m.forEach((s, i) => { const v = s.trim().split(/\s+/); pos[i*3] = +v[1]; pos[i*3+1] = +v[2]; pos[i*3+2] = +v[3]; });
+  return pos;
+}
+function faceNormals(pos) {
+  const nor = new Float32Array(pos.length);
+  for (let i = 0; i < pos.length; i += 9) {
+    const ax = pos[i+3]-pos[i], ay = pos[i+4]-pos[i+1], az = pos[i+5]-pos[i+2];
+    const bx = pos[i+6]-pos[i], by = pos[i+7]-pos[i+1], bz = pos[i+8]-pos[i+2];
+    let nx = ay*bz-az*by, ny = az*bx-ax*bz, nz = ax*by-ay*bx;
+    const l = Math.hypot(nx, ny, nz) || 1; nx/=l; ny/=l; nz/=l;
+    for (let k = 0; k < 3; k++) { nor[i+k*3] = nx; nor[i+k*3+1] = ny; nor[i+k*3+2] = nz; }
+  }
+  return nor;
+}
+function bounds(pos) {
+  const mn = [Infinity, Infinity, Infinity], mx = [-Infinity, -Infinity, -Infinity];
+  for (let i = 0; i < pos.length; i += 3) for (let a = 0; a < 3; a++) { const v = pos[i+a]; if (v < mn[a]) mn[a] = v; if (v > mx[a]) mx[a] = v; }
+  return { mn, mx, size: mx.map((v, a) => v - mn[a]), center: mx.map((v, a) => (v + mn[a]) / 2) };
+}
+
+// ---- 小さな行列 ----
+const M = {
+  mul(a, b) { const r = new Float32Array(16); for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { let s = 0; for (let k = 0; k < 4; k++) s += a[k*4+j] * b[i*4+k]; r[i*4+j] = s; } return r; },
+  persp(f, asp, n, fa) { const t = 1 / Math.tan(f / 2); return new Float32Array([t/asp,0,0,0, 0,t,0,0, 0,0,(fa+n)/(n-fa),-1, 0,0,2*fa*n/(n-fa),0]); },
+  rotX(a) { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([1,0,0,0, 0,c,s,0, 0,-s,c,0, 0,0,0,1]); },
+  rotY(a) { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([c,0,-s,0, 0,1,0,0, s,0,c,0, 0,0,0,1]); },
+  trans(x, y, z) { return new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, x,y,z,1]); },
+  scale(s) { return new Float32Array([s,0,0,0, 0,s,0,0, 0,0,s,0, 0,0,0,1]); },
+};
+
+// ---- 描画 ----
+const canvas = document.getElementById("c");
+const gl = canvas.getContext("webgl", { antialias: true });
+const info = document.getElementById("info");
+const stage = document.getElementById("stage");
+let prog, buf = null, count = 0, model = null, zUp = true;
+const cam = { yaw: -0.6, pitch: 0.35, dist: 2.6 };
+
+if (!gl) info.textContent = "このブラウザでは 3D 表示（WebGL）が使えません。";
+else {
+  const vs = `attribute vec3 p; attribute vec3 n; uniform mat4 mvp; uniform mat4 rot; varying vec3 vn;
+    void main(){ vn = (rot * vec4(n,0.0)).xyz; gl_Position = mvp * vec4(p,1.0); }`;
+  const fs = `precision mediump float; varying vec3 vn;
+    void main(){ vec3 N = normalize(vn); if(!gl_FrontFacing) N = -N;
+      float d1 = max(dot(N, normalize(vec3(0.4,0.6,0.7))),0.0);
+      float d2 = max(dot(N, normalize(vec3(-0.6,-0.2,0.4))),0.0);
+      float c = 0.25 + 0.6*d1 + 0.25*d2; gl_FragColor = vec4(vec3(0.86,0.84,0.80)*c,1.0); }`;
+  const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); return o; };
+  prog = gl.createProgram();
+  gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog); gl.useProgram(prog);
+  gl.enable(gl.DEPTH_TEST);
+}
+
+function load(name, arrayBuf) {
+  let pos;
+  try { pos = parseSTL(arrayBuf); } catch (e) { info.textContent = name + ": " + e.message; return; }
+  show(name, pos);
+  setView("front");
+}
+function show(name, pos, note) {
+  const b = bounds(pos);
+  model = { pos, b, name };
+  upload();
+  document.getElementById("drop").hidden = true;
+  const s = b.size.map(v => v.toFixed(1));
+  info.textContent = `${name} ／ 三角形 ${(pos.length / 9).toLocaleString()} 枚 ／ 大きさ X ${s[0]} × Y ${s[1]} × Z ${s[2]}（STL の単位のまま・Meshy は mm）` + (note || "");
+}
+// 開いた直後に出す見本（外径 80 mm・太さ 20 mm のドーナツ形）
+function sampleTorus(R = 30, r = 10, nu = 48, nv = 24) {
+  const pt = (i, j) => { const u = i / nu * 2 * Math.PI, v = j / nv * 2 * Math.PI;
+    return [(R + r * Math.cos(v)) * Math.cos(u), (R + r * Math.cos(v)) * Math.sin(u), r * Math.sin(v)]; };
+  const out = [];
+  for (let i = 0; i < nu; i++) for (let j = 0; j < nv; j++) {
+    const a = pt(i, j), b = pt(i + 1, j), c = pt(i + 1, j + 1), d = pt(i, j + 1);
+    out.push(...a, ...b, ...c, ...a, ...c, ...d);
+  }
+  return new Float32Array(out);
+}
+function upload() {
+  if (!gl || !model) return;
+  const { pos, b } = model;
+  const nor = faceNormals(pos);
+  const r = Math.max(...b.size) / 2 || 1;
+  // 中心を原点に・大きさを1にそろえ、Z 上なら Y 上に回す
+  const p = new Float32Array(pos.length), n = new Float32Array(pos.length);
+  for (let i = 0; i < pos.length; i += 3) {
+    let x = (pos[i] - b.center[0]) / r, y = (pos[i+1] - b.center[1]) / r, z = (pos[i+2] - b.center[2]) / r;
+    let nx = nor[i], ny = nor[i+1], nz = nor[i+2];
+    if (zUp) { [y, z] = [z, -y]; [ny, nz] = [nz, -ny]; }
+    p[i] = x; p[i+1] = y; p[i+2] = z; n[i] = nx; n[i+1] = ny; n[i+2] = nz;
+  }
+  const data = new Float32Array(p.length * 2);
+  for (let i = 0; i < p.length / 3; i++) { data.set(p.subarray(i*3, i*3+3), i*6); data.set(n.subarray(i*3, i*3+3), i*6+3); }
+  if (!buf) buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+  const lp = gl.getAttribLocation(prog, "p"), ln = gl.getAttribLocation(prog, "n");
+  gl.enableVertexAttribArray(lp); gl.vertexAttribPointer(lp, 3, gl.FLOAT, false, 24, 0);
+  gl.enableVertexAttribArray(ln); gl.vertexAttribPointer(ln, 3, gl.FLOAT, false, 24, 12);
+  count = p.length / 3;
+  draw();
+}
+function draw() {
+  if (!gl) return;
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth * dpr | 0, h = canvas.clientHeight * dpr | 0;
+  if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+  gl.viewport(0, 0, w, h);
+  // 背景は透明にして、下の #stage の色（明るい／暗いに合わせた --canvas）を見せる
+  gl.clearColor(0, 0, 0, 0);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  if (!count) return;
+  const rot = M.mul(M.rotX(cam.pitch), M.rotY(cam.yaw));
+  const mv = M.mul(M.trans(0, 0, -cam.dist), rot);
+  // 縦長の画面（スマホ）では横の見える幅が狭くなるので、横幅を基準に画角を広げて形を収める
+  const asp = w / h, fov = asp < 1 ? 2 * Math.atan(Math.tan(0.45) / asp) : 0.7;
+  const mvp = M.mul(M.persp(fov, asp, 0.05, 50), mv);
+  gl.uniformMatrix4fv(gl.getUniformLocation(prog, "mvp"), false, mvp);
+  gl.uniformMatrix4fv(gl.getUniformLocation(prog, "rot"), false, rot);
+  gl.drawArrays(gl.TRIANGLES, 0, count);
+}
+function setView(v) {
+  if (v === "front") { cam.yaw = 0; cam.pitch = 0.15; }
+  if (v === "side") { cam.yaw = -Math.PI / 2; cam.pitch = 0.15; }
+  if (v === "top") { cam.yaw = 0; cam.pitch = Math.PI / 2 - 0.01; }
+  cam.dist = 3.4; draw();
+}
+
+// ---- 操作 ----
+const pts = new Map(); let pinch0 = 0;
+canvas.addEventListener("pointerdown", e => { canvas.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); });
+canvas.addEventListener("pointermove", e => {
+  if (!pts.has(e.pointerId)) return;
+  const [px, py] = pts.get(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]);
+  if (pts.size === 1) {
+    cam.yaw += (e.clientX - px) * 0.01;
+    cam.pitch = Math.max(-1.55, Math.min(1.55, cam.pitch + (e.clientY - py) * 0.01));
+  } else if (pts.size === 2) {
+    const [a, b] = [...pts.values()]; const d = Math.hypot(a[0]-b[0], a[1]-b[1]);
+    if (pinch0) cam.dist = Math.max(0.6, Math.min(10, cam.dist * pinch0 / d));
+    pinch0 = d;
+  }
+  draw();
+});
+const up = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch0 = 0; };
+canvas.addEventListener("pointerup", up); canvas.addEventListener("pointercancel", up);
+canvas.addEventListener("wheel", e => { e.preventDefault(); cam.dist = Math.max(0.6, Math.min(10, cam.dist * Math.exp(e.deltaY * 0.001))); draw(); }, { passive: false });
+window.addEventListener("resize", draw);
+if (window.ResizeObserver) new ResizeObserver(() => draw()).observe(stage);
+document.querySelectorAll("[data-view]").forEach(b => b.onclick = () => setView(b.dataset.view));
+document.getElementById("up").onclick = e => { zUp = !zUp; e.target.textContent = "上の向き: " + (zUp ? "Z" : "Y"); upload(); };
+const readFile = f => f && f.arrayBuffer().then(ab => load(f.name, ab));
+document.getElementById("file").onchange = e => readFile(e.target.files[0]);
+["dragenter", "dragover"].forEach(t => stage.addEventListener(t, e => { e.preventDefault(); stage.classList.add("over"); }));
+["dragleave", "drop"].forEach(t => stage.addEventListener(t, e => { e.preventDefault(); stage.classList.remove("over"); }));
+stage.addEventListener("drop", e => readFile(e.dataTransfer.files[0]));
+if (gl) show("見本（ドーナツ形）", sampleTorus(), " ／ 「STL を開く」で自分のファイルに替わります");
+draw();
+
+// ---- 自己試験 ----
+function selfTest() {
+  const res = [];
+  const ok = (name, c) => res.push((c ? "✅ " : "❌ ") + name);
+  // 正四面体のバイナリ STL を作って読む
+  const tris = [[0,0,0, 10,0,0, 0,10,0], [0,0,0, 0,10,0, 0,0,10], [0,0,0, 0,0,10, 10,0,0], [10,0,0, 0,0,10, 0,10,0]];
+  const ab = new ArrayBuffer(84 + tris.length * 50), dv = new DataView(ab);
+  dv.setUint32(80, tris.length, true);
+  tris.forEach((t, i) => t.forEach((v, k) => dv.setFloat32(84 + i * 50 + 12 + k * 4, v, true)));
+  const p = parseSTL(ab);
+  ok("バイナリ: 三角形の数", p.length / 9 === 4);
+  const b = bounds(p);
+  ok("バイナリ: 大きさ 10×10×10", b.size.every(v => Math.abs(v - 10) < 1e-6));
+  ok("バイナリ: 中心 5,5,5", b.center.every(v => Math.abs(v - 5) < 1e-6));
+  const txt = "solid t\nfacet normal 0 0 1\nouter loop\nvertex 0 0 0\nvertex 2 0 0\nvertex 0 3 0\nendloop\nendfacet\nendsolid t\n";
+  const q = parseSTL(new TextEncoder().encode(txt).buffer);
+  ok("文字の STL: 読める", q.length === 9 && q[7] === 3);
+  const n = faceNormals(q);
+  ok("面の向き: +Z", Math.abs(n[2] - 1) < 1e-6);
+  let threw = false; try { parseSTL(new TextEncoder().encode("hello").buffer); } catch (e) { threw = true; }
+  ok("STL でないものは止める", threw);
+  const t = sampleTorus(30, 10, 8, 4), tb = bounds(t);
+  ok("見本: 三角形 64 枚・外径 80 mm", t.length / 9 === 64 && Math.abs(tb.size[0] - 80) < 1e-6);
+  return res;
+}
+document.getElementById("test").onclick = () => { const r = selfTest(); info.textContent = "自己試験 " + r.filter(s => s[0] === "✅").length + "/" + r.length + "： " + r.join(" ／ "); };
+</script>
+</body>
+</html>

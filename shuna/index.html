@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="迷子の犬シュナを探して、トランプ44枚の地下室を灯りひとつで降りていく。ルールは Scoundrel（Zach Gage・Kurt Bieg）が手本。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="frickey の工房">
+<meta property="og:title" content="シュナをさがして">
+<meta property="og:description" content="迷子の犬シュナを探して、トランプ44枚の地下室を灯りひとつで降りていく。ルールは Scoundrel（Zach Gage・Kurt Bieg）が手本。">
+<meta property="og:url" content="https://frickey104.github.io/shuna/">
+<meta property="og:image" content="https://frickey104.github.io/img/og-shuna.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+.fk-bar{all:initial;display:flex;align-items:center;justify-content:space-between;gap:12px;box-sizing:border-box;width:100%;min-height:34px;padding:6px max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px));background:#16283c;color:#e9eef4;font:600 13px/1.3 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",sans-serif;position:relative;z-index:2147483647}
+.fk-bar a{all:initial;color:#e9eef4;font:inherit;cursor:pointer;text-decoration:none}
+.fk-bar a:hover,.fk-bar a:focus-visible{text-decoration:underline;outline:none}
+.fk-bar span{all:initial;color:#9fb3c8;font:500 12px/1.3 ui-monospace,Consolas,monospace}
+</style>
+</head>
+<body>
+<nav class="fk-bar" aria-label="作品集"><a href="../">← frickey の工房</a><span>カードの RPG・1人 / 試作3版 / 5分</span></nav>
+<title>シュナをさがして</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Kaisei+Decol:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
+<style>
+/* レイアウト: 縦1列。上に体力と山札、灯りの届くところだけ見えるドット絵の舞台（主人公とシュナ）、中央に部屋の4枚（主役）、その下に武器の枠とボタン */
+:root{
+  --bg:#1a1714; --panel:#25211d; --ink:#efe6d8; --muted:#a89d8d; --line:#3a332c;
+  --card:#f4ecdf; --cardink:#2a241e; --mon:#3b3f58; --mon2:#5c3d6e; --mon3:#7a2e2e; --wep:#9a5a2b; --pot:#a8324a;
+  --lamp:#f2b25c; --hpbar:#e0614f; --good:#7fb069;
+  --pixel:"DotGothic16","Hiragino Sans",monospace;
+  --serif:"Kaisei Decol","Hiragino Mincho ProN","Yu Mincho",serif;
+  --body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){
+  --bg:#ece5d9; --panel:#f6f1e8; --ink:#2a241e; --muted:#6f6556; --line:#d6ccbc;
+  --card:#fffaf2; --cardink:#2a241e; --lamp:#b8742a; color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#ece5d9; --panel:#f6f1e8; --ink:#2a241e; --muted:#6f6556; --line:#d6ccbc;
+  --card:#fffaf2; --cardink:#2a241e; --lamp:#b8742a; color-scheme:light}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.7}
+.wrap{max-width:560px;margin:0 auto;padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap}
+h1{font-family:var(--serif);font-weight:700;font-size:1.8rem;line-height:1.1;margin:0;letter-spacing:.04em}
+h1 small{display:block;font-family:var(--body);font-weight:400;font-size:.75rem;color:var(--muted);margin-top:6px}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+select,button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 12px}
+.controls button,.controls select{padding:5px 10px;font-size:.88rem}
+button{cursor:pointer}
+button.main{background:var(--lamp);color:#1a1714;border-color:var(--lamp);font-weight:700}
+button:disabled{opacity:.4;cursor:default}
+button:focus-visible,select:focus-visible,.card:focus-visible{outline:3px solid var(--lamp);outline-offset:2px}
+.stats{display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center;font-variant-numeric:tabular-nums}
+.hp{display:flex;align-items:center;gap:8px}
+.bar{flex:1;height:12px;background:var(--line);border-radius:6px;overflow:hidden;min-width:80px}
+.bar i{display:block;height:100%;background:var(--hpbar);transition:width .3s}
+.hp b{font-size:1.1rem;min-width:4.2em}
+.stat{font-size:.85rem;color:var(--muted);text-align:right}
+.stat b{display:block;color:var(--ink);font-size:1.05rem}
+.stagebox{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#0a0806}
+#stage{display:block;width:100%;height:auto;aspect-ratio:120/54;image-rendering:pixelated}
+.floor{position:absolute;top:6px;left:10px;font-family:var(--pixel);font-size:.8rem;color:#d9cdb5;letter-spacing:.1em;text-shadow:0 1px 0 #000}
+.story{margin:0;padding:8px 12px 10px;min-height:2.9em;text-align:center;text-wrap:balance;font-family:var(--pixel);font-size:.92rem;line-height:1.5;color:#f2c983;background:#0a0806;border-top:1px solid #2b2620}
+#pops{position:absolute;left:13%;top:30%;pointer-events:none}
+.pop{position:absolute;left:0;top:0;font-family:var(--pixel);font-size:1.3rem;font-weight:700;white-space:nowrap;text-shadow:0 2px 0 #000;animation:pop 1.1s ease-out forwards}
+.pop.dmg{color:#ff6b5a}.pop.heal{color:#9fe38f}.pop.ok{color:#e9e2c8}
+@keyframes pop{0%{transform:translateY(6px);opacity:0}15%{opacity:1}100%{transform:translateY(-26px);opacity:0}}
+.card img.px{width:58%;height:auto;image-rendering:pixelated}
+#play{display:flex;flex-direction:column;gap:14px}
+.room{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.card{position:relative;aspect-ratio:5/7;border-radius:10px;border:0;padding:6px;background:var(--card);color:var(--cardink);display:flex;flex-direction:column;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:0 3px 0 #0005;transition:transform .12s}
+.card:hover:not(:disabled){transform:translateY(-3px)}
+.card.empty{background:transparent;border:2px dashed var(--line);box-shadow:none;cursor:default}
+.card.sel{outline:3px solid var(--lamp);outline-offset:2px}
+.card .rank{align-self:flex-start;font-family:var(--serif);font-weight:700;font-size:1.25rem;line-height:1}
+.card .suit{font-size:.8rem}
+.card svg{width:56%;height:auto}
+.card .nm{font-size:.72rem;font-weight:700;line-height:1.2;text-align:center}
+.card .tag{font-size:.62rem;color:#fff;border-radius:4px;padding:0 6px}
+.t-mon .tag{background:var(--mon)} .t-wep .tag{background:var(--wep)} .t-pot .tag{background:var(--pot)}
+.choice{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;min-height:2.6em}
+.gear{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-height:64px}
+.gear .lbl{font-size:.75rem;color:var(--muted);letter-spacing:.08em}
+.gear .w{font-weight:700}
+.gear{flex-wrap:wrap}
+.gear .slot{display:flex;align-items:center;gap:8px;margin-left:auto}
+.gear .slot img,.peek img{width:28px;height:auto;image-rendering:pixelated;background:var(--card);border-radius:4px;padding:2px}
+.peek{display:flex;align-items:center;justify-content:center;gap:8px;font-size:.85rem;color:var(--muted);min-height:34px}
+.peek b{color:var(--ink)}
+.slain{display:flex;gap:4px;flex-wrap:wrap}
+.slain span{font-size:.75rem;background:var(--mon);color:#fff;border-radius:4px;padding:0 6px;font-variant-numeric:tabular-nums}
+.row{display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.log{font-size:.82rem;color:var(--muted);margin:0;min-height:1.4em}
+.end{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:10px;text-align:center}
+.end p{text-wrap:balance;margin:0;font-family:var(--serif);font-size:1.05rem;line-height:2}
+.end .score{font-family:var(--body);font-size:.9rem;color:var(--muted)}
+details{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+summary{cursor:pointer;font-weight:700}
+details ul{padding-left:1.2em;margin:.4em 0}
+#tests{font-size:.8rem;font-variant-numeric:tabular-nums}
+@media (max-width:420px){.room{gap:5px}.card .nm{font-size:.62rem}.card .rank{font-size:1.05rem}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}.pop{animation-duration:.01s}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>シュナをさがして<small>トランプ44枚の地下室を、灯りひとつで降りていく</small></h1>
+    <div class="controls">
+      <select id="diff" aria-label="難しさ"><option value="easy" selected>やさしい</option><option value="normal">ふつう</option><option value="classic">原作</option></select>
+      <button id="mute" aria-pressed="false">音 あり</button>
+      <button id="new">はじめから</button>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="hp"><span>体力</span><div class="bar"><i id="hpbar"></i></div><b id="hptext"></b></div>
+    <div class="stat">山札<b id="deckn"></b></div>
+    <div class="stat">最高<b id="best"></b></div>
+  </div>
+
+  <div class="stagebox"><canvas id="stage" width="120" height="54" aria-hidden="true"></canvas><span class="floor" id="floor"></span><div id="pops"></div><p class="story" id="story" aria-live="polite"></p></div>
+  <div class="end" id="end" hidden></div>
+  <div id="play">
+    <div class="room" id="room"></div>
+    <div class="peek" id="peek"></div>
+    <div class="choice" id="choice"></div>
+    <div class="gear" id="gear"></div>
+    <div class="row"><p class="log" id="log"></p><button id="flee">この部屋から逃げる</button></div>
+  </div>
+
+  <details open>
+    <summary>遊び方</summary>
+    <ul>
+      <li>場の4枚が「部屋」。<b>3枚を選んで</b>片づけると、残りの1枚に3枚が足されて次の部屋になる</li>
+      <li><b>黒（♠♣）はモンスター</b>。素手だと数字ぶん体力が減る。<b>♦は武器</b>で、装備すると（相手−武器）ぶんしか減らない</li>
+      <li>ただし武器は、一度使うと<b>最後に倒した相手の数以下</b>にしか使えなくなる。強い相手に使うか、とっておくか</li>
+      <li><b>♥は回復</b>。ただし1つの部屋で効くのは<b>最初の1枚だけ</b></li>
+      <li>手をつける前なら、部屋から<b>逃げられる</b>（4枚は山札の底へ）。ただし2部屋続けては逃げられない</li>
+      <li>44枚を全部片づけたら、シュナのところへたどり着く</li>
+      <li><b>次に来る1枚</b>が見える。先を読んで、今どれを片づけるか決める</li>
+      <li><b>かばん</b>に武器か回復を1枚しまっておける（しまうのも3枚のうちの1枚）。好きなときに取り出して使える</li>
+      <li>体力は「やさしい」で25、「ふつう」で20。「原作」は体力20で、次の1枚・かばん・公平な山札（最初の部屋に強敵なし・武器が来ない時間を短く）がない</li>
+    </ul>
+    <p style="margin:.3em 0 0;font-size:.8rem;color:var(--muted)">灯りの大きさが体力。暗くなるほど危ない。深く降りるほど、暗がりの先のシュナが近づいてくる。</p>
+    <p style="margin:.3em 0 0;font-size:.8rem;color:var(--muted)">手本: Scoundrel（Zach Gage・Kurt Bieg、2011年）のルール。物語・ドット絵・音を足した。</p>
+  </details>
+  <details>
+    <summary>自己試験</summary>
+    <div id="tests"></div>
+  </details>
+</div>
+
+<script>
+/* ===================== ルール（画面と切り離した部分） ===================== */
+const kind=c=>c.s==='S'||c.s==='C'?'mon':c.s==='D'?'wep':'pot';
+function buildDeck(){const d=[];let id=0;
+  for(const s of['S','C'])for(let v=2;v<=14;v++)d.push({s,v,id:id++});
+  for(const s of['D','H'])for(let v=2;v<=10;v++)d.push({s,v,id:id++});
+  return d}
+function shuffle(a,rand=Math.random){for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+/* 公平な山札: 最初の部屋に J〜A を入れず武器を1枚入れる・武器と武器の間を9枚以内にする */
+function isFair(d){const f=d.slice(0,4);if(f.some(c=>kind(c)==='mon'&&c.v>=11)||!f.some(c=>kind(c)==='wep'))return false;
+  let last=-1;for(let i=0;i<d.length;i++)if(kind(d[i])==='wep'){if(i-last>10)return false;last=i}return true}
+function fairDeck(rand=Math.random){let d;for(let k=0;k<5000;k++){d=shuffle(buildDeck(),rand);if(isFair(d))return d}return d}
+function newState(easy,rand=Math.random,deck,opts={}){
+  const max=easy?25:20;
+  const s={deck:deck||(opts.fair?fairDeck(rand):shuffle(buildDeck(),rand)),room:[],hp:max,max,weapon:null,fledLast:false,taken:0,potionUsed:false,over:null,score:null,last:null,log:[],dealt:0,opts,bag:null};
+  deal(s);return s}
+function deal(s){while(s.room.length<4&&s.deck.length)s.room.push(s.deck.shift());s.taken=0;s.potionUsed=false;s.dealt++}
+const canFlee=s=>!s.over&&!s.fledLast&&s.taken===0&&s.room.length===4;
+function flee(s){if(!canFlee(s))return false;s.deck.push(...s.room);s.room=[];deal(s);s.fledLast=true;s.flees=(s.flees||0)+1;s.log.push('部屋から逃げた');return true}
+const weaponOk=(s,c)=>!!s.weapon&&(s.weapon.slain.length===0||c.v<=s.weapon.slain[s.weapon.slain.length-1].v);
+const damage=(s,c,useW)=>useW&&weaponOk(s,c)?Math.max(0,c.v-s.weapon.card.v):c.v;
+function take(s,idx,useW=true){
+  if(s.over||idx<0||idx>=s.room.length)return false;
+  const c=s.room.splice(idx,1)[0];s.last=c;s.taken++;
+  const k=kind(c);
+  if(k==='wep'){s.weapon={card:c,slain:[]};s.log.push(`${NAMES.wep[c.v]}（${c.v}）を装備した`)}
+  else if(k==='pot'){
+    if(s.potionUsed)s.log.push(`${NAMES.pot[c.v]}は、この部屋ではもう効かない`);
+    else{const before=s.hp;s.hp=Math.min(s.max,s.hp+c.v);s.potionUsed=true;s.log.push(`${NAMES.pot[c.v]}で ${s.hp-before} 回復`)}}
+  else{const w=useW&&weaponOk(s,c);const dmg=damage(s,c,w);s.hp-=dmg;if(w)s.weapon.slain.push(c);s.kills=(s.kills||0)+1;
+    s.log.push(`${NAMES.mon[c.v]}（${c.v}）を${w?'武器で':'素手で'}倒した。${dmg?`体力 −${dmg}`:'無傷'}`)}
+  return settle(s,c)}
+/* 1枚片づけたあとの共通の処理（負け・勝ち・次の部屋） */
+function settle(s,c){
+  if(s.hp<=0){s.hp=0;s.over='lose';s.score=-(s.deck.concat(s.room).filter(x=>kind(x)==='mon').reduce((a,x)=>a+x.v,0));return true}
+  if(!s.room.length&&!s.deck.length){s.over='win';s.score=s.hp+(s.hp===s.max&&kind(c)==='pot'&&s.bag!==c?c.v:0);return true}
+  if(s.taken>=3&&s.room.length===1&&s.deck.length){s.fledLast=false;deal(s)}
+  return true}
+/* かばん（1枠）: 武器か回復を1枚しまう。しまうのも「3枚のうちの1枚」 */
+const canStash=(s,c)=>!!(s.opts&&s.opts.bag)&&!s.over&&!s.bag&&!!c&&kind(c)!=='mon';
+function stash(s,idx){const c=s.room[idx];if(!canStash(s,c))return false;s.room.splice(idx,1);s.bag=c;s.taken++;s.stashed=(s.stashed||0)+1;
+  s.log.push(`${NAMES[kind(c)][c.v]}（${c.v}）をかばんにしまった`);return settle(s,c)}
+const canUseBag=s=>!!s.bag&&!s.over&&!(kind(s.bag)==='pot'&&s.potionUsed);
+function useBag(s){if(!canUseBag(s))return false;const c=s.bag;s.bag=null;
+  if(kind(c)==='wep'){s.weapon={card:c,slain:[]};s.log.push(`かばんの${NAMES.wep[c.v]}（${c.v}）を装備した`)}
+  else{const before=s.hp;s.hp=Math.min(s.max,s.hp+c.v);s.potionUsed=true;s.log.push(`かばんの${NAMES.pot[c.v]}で ${s.hp-before} 回復`)}
+  return true}
+
+const NAMES={
+  mon:{2:'ネズミ',3:'コウモリ',4:'スライム',5:'大グモ',6:'大ヘビ',7:'ゴブリン',8:'オオカミ',9:'がいこつ',10:'オーガ',11:'さまよう騎士',12:'地下の魔女',13:'竜の子',14:'迷宮の主'},
+  wep:{2:'木の棒',3:'石つぶて',4:'ナイフ',5:'こん棒',6:'短剣',7:'手斧',8:'槍',9:'長剣',10:'大剣'},
+  pot:{2:'わき水',3:'木の実',4:'薬草',5:'パン',6:'ハチミツ',7:'薬',8:'上等な薬',9:'妖精の水',10:'命のしずく'}};
+const RANK=v=>({11:'J',12:'Q',13:'K',14:'A'})[v]||String(v);
+const SUIT={S:'♠',C:'♣',D:'♦',H:'♥'};
+
+/* ===================== ドット絵（1文字＝1ドット・'.'は透明） ===================== */
+const TIER=v=>v>=11?'#b0443a':v>=7?'#8c5aa8':'#6a76a8';
+const SPR={
+  hero:{pal:{h:'#6b3f22',s:'#f1c9a0',e:'#2a1e18',c:'#3f6f8f',d:'#2c5068',b:'#4a3426',l:'#ffd27a',w:'#8a6a3a'},rows:[
+    '....hhhh....','...hhhhhh...','...hhsssss..','...hssesse..','...hsssss...','....ssss....','...cccccc...','..cdccccdcw.',
+    '..cdccccdsw.','..cdccccdlll','..ccccccclll','...cccccc.w.','...bb..bb...','...bb..bb...','..bbb..bbb..','............']},
+  shuna:{pal:{g:'#8d9196',d:'#5d6166',W:'#eceae4',k:'#1d1d1d',t:'#e88a9a'},rows:[
+    '.dd...........','.dgd.........d','dgWWg.......dg','gkgggggggggggd','kWWggggggggggd','WWWWgggggggggd',
+    'WWWtWgggggggg.','.WW.gggggggg..','..W.W.....W.W.','..W.W.....W.W.','.WW.WW...WW.WW']},
+  slime:{pal:{w:'#ffffff',k:'#111111'},rows:[
+    '..........','...mmmm...','..mmmmmm..','.mmmmmmmm.','.mwkmmwkm.','.mmmmmmmm.','mmmmmmmmmm','mmmmmmmmmm','.mmmmmmmm.','..........']},
+  ghoul:{pal:{w:'#ffffff',k:'#111111'},rows:[
+    '...mmmm...','..mmmmmm..','..mwkmmwk.','..mmmmmm..','...mkkm...','..mmmmmm..','.mmmmmmmm.','m.mmmmmm.m','..mmmmmm..','..mm..mm..']},
+  demon:{pal:{w:'#ffffff',k:'#111111',y:'#f2c94c'},rows:[
+    '...y.yy.y...','...yyyyyy...','m..mmmmmm..m','mm.mmmmmm.mm','.mmmmmmmmmm.','..mwkmmwkm..','..mmmmmmmm..','..mwwmmwwm..','...mmmmmm...','.mmmmmmmmmm.','mm.mm..mm.mm']},
+  sword:{pal:{w:'#d8dde3',y:'#c9a23a',h:'#6b3f22'},rows:[
+    '.........w','........ww','.......ww.','......ww..','.....ww...','..y.ww....','...yw.....','..yhy.....','.h........','h.........']},
+  potion:{pal:{k:'#5a3d28',g:'#cfe3ef',r:'#d0384f',w:'#ffffff'},rows:[
+    '..kkkk..','...gg...','...gg...','..gggg..','.grrrrg.','grrwrrrg','grrrrrrg','grrrrrrg','.grrrrg.','..gggg..']},
+  heart:{pal:{r:'#e8506a'},rows:['.rr.rr.','rrrrrrr','rrrrrrr','.rrrrr.','..rrr..','...r...']}};
+const monSpr=v=>v>=11?'demon':v>=7?'ghoul':'slime';
+const SPRITE_CACHE={};
+function sprCanvas(name,tint){const key=name+(tint||'');if(SPRITE_CACHE[key])return SPRITE_CACHE[key];
+  const sp=SPR[name],h=sp.rows.length,w=sp.rows[0].length,cv=document.createElement('canvas');cv.width=w;cv.height=h;const x=cv.getContext('2d');
+  sp.rows.forEach((row,r)=>[...row].forEach((ch,c)=>{if(ch==='.')return;x.fillStyle=ch==='m'?tint:sp.pal[ch];x.fillRect(c,r,1,1)}));
+  return SPRITE_CACHE[key]=cv}
+const sprURL=(name,tint)=>sprCanvas(name,tint).toDataURL();
+function cardSprite(c){const k=kind(c);return k==='mon'?sprURL(monSpr(c.v),TIER(c.v)):k==='wep'?sprURL('sword'):sprURL('potion')}
+
+/* ===================== 音（タップしたあとだけ鳴る・簡単な合成音） ===================== */
+let AC=null,MUTED=false;try{MUTED=localStorage.getItem('shuna-mute')==='1'}catch(e){}
+function ac(){if(MUTED)return null;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}catch(e){return null}}
+function tone(f,dur,type='square',vol=.06,f2=null,delay=0){const a=ac();if(!a)return;const t=a.currentTime+delay,o=a.createOscillator(),g=a.createGain();
+  o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(a.destination);o.start(t);o.stop(t+dur+.02)}
+function noise(dur,vol=.12){const a=ac();if(!a)return;const b=a.createBuffer(1,a.sampleRate*dur,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);
+  const s=a.createBufferSource(),g=a.createGain();g.gain.value=vol;s.buffer=b;s.connect(g).connect(a.destination);s.start()}
+const SFX={
+  hit:big=>{noise(big?.25:.12,big?.2:.12);tone(big?90:140,.18,'square',.05,50)},
+  slay:()=>{tone(520,.06,'square',.04);tone(780,.08,'square',.04,null,.06)},
+  heal:()=>{tone(523,.1,'triangle',.07);tone(659,.1,'triangle',.07,null,.09);tone(784,.16,'triangle',.07,null,.18)},
+  equip:()=>{tone(1200,.05,'square',.04);tone(1800,.12,'triangle',.05,null,.05)},
+  dud:()=>tone(200,.15,'triangle',.05,150),
+  flee:()=>tone(600,.25,'sawtooth',.035,150),
+  step:()=>{tone(110,.07,'triangle',.06);tone(100,.07,'triangle',.06,null,.18)},
+  bark:(soft)=>{tone(700,.07,'square',soft?.025:.05,450);tone(760,.08,'square',soft?.025:.05,480,.14)},
+  win:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.22,'triangle',.07,null,i*.14)),
+  lose:()=>[330,262,196].forEach((f,i)=>tone(f,.4,'triangle',.06,null,i*.3))};
+
+/* ===================== 舞台（灯りの届くところだけ見える） ===================== */
+const ST={W:120,H:54};const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+let FX=null,lightR=1,shake=0,lastBarkAt=44;
+function progress(s){return 1-(s.deck.length+s.room.length)/44}
+function floorNo(s){return Math.floor((44-(s.deck.length+s.room.length))/3)+1}
+function brick(x,y){const h=Math.sin(x*12.9898+y*78.233)*43758.5453;return h-Math.floor(h)}
+function drawStage(now){
+  const cv=document.getElementById('stage');if(!cv)return;const g=cv.getContext('2d');g.imageSmoothingEnabled=false;
+  const s=S;const W=ST.W,H=ST.H,floorY=44;
+  /* 壁と床 */
+  g.fillStyle='#2b2620';g.fillRect(0,0,W,H);
+  for(let r=0;r<6;r++)for(let c=-1;c<14;c++){const x=c*10+(r%2?5:0),y=r*8;const v=brick(c,r);g.fillStyle=v<.33?'#3a332b':v<.66?'#342e27':'#403830';g.fillRect(x+1,y+1,8,6)}
+  g.fillStyle='#1f1b17';g.fillRect(0,floorY,W,H-floorY);g.fillStyle='#2a251f';for(let x=0;x<W;x+=12)g.fillRect(x,floorY+4+(x%24?0:3),7,1);
+  /* 主人公 */
+  const t=now/1000;let hx=14,hy=floorY-16;
+  let ox=0;if(shake>0&&!RM){ox=(Math.random()*2-1)*shake;shake*=.85;if(shake<.3)shake=0}
+  if(FX&&FX.type==='flee'){const k=Math.min(1,(now-FX.t0)/500);hx-=Math.sin(k*Math.PI)*8}
+  g.drawImage(sprCanvas('hero'),Math.round(hx+ox),hy);
+  if(s.weapon){g.save();g.translate(Math.round(hx+ox)+1,hy+5);g.drawImage(sprCanvas('sword'),0,0,7,7);g.restore()}
+  /* シュナ（深くなるほど近づく） */
+  const p=progress(s);let sx=Math.round(108-76*p),sy=floorY-11;
+  if(FX&&FX.type==='win'){const k=Math.min(1,(now-FX.t0)/1400);sx=Math.round(sx+(hx+14-sx)*k);sy-=Math.abs(Math.sin(k*Math.PI*6))*3}
+  if(s.over!=='lose'||FX)g.drawImage(sprCanvas('shuna'),sx,Math.round(sy));
+  /* 戦う相手 */
+  if(FX&&FX.type==='fight'){const k=(now-FX.t0)/700;if(k<1){const mx=Math.round(58-Math.sin(Math.min(1,k*2)*Math.PI/2)*26+(k>.5?(k-.5)*36:0));const im=sprCanvas(monSpr(FX.v),TIER(FX.v));
+      g.globalAlpha=k>.6?Math.max(0,1-(k-.6)/.4):1;g.drawImage(im,mx,floorY-im.height);g.globalAlpha=1;
+      if(k>.35&&k<.5){g.fillStyle='#ffffffaa';g.fillRect(hx+8,hy+2,14,10)}}}
+  if(FX&&FX.type==='heal'){const k=(now-FX.t0)/900;if(k<1)for(let i=0;i<6;i++){const a=i/6*Math.PI*2+k*3;g.fillStyle='#9fe38f';g.fillRect(Math.round(hx+6+Math.cos(a)*10),Math.round(hy+8+Math.sin(a)*6-k*8),1,1)}}
+  if(FX&&FX.type==='equip'){const k=(now-FX.t0)/500;if(k<1){g.fillStyle='#ffffff';g.fillRect(hx+3,hy+5-Math.round(k*6),1,3)}}
+  /* 灯り（体力ぶんの明るさ） */
+  const target=s.over==='lose'?0:(12+40*(s.hp/s.max));lightR+=(target-lightR)*(RM?1:.12);
+  const fl=RM?0:Math.sin(t*9)*.8+Math.sin(t*23)*.5;const lx=hx+11,ly=hy+10,R=Math.max(0,lightR+fl);
+  const grd=g.createRadialGradient(lx,ly,R*.35,lx,ly,Math.max(1,R));grd.addColorStop(0,'rgba(10,8,6,0)');grd.addColorStop(.7,'rgba(10,8,6,.55)');grd.addColorStop(1,'rgba(10,8,6,.97)');
+  g.fillStyle=grd;g.fillRect(0,0,W,H);
+  g.fillStyle='rgba(255,190,90,.06)';g.beginPath();g.arc(lx,ly,R*.6,0,Math.PI*2);g.fill();
+  /* 暗がりの目（シュナ）*/
+  const dist=Math.abs(sx-lx);if(p>.25&&dist>R*.8&&s.over!=='lose'&&(RM||Math.sin(t*1.3)>-.7)){g.fillStyle='#e9e2c8';g.fillRect(sx+1,Math.round(sy)+3,1,1)}
+  if((FX&&FX.type==='win'&&now-FX.t0>1300)||(s.over==='win'&&!FX&&endReady)){const k=FX?Math.min(6,(now-FX.t0-1300)/120):6;g.drawImage(sprCanvas('heart'),hx+9,hy-9-Math.round(k)+(RM?0:Math.round(Math.sin(t*3))))}
+}
+function loop(now){drawStage(now);if(FX&&now-FX.t0>FX.dur){const done=FX.done;FX=null;done&&done()}requestAnimationFrame(loop)}
+function fx(type,extra={}){FX=Object.assign({type,t0:performance.now(),dur:{fight:700,heal:900,equip:500,flee:500,win:2400,lose:1600}[type]||600},extra)}
+function popNumber(text,cls){const L=document.getElementById('pops');if(!L)return;const el=document.createElement('span');el.className='pop '+cls;el.textContent=text;L.appendChild(el);setTimeout(()=>el.remove(),1100)}
+
+/* ===================== 画面 ===================== */
+let S,pick=-1,diff='easy',endReady=false;
+function cardHTML(c){const k=kind(c);return `<span class="rank">${RANK(c.v)}<span class="suit"> ${SUIT[c.s]}</span></span><img class="px" src="${cardSprite(c)}" alt=""><span class="nm">${NAMES[k][c.v]}</span><span class="tag">${{mon:'モンスター',wep:'武器',pot:'回復'}[k]}</span>`}
+function storyLine(s){
+  if(s.over)return '';
+  const n=s.deck.length+s.room.length;
+  if(n>=40)return '階段の前に、シュナの赤い首輪が落ちていた。';
+  if(n>30)return '灯りを高くかかげて、地下室へ降りる。';
+  if(n>18)return '遠くで、小さな鳴き声がした。';
+  if(n>8)return '石の床に、短い足あとが続いている。';
+  return 'すぐ近くで、しっぽが床を打つ音がする。'}
+const bestKey='shuna-best';
+function getBest(){try{return JSON.parse(localStorage.getItem(bestKey)||'{}')}catch(e){return{}}}
+function setBest(b){try{localStorage.setItem(bestKey,JSON.stringify(b));return true}catch(e){return false}}
+function render(){
+  const s=S;
+  document.getElementById('hpbar').style.width=(100*s.hp/s.max)+'%';
+  document.getElementById('hptext').textContent=`${s.hp} / ${s.max}`;
+  document.getElementById('deckn').textContent=s.deck.length;
+  const b=getBest()[diff];document.getElementById('best').textContent=b==null?'—':b;
+  document.getElementById('story').textContent=s.over?(s.over==='win'?'灯りの輪の中に、灰色の小さな影。':'灯りが消えた。'):storyLine(s);
+  document.getElementById('floor').textContent=`地下 ${floorNo(s)} 階`;
+  const R=document.getElementById('room');R.innerHTML='';
+  for(let i=0;i<4;i++){const c=s.room[i];const el=document.createElement('button');
+    if(!c){el.className='card empty';el.disabled=true;el.setAttribute('aria-label','空き')}
+    else{el.className=`card t-${kind(c)}${i===pick?' sel':''}`;el.innerHTML=cardHTML(c);el.disabled=!!s.over;
+      el.setAttribute('aria-label',`${RANK(c.v)} ${SUIT[c.s]} ${NAMES[kind(c)][c.v]}`);el.onclick=()=>choose(i)}
+    R.appendChild(el)}
+  const C=document.getElementById('choice');C.innerHTML='';
+  const add=(t,f,cls='')=>{const b=document.createElement('button');b.textContent=t;b.className=cls;b.onclick=f;C.appendChild(b)};
+  if(pick>=0&&s.room[pick]&&kind(s.room[pick])!=='mon'){const c=s.room[pick];
+    if(kind(c)==='wep')add(`装備する（${c.v}）`,()=>commit(true),'main');
+    else add(s.potionUsed?'飲む（この部屋ではもう効かない）':`飲む（体力 +${Math.min(c.v,s.max-s.hp)}）`,()=>commit(true),s.potionUsed?'':'main');
+    add('かばんにしまう',toBag,s.potionUsed&&kind(c)==='pot'?'main':'');add('やめる',()=>{pick=-1;render()})}
+  else if(pick>=0&&s.room[pick]&&kind(s.room[pick])==='mon'){const c=s.room[pick];
+    if(weaponOk(s,c))add(`武器で戦う（体力 −${damage(s,c,true)}）`,()=>commit(true),'main');
+    else{const n=document.createElement('span');n.className='log';n.style.alignSelf='center';n.textContent=`武器は ${s.weapon.slain[s.weapon.slain.length-1].v} 以下の相手にしか使えない`;C.appendChild(n)}
+    add(`素手で戦う（体力 −${c.v}）`,()=>commit(false),weaponOk(s,c)?'':'main');add('やめる',()=>{pick=-1;render()})}
+  else if(!s.over){const last=!s.deck.length;const need=last?s.room.length:3-s.taken;
+    C.innerHTML=`<span class="log" style="align-self:center">${last?`最後の部屋。残り ${need} 枚を全部片づける`:s.taken===0?'3枚を選んで片づける':`あと ${need} 枚`}</span>`}
+  const G=document.getElementById('gear');
+  G.innerHTML=s.weapon?`<div><div class="lbl">装備中の武器</div><div class="w">${NAMES.wep[s.weapon.card.v]}（${s.weapon.card.v}）</div></div><div style="flex:1;min-width:0"><div class="lbl">${s.weapon.slain.length?`次に使えるのは ${s.weapon.slain[s.weapon.slain.length-1].v} 以下の相手`:'まだ誰も倒していない'}</div><div class="slain">${s.weapon.slain.map(m=>`<span>${RANK(m.v)}</span>`).join('')}</div></div>`
+    :'<div><div class="lbl">装備中の武器</div><div class="w">なし（素手）</div></div>';
+  if(s.opts&&s.opts.bag){const d=document.createElement('div');d.className='slot';
+    if(s.bag){const k=kind(s.bag);d.innerHTML=`<div><div class="lbl">かばん</div><div class="w">${NAMES[k][s.bag.v]}（${s.bag.v}）</div></div><img src="${cardSprite(s.bag)}" alt="">`;
+      const b=document.createElement('button');b.textContent=k==='pot'&&s.potionUsed?'次の部屋で使える':k==='wep'?'装備する':'飲む';b.disabled=!canUseBag(s);b.onclick=fromBag;d.appendChild(b)}
+    else d.innerHTML='<div><div class="lbl">かばん</div><div class="w" style="font-weight:400;color:var(--muted)">からっぽ</div></div>';
+    G.appendChild(d)}
+  const P=document.getElementById('peek');
+  if(s.opts&&s.opts.bag&&!s.over){P.innerHTML=s.deck.length?`次に来る1枚 <img src="${cardSprite(s.deck[0])}" alt=""><b>${RANK(s.deck[0].v)}${SUIT[s.deck[0].s]} ${NAMES[kind(s.deck[0])][s.deck[0].v]}</b>`:'山札はもうない';P.hidden=false}else P.hidden=true;
+  document.getElementById('log').textContent=s.log.slice(-1)[0]||'';
+  const F=document.getElementById('flee');F.disabled=!canFlee(s);F.textContent=s.over?'この部屋から逃げる':s.room.length<4?'最後の部屋は逃げられない':s.taken>0?'手をつけた部屋からは逃げられない':s.fledLast?'続けては逃げられない':'この部屋から逃げる';
+  const E=document.getElementById('end');E.hidden=!(s.over&&endReady);document.getElementById('play').hidden=!!(s.over&&endReady);
+  if(s.over&&endReady){
+    if(!s.bestDone){const bb=getBest();s.newBest=false;if(bb[diff]==null||s.score>bb[diff]){bb[diff]=s.score;s.newBest=setBest(bb)&&getBest()[diff]===s.score}s.bestDone=true}
+    const newBest=s.newBest;
+    E.innerHTML=s.over==='win'
+      ?`<p>最後の扉を押し開けると、灯りの輪の中に、灰色の小さな影がいた。</p><p>シュナが、ひげをふるわせて、まっすぐ駆けてくる。</p><p>「おそくなって、ごめん。いっしょに帰ろう」</p><p class="score">倒したモンスター ${s.kills||0} 体・逃げた部屋 ${s.flees||0}。得点 ${s.score}${newBest?'（最高得点）':''}</p><div><button class="main" id="again">もう一度、降りる</button></div>`
+      :`<p>灯りが、ふっと小さくなって消えた。</p><p>暗がりのどこかで、小さな鳴き声が続いている。シュナは、まだ待っている。</p><p class="score">倒したモンスター ${s.kills||0} 体。残りのモンスター ${-s.score} ぶん。得点 ${s.score}${newBest?'（最高得点）':''}</p><div><button class="main" id="again">もう一度、迎えに行く</button></div>`;
+    document.getElementById('again').onclick=()=>start();
+    if(!E.dataset.shown){E.dataset.shown='1';try{document.querySelector('.stagebox').scrollIntoView({behavior:RM?'auto':'smooth',block:'start'})}catch(e){}}
+    document.getElementById('choice').innerHTML='';}
+}
+/* 行動のあとに、絵・数字・音で手ごたえを返す */
+function act(fn,tag){const s=S,b={hp:s.hp,dealt:s.dealt,left:s.deck.length+s.room.length,last:s.last};fn();
+  const c=s.last,left=s.deck.length+s.room.length;
+  if(tag==='stash'){tone(660,.08,'triangle',.05);tone(440,.1,'triangle',.05,null,.08);popNumber('しまった','ok')}
+  else if(tag==='bag'){if(s.hp>b.hp){fx('heal');SFX.heal();popNumber('+'+(s.hp-b.hp),'heal')}else{fx('equip');SFX.equip()}}
+  else if(left<b.left&&c){const k=kind(c);
+    if(k==='mon'){const d=b.hp-s.hp;fx('fight',{v:c.v});if(d>0){SFX.hit(d>=8);shake=d>=8?3:1.5;popNumber('−'+d,'dmg')}else{SFX.slay();popNumber('無傷','ok')}}
+    else if(k==='pot'){const h=s.hp-b.hp;if(h>0){fx('heal');SFX.heal();popNumber('+'+h,'heal')}else{SFX.dud();popNumber('効かない','ok')}}
+    else{fx('equip');SFX.equip()}
+  }
+  for(const m of[30,18,8])if(b.left>m&&left<=m)setTimeout(()=>SFX.bark(true),500);
+  if(s.dealt>b.dealt&&!s.over)setTimeout(()=>SFX.step(),left<b.left?350:0);
+  if(s.over==='win'){setTimeout(()=>{fx('win',{done:()=>{endReady=true;render()}});SFX.bark(false);setTimeout(()=>SFX.win(),900)},700)}
+  if(s.over==='lose'){setTimeout(()=>{fx('lose',{done:()=>{endReady=true;render()}});SFX.lose()},600)}
+  render()}
+function choose(i){const s=S,c=s.room[i];if(s.over||!c)return;
+  if(kind(c)==='mon'&&s.weapon&&(!weaponOk(s,c)||damage(s,c,true)<c.v)){pick=i;render();return}
+  if(canStash(s,c)){pick=i;render();return}
+  pick=-1;act(()=>take(s,i,false))}
+function commit(useW){if(pick<0)return;const i=pick;pick=-1;act(()=>take(S,i,useW))}
+function toBag(){if(pick<0)return;const i=pick;pick=-1;act(()=>stash(S,i),'stash')}
+function fromBag(){if(!canUseBag(S))return;pick=-1;act(()=>useBag(S),'bag')}
+function start(saved){const sel=document.getElementById('diff');if(saved&&saved.deck){diff=!(saved.opts&&saved.opts.bag)?'classic':saved.max===25?'easy':'normal';sel.value=diff;S=saved;endReady=!!saved.over}else{diff=sel.value;S=newState(diff==='easy',Math.random,undefined,diff==='classic'?{}:{fair:true,bag:true});endReady=false}delete document.getElementById('end').dataset.shown;pick=-1;FX=null;lightR=12+40*(S.hp/S.max);render()}
+document.getElementById('new').onclick=()=>start();
+document.getElementById('diff').onchange=()=>start();
+document.getElementById('flee').onclick=()=>{if(canFlee(S)){pick=-1;fx('flee');SFX.flee();act(()=>flee(S))}};
+function setMute(m){MUTED=m;try{localStorage.setItem('shuna-mute',m?'1':'0')}catch(e){}const b=document.getElementById('mute');b.textContent=m?'音 なし':'音 あり';b.setAttribute('aria-pressed',String(m))}
+document.getElementById('mute').onclick=()=>setMute(!MUTED);setMute(MUTED);
+requestAnimationFrame(loop);
+window.claude?.hot?.snapshot?.(()=>S);
+
+/* ===================== 自己試験（答えの分かっている例） ===================== */
+function runTests(){const T=[],ok=(n,c)=>T.push([n,!!c]);
+  const card=(s,v)=>({s,v,id:Math.random()});
+  const mk=(room,deck=[],o={})=>Object.assign({deck,room,hp:20,max:20,weapon:null,fledLast:false,taken:0,potionUsed:false,over:null,score:null,last:null,log:[],dealt:1},o);
+  const d=buildDeck();
+  ok('山札は44枚（モンスター26・武器9・回復9）',d.length===44&&d.filter(c=>kind(c)==='mon').length===26&&d.filter(c=>kind(c)==='wep').length===9&&d.filter(c=>kind(c)==='pot').length===9);
+  ok('モンスターの合計は208・回復の合計は54',d.filter(c=>kind(c)==='mon').reduce((a,c)=>a+c.v,0)===208&&d.filter(c=>kind(c)==='pot').reduce((a,c)=>a+c.v,0)===54);
+  ok('素手は数字ぶん減る',(()=>{const s=mk([card('S',9),card('H',2),card('H',3),card('H',4)],[card('C',2)]);take(s,0,false);return s.hp===11})());
+  ok('武器なら（相手−武器）ぶん',(()=>{const s=mk([card('D',5),card('S',9),card('H',2),card('H',3)],[card('C',2)]);take(s,0);take(s,0);return s.hp===16&&s.weapon.slain.length===1})());
+  ok('武器は最後に倒した数「以下」にだけ使える',(()=>{const s=mk([card('C',2)],[],{weapon:{card:card('D',5),slain:[card('S',8)]}});return weaponOk(s,card('S',8))&&!weaponOk(s,card('S',9))})());
+  ok('使えない相手に武器を選んでも素手あつかい',(()=>{const s=mk([card('S',10),card('H',2),card('H',3),card('H',4)],[card('C',2)],{weapon:{card:card('D',5),slain:[card('S',6)]}});take(s,0,true);return s.hp===10&&s.weapon.slain.length===1})());
+  ok('回復は1部屋で最初の1枚だけ・上限まで',(()=>{const s=mk([card('H',5),card('H',7),card('S',2),card('S',3)],[card('C',2)],{hp:12});take(s,0);take(s,0);return s.hp===17})());
+  ok('回復は上限をこえない',(()=>{const s=mk([card('H',9),card('S',2),card('S',3),card('S',4)],[card('C',2)],{hp:18});take(s,0);return s.hp===20})());
+  ok('3枚片づけると、残り1枚に3枚が足される',(()=>{const s=mk([card('H',2),card('H',3),card('H',4),card('S',14)],[card('C',2),card('C',3),card('C',4),card('C',5)]);take(s,0);take(s,0);take(s,0);return s.room.length===4&&s.room[0].v===14&&s.deck.length===1&&!s.potionUsed})());
+  ok('逃げると4枚が山札の底へ・続けては逃げられない',(()=>{const s=mk([card('S',2),card('S',3),card('S',4),card('S',5)],[card('C',6),card('C',7),card('C',8),card('C',9)]);const a=flee(s);return a&&s.deck.length===4&&s.deck[3].v===5&&s.room[0].v===6&&!canFlee(s)})());
+  ok('手をつけた部屋からは逃げられない',(()=>{const s=mk([card('H',2),card('S',3),card('S',4),card('S',5)],[card('C',6)]);take(s,0);return !canFlee(s)})());
+  ok('部屋を片づけたらまた逃げられる',(()=>{const s=mk([card('H',2),card('H',3),card('H',4),card('S',5)],[card('C',6),card('C',7),card('C',8)],{fledLast:true});take(s,0);take(s,0);take(s,0);return canFlee(s)})());
+  ok('体力0で負け・得点は残りのモンスターのマイナス',(()=>{const s=mk([card('S',14),card('S',3),card('H',4),card('D',5)],[card('C',6)],{hp:10});take(s,0,false);return s.over==='lose'&&s.score===-9})());
+  ok('山札が尽きたら最後の部屋を全部片づけて勝ち',(()=>{const s=mk([card('S',2),card('H',3),card('S',4),card('S',5)],[],{hp:20});take(s,0);take(s,0);take(s,0);const mid=s.over;take(s,0);return mid===null&&s.over==='win'&&s.score===11})());
+  ok('体力満タンで最後が回復なら、その値を足す',(()=>{const s=mk([card('H',6)],[],{hp:20,taken:3});take(s,0);return s.over==='win'&&s.score===26})());
+  ok('公平な山札: 最初の部屋に J〜A がなく武器がある・武器の間は9枚以内（300回）',(()=>{for(let k=0;k<300;k++)if(!isFair(fairDeck()))return false;return true})());
+  ok('かばんにしまうのも3枚のうちの1枚',(()=>{const s=mk([card('H',2),card('D',7),card('H',4),card('S',14)],[card('C',2),card('C',3),card('C',4)],{opts:{bag:true},bag:null});stash(s,1);take(s,0);take(s,0);return s.bag&&s.bag.v===7&&s.room.length===4&&s.taken===0})());
+  ok('かばんは1枠だけ・モンスターはしまえない',(()=>{const s=mk([card('D',5),card('D',6),card('S',4),card('H',3)],[card('C',2)],{opts:{bag:true},bag:null});return stash(s,0)&&!stash(s,0)&&!canStash({...s,bag:null},card('S',4))})());
+  ok('かばんの回復も1部屋1回の決まりに従う',(()=>{const s=mk([card('H',5),card('S',2),card('S',3),card('S',4)],[card('C',2)],{hp:10,opts:{bag:true},bag:card('H',6)});take(s,0);return s.hp===15&&!canUseBag(s)&&!useBag(s)})());
+  ok('かばんの武器は装備できて、数には数えない',(()=>{const s=mk([card('S',9),card('S',2),card('S',3),card('S',4)],[card('C',2)],{opts:{bag:true},bag:card('D',8)});useBag(s);take(s,0);return s.weapon.card.v===8&&s.hp===19&&s.taken===1})());
+  ok('原作ではかばんを使えない',!canStash(mk([card('D',5)],[],{opts:{}}),card('D',5)));
+  return T}
+const TR=runTests();document.getElementById('tests').innerHTML=`<p>${TR.filter(t=>t[1]).length}/${TR.length} 合格</p><ul>${TR.map(t=>`<li>${t[1]?'✅':'❌'} ${t[0]}</li>`).join('')}</ul>`;
+
+window.claude?.hot?.ready?window.claude.hot.ready(d=>start(d)):start(window.claude?.hot?.data);
+</script>
+</body>
+</html>
