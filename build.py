@@ -31,7 +31,7 @@ TOP = HERE / "_top.html"  # トップページの元（手で書く。カード�
 # 公開・非公開の切り替え: その行の public=True / False を変えて python build.py（False の作品は、トップのカード・
 # <slug>/ の写し・サムネイル・カード画像を消し、links.md の状態を「非公開」にする。True に戻すと作り直し、状態は「公開待ち」）
 ITEMS = [
-    dict(public=True, slug="chikai", src="2026-10-24_chikai-no-sekai", title="誓いの世界", kind="RPG", ver="試作3版",
+    dict(public=True, slug="chikai", src="2026-10-24_chikai-no-sekai", title="誓いの世界", kind="RPG", ver="試作4版",
          time="30分", crop=(34, 122, 766, 560),
          desc="王の書記の見習いが、霧の奥の長へ王の手紙を届ける三日間の旅。剣では戦わず、相手の事情を見抜いて進む。"),
     dict(public=True, slug="oshidashi", src="2026-10-21_board-game", title="おしだし", kind="ボードゲーム・2人", ver="試作2版",
