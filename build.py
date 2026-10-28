@@ -1,21 +1,28 @@
 """作品集のサイトを組み立てる。
 
 使い方: python build.py            （サイトを作り直して、公開前の点検をする）
+        python build.py --pages    （画像は作らず、ページだけ作る＝画面を撮る前）
         python build.py --check    （作り直さずに点検だけ）
 
 - 作品の元のファイル（works の各フォルダの index.html）を、<slug>/index.html に写す。
   そのとき、スマホ向けの頭（文字コード・画面の幅）と X のカード（OGP）、上の「作品集へ」の帯を足す
-- drafts/shots/ の画面の写真から、サムネイル（img/<slug>.jpg）と X のカード画像（img/og-<slug>.jpg）を作る
-- 公開・非公開: ITEMS / EXTERNAL の各行の public=True/False（False はトップ・写し・画像・links.md から外す）
-- トップページ index.html は _top.html（手で書く元）から作る
-- 点検: 公開するファイルすべてで、個人の情報の言葉が0件・外への読み込みが Google Fonts だけ
+- drafts/shots/<slug>.jpg の画面の写真から、サムネイル（img/<slug>.jpg）と X のカード画像（img/og-<slug>.jpg）を作る
+- 作品の状態（完成・途中・止めた）は works/README.md の表の「フォルダ」「状態」の列から読む（状態の頭の語）
+- トップページ index.html は _top.html（手で書く元・カードは書かない）に、棚とカードを入れて作る
+  並び: 自己紹介と今週の変化 → すぐ遊べる（完成・pick）→ ほかの完成品 → 作りかけの棚（途中）→ つくったもの（物）→ 止めたもの
+- 点検: 公開するファイルすべてで、個人の情報の言葉が0件（HTML のコメントも）・外への読み込みが Google Fonts だけ・
+  画像に撮影情報（Exif）や PNG の文字の情報（tEXt/iTXt/zTXt）が無い・drafts/ のファイルや .stl が混じっていない
   （言葉の一覧は .company/pr/links.md の冒頭と同じ。ここには書かない＝このファイルも公開されるため）
 """
 from __future__ import annotations
 
 import argparse
+import base64
+import datetime as dt
 import html
+import io
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -24,57 +31,81 @@ WORKS = HERE.parent
 SITE = "https://frickey104.github.io"
 NAME = "frickey の工房"
 FONT = r"C:\Windows\Fonts\YuGothB.ttc"
-LINKS_MD = WORKS.parent / ".company" / "pr" / "links.md"
-TOP = HERE / "_top.html"  # トップページの元（手で書く。カードは全作品ぶん。_ で始まるので公開されない）
+LINKS_MD = WORKS.parent / ".company" / "pr" / "links.md"  # 読むだけ（個人の情報の言葉）
+WORKS_MD = WORKS / "README.md"  # 読むだけ（作品の状態）
+TOP = HERE / "_top.html"  # トップページの元（手で書く。_ で始まるので公開されない）
+TODAY = dt.date.today()
 
-# 載せる作品（順番＝サイトでの並び。最初が注目作）
-# 公開・非公開の切り替え: その行の public=True / False を変えて python build.py（False の作品は、トップのカード・
-# <slug>/ の写し・サムネイル・カード画像を消し、links.md の状態を「非公開」にする。True に戻すと作り直し、状態は「公開待ち」）
+# 載せる作品（順番＝棚の中での並び）。載せない作品は書かない。
+# pick=True: 完成のうち「すぐ遊べる」に大きく出す（2〜3本）／ thing=True: つくったもの（物）の棚に出す
 ITEMS = [
-    dict(public=True, slug="chikai", src="2026-10-24_chikai-no-sekai", title="誓いの世界", kind="RPG", ver="試作4版",
-         time="30分", crop=(34, 122, 766, 560),
-         desc="王の書記の見習いが、霧の奥の長へ王の手紙を届ける三日間の旅。剣では戦わず、相手の事情を見抜いて進む。"),
-    dict(public=True, slug="oshidashi", src="2026-10-21_board-game", title="おしだし", kind="ボードゲーム・2人", ver="試作2版",
-         time="", crop=(0, 350, 768, 926),
-         desc="盤の外から石を入れて、列ごと押し出す。4つ並べるか、相手の石を3つ落としたら勝ち。CPU とも対戦できる。"),
-    dict(public=True, slug="shuna", src="2026-10-23_shuna-cards", title="シュナをさがして", kind="カードの RPG・1人", ver="試作3版",
-         time="5分", crop=(28, 336, 746, 875),
-         desc="迷子の犬シュナを探して、トランプ44枚の地下室を灯りひとつで降りていく。ルールは Scoundrel（Zach Gage・Kurt Bieg）が手本。"),
-    dict(public=True, slug="yoake", src="2026-10-23_yoake-quest", title="夜明けの塔", kind="RPG", ver="試作1版",
-         time="10〜15分", crop=(40, 130, 736, 652),
-         desc="歩いて、出会って、コマンドで戦う。王道の RPG を小さくした1本道。犬のシュナがついてくる。"),
-    dict(public=True, slug="kadotsunagi", src="2026-10-22_kadotsunagi", title="かどつなぎ", kind="ボードゲーム・2人", ver="",
-         time="", crop=(28, 300, 746, 838),
-         desc="1〜5マスの駒を、自分の駒と角だけでつなげて置いていく陣取り。1回だけ相手の駒を消して置ける「消す権利」つき。市販の「ブロックス」（2人用）が手本。"),
-    dict(public=True, slug="michifusagi", src="2026-10-22_michifusagi", title="みちふさぎ", kind="ボードゲーム・2人", ver="",
-         time="", crop=(28, 370, 746, 908),
-         desc="壁を置いて相手の道をふさぎ、先に向こう側へ着いた方が勝ち。市販の「コリドール」が手本。CPU とも対戦できる。"),
-    dict(public=True, slug="hex", src="2026-10-23_hex", title="ヘックス", kind="ボードゲーム・2人", ver="試し",
-         time="", crop=(40, 450, 720, 960),
-         desc="六角形の盤で、自分の色の辺と辺を石でつないだら勝ち。昔からある公開のゲーム「ヘックス」を作ってみた。"),
-    dict(public=True, slug="tewatashi", src="2026-10-23_tewatashi", title="てわたし", kind="ボードゲーム・2人", ver="試し",
-         time="", crop=(0, 20, 768, 596),
-         desc="置く駒を相手が選んで渡してくる2人対戦。クアルトと同じ型を、自分なりに作ってみた試し。"),
-    dict(public=True, slug="stl-viewer", src="2026-10-23_stl-viewer", title="STL ビューア", kind="道具", ver="",
-         time="", crop=(0, 400, 800, 1000),
-         desc="3D の形のファイル（STL）を回して見るだけの道具。ファイルは端末の中で読むだけで、どこにも送らない。"),
-    dict(public=True, slug="vcm-calc", src="2026-10-12_vcm-calc", title="VCM 効き方計算", kind="計算シート", ver="",
-         time="", crop=(150, 440, 730, 875),
-         desc="可動コイル型の VCM で、寸法・磁石・コイルを変えたら推力が何%変わるかを、幅つきで出す。断面図と解説つき。"),
-    dict(public=True, slug="force-balance", src="2026-10-12_force-balance", title="力のつり合い計算", kind="計算シート", ver="試作",
-         time="", crop=(0, 20, 768, 596), bundle=True,
-         desc="部品1つについて、触れているところが受ける力を、つり合いの式から求める。接触の種類を選ぶと力の向きが決まる。"),
+    dict(slug="chikai", src="2026-10-24_chikai-no-sekai", title="誓いの世界", kind="RPG", ver="試作4版", time="30分",
+         crop=(34, 122, 766, 560), pick=True,
+         alt="誓いの世界の場面。夜の書記の部屋で、ろうそくの灯る机と本棚、白いひげの師匠",
+         desc="王の書記の見習いが、霧の奥の長へ王の手紙を届ける三日間の旅。剣では戦わず、相手の事情を見抜いて進みます。"),
+    dict(slug="shuna", src="2026-10-23_shuna-cards", title="シュナをさがして", kind="カードの RPG・1人", ver="試作3版", time="5分",
+         crop=(28, 336, 746, 875), pick=True,
+         alt="シュナをさがしての画面。灯りに照らされた地下室と、4枚のカード",
+         desc="迷子の犬シュナを探して、トランプ44枚の地下室を灯りひとつで降りていく。ルールは Scoundrel（Zach Gage・Kurt Bieg）が手本です。"),
+    dict(slug="michifusagi", src="2026-10-22_michifusagi", title="みちふさぎ", kind="ボードゲーム・2人", ver="", time="",
+         crop=(28, 370, 746, 908), pick=True,
+         alt="みちふさぎの9×9の盤と、向かい合う紅と藍のコマ",
+         desc="壁を置いて相手の道をふさぎ、先に向こう側へ着いた方が勝ち。市販の「コリドール」が手本です。CPU とも対戦できます。"),
+    dict(slug="yoake", src="2026-10-23_yoake-quest", title="夜明けの塔", kind="RPG", ver="試作1版", time="10〜15分",
+         crop=(40, 130, 736, 652),
+         alt="夜明けの塔のタイトル画面。主人公と犬のドット絵",
+         desc="歩いて、出会って、コマンドで戦う。王道の RPG を小さくした1本道。犬のシュナがついてきます。"),
+    dict(slug="kadotsunagi", src="2026-10-22_kadotsunagi", title="かどつなぎ", kind="ボードゲーム・2人", ver="", time="",
+         crop=(28, 300, 746, 838),
+         alt="かどつなぎの14×14の盤と、紅と藍の開始の印",
+         desc="1〜5マスの駒を、自分の駒と角だけでつなげて置いていく陣取り。1回だけ相手の駒を消して置ける「消す権利」つき。市販の「ブロックス」（2人用）が手本です。"),
+    dict(slug="stl-viewer", src="2026-10-23_stl-viewer", title="STL ビューア", kind="道具", ver="", time="",
+         crop=(0, 400, 800, 1000),
+         alt="STL ビューアに表示したドーナツ形の3Dモデル",
+         desc="3D の形のファイル（STL）を回して見るだけの道具。ファイルは端末の中で読むだけで、どこにも送りません。"),
+    dict(slug="vcm-calc", src="2026-10-12_vcm-calc", title="VCM 効き方計算", kind="計算シート", ver="", time="",
+         crop=(150, 440, 730, 875),
+         alt="VCM 効き方計算の断面図。上下のヨーク、N極とS極の磁石、コイル",
+         desc="可動コイル型の VCM で、寸法・磁石・コイルを変えたら推力が何%変わるかを、幅つきで出します。断面図と解説つき。"),
+    dict(slug="itazeri", src="2026-10-28_itazeri", title="板ぜり", kind="ボードゲーム・2人", ver="試作2版", time="",
+         crop=(160, 250, 640, 610),
+         alt="板ぜりの盤。1から9の価格の段と、真ん中の株価5",
+         desc="株の板取引を参考にした2人対戦。伏せた壁とハッタリ札で、株価という前線を押し合います。CPU とも対戦できます。"),
+    dict(slug="oshidashi", src="2026-10-21_board-game", title="おしだし", kind="ボードゲーム・2人", ver="試作2版", time="",
+         crop=(0, 350, 768, 926),
+         alt="おしだしの盤。5×5のマスと、まわりの矢印",
+         desc="盤の外から石を入れて、列ごと押し出す。4つ並べるか、相手の石を3つ落としたら勝ち。CPU とも対戦できます。"),
+    dict(slug="hex", src="2026-10-23_hex", title="ヘックス", kind="ボードゲーム・2人", ver="試し", time="",
+         crop=(40, 450, 720, 960),
+         alt="ヘックスの六角形の盤。上下が藍、左右が山吹の辺",
+         desc="六角形の盤で、自分の色の辺と辺を石でつないだら勝ち。昔からある公開のゲームを作ってみました。"),
+    dict(slug="tewatashi", src="2026-10-23_tewatashi", title="てわたし", kind="ボードゲーム・2人", ver="試し", time="",
+         crop=(0, 20, 768, 596),
+         alt="てわたしの画面。4×4の丸いマスと、相手に渡す駒を選ぶ案内",
+         desc="置く駒を相手が選んで渡してくる2人対戦。クアルトと同じ型を、自分なりに作ってみた試しです。"),
+    dict(slug="brooch", src="2026-10-27_fashion-items", title="ブローチの見本", kind="3D プリントの小物", ver="", time="",
+         crop=(16, 166, 784, 742), thing=True,
+         alt="ブローチの見本の絵。花のブローチと、白目のシュナウザーの顔",
+         desc="3D プリンタで刷るブローチの見本の絵。花と、シュナウザーの顔やへそ天の姿。大きさと材料つき。"),
+    dict(slug="force-balance", src="2026-10-12_force-balance", title="力のつり合い計算", kind="計算シート", ver="試作", time="",
+         crop=(0, 20, 768, 596), bundle=True,
+         alt="力のつり合い計算の入力画面。部品の質量と重心、つり合いの確認の表示",
+         desc="部品1つについて、触れているところが受ける力をつり合いの式から求めます。接触の種類を選ぶと、力の向きが決まります。"),
 ]
 # 外にあるもの（写さない・リンクだけ）
 EXTERNAL = [
-    dict(public=True, slug="experiments", title="実験室", kind="アート", url=f"{SITE}/experiments/", crop=(0, 100, 800, 700),
-         desc="触った跡が作品に残り、次の動きを変える。ブラウザで動く実験の記録。"),
+    dict(slug="experiments", src="2026-08-18_experiments", title="実験室", kind="アート", url=f"{SITE}/experiments/",
+         crop=(0, 100, 800, 700),
+         alt="実験室の作品「風の地形」。暗い青の中を流れる細い光の筋",
+         desc="触った跡が作品に残り、次の動きを変える。ブラウザで動く実験の記録です。"),
 ]
 
+STATES = {"完成": "done", "途中": "wip", "止めた": "stop"}
 ALLOWED_HOSTS = {"fonts.googleapis.com", "fonts.gstatic.com", "frickey104.github.io", "github.com",
                  "www.w3.org"}  # w3.org は SVG の名前（通信しない）
 # 出典として押すと開くリンク（<a href> だけ認める。読み込みには使わせない）
 LINK_ONLY_HOSTS = {"www.duramag.com", "product.tdk.com"}
+PROBLEMS: list[str] = []  # 組み立て中に見つかった問題（点検で ng にする）
 
 SKELETON = """<!doctype html>
 <html lang="ja">
@@ -117,8 +148,29 @@ def pii_words() -> list[str]:
     return words
 
 
-def public(it: dict) -> bool:
-    return it.get("public", True)
+def read_states() -> None:
+    """works/README.md の表から、各作品の状態（完成・途中・止めた）を it["state"] に入れる。読めない作品は ng。"""
+    found = {}
+    for line in WORKS_MD.read_text(encoding="utf-8").splitlines():
+        cells = [c.strip() for c in line.split("|")]
+        if len(cells) < 7 or not cells[3].startswith("`"):
+            continue
+        m = re.match(r"(完成|途中|止めた)", cells[5])
+        found[cells[3].strip("`")] = m.group(1) if m else None
+    for it in ITEMS + EXTERNAL:
+        it["state"] = found.get(it["src"])
+        if not it["state"]:
+            why = "表に無い" if it["src"] not in found else "状態が 完成・途中・止めた のどれでもない"
+            PROBLEMS.append(f"works/README.md: {it['title']}（{it['src']}）の状態が読めない（{why}）")
+
+
+def updated(it: dict) -> dt.date | None:
+    """作品フォルダの git の最新 commit の日付（フォルダが自分の git を持たないときは None）。"""
+    d = WORKS / it["src"]
+    if not (d / ".git").exists():
+        return None
+    r = subprocess.run(["git", "-C", str(d), "log", "-1", "--format=%cs"], capture_output=True, text=True)
+    return dt.date.fromisoformat(r.stdout.strip()) if r.returncode == 0 and r.stdout.strip() else None
 
 
 def href(it: dict) -> str:
@@ -131,6 +183,28 @@ def label(it: dict) -> str:
     return " / ".join(p for p in parts if p)
 
 
+def md(d: dt.date) -> str:
+    return f"{d.month}/{d.day}"
+
+
+def shelves() -> list[tuple[str, str, list[dict], bool]]:
+    """（id, 見出し, 作品, 大きいカードか）の並び。"""
+    allw = [i for i in ITEMS + EXTERNAL if i.get("state")]
+    things = [i for i in allw if i.get("thing")]
+    rest = [i for i in allw if not i.get("thing")]
+    return [
+        ("play", "すぐ遊べる", [i for i in rest if i["state"] == "完成" and i.get("pick")], True),
+        ("done", "ほかの完成品", [i for i in rest if i["state"] == "完成" and not i.get("pick")], False),
+        ("wip", "作りかけの棚", [i for i in rest if i["state"] == "途中"], False),
+        ("things", "つくったもの", things, False),
+        ("stopped", "止めたもの", [i for i in rest if i["state"] == "止めた"], False),
+    ]
+
+
+def ordered() -> list[dict]:
+    return [it for _, _, items, _ in shelves() for it in items]
+
+
 def make_images() -> None:
     from PIL import Image, ImageDraw, ImageFont
     shots = HERE / "drafts" / "shots"
@@ -139,7 +213,6 @@ def make_images() -> None:
     big = ImageFont.truetype(FONT, 64)
     mid = ImageFont.truetype(FONT, 30)
     small = ImageFont.truetype(FONT, 24)
-    ink, paper, line = (22, 40, 60), (238, 242, 245), (205, 216, 226)
 
     def blueprint(w, h):
         im = Image.new("RGB", (w, h), (20, 46, 78))
@@ -151,8 +224,11 @@ def make_images() -> None:
         return im
 
     thumbs = {}
-    for it in [i for i in ITEMS + EXTERNAL if public(i)]:
+    for it in ITEMS + EXTERNAL:
         src = shots / f"{it['slug']}.jpg"
+        if not src.exists():
+            PROBLEMS.append(f"drafts/shots/{it['slug']}.jpg: 画面の写真が無い（撮ってから作り直す）")
+            continue
         im = Image.open(src).convert("RGB").crop(it["crop"])
         th = im.resize((800, 600), Image.LANCZOS) if abs(im.width / im.height - 4 / 3) < .05 else fit(im, 800, 600)
         th.save(out / f"{it['slug']}.jpg", quality=84, optimize=True)
@@ -166,16 +242,16 @@ def make_images() -> None:
         d.text((60, 90), NAME, font=small, fill=(160, 190, 220))
         title_font = big if len(it["title"]) <= 6 else mid
         d.text((60, 150), it["title"], font=title_font, fill=(240, 246, 252))
-        d.text((60, 250), label(it) if "ver" in it else it["kind"], font=small, fill=(160, 190, 220))
+        d.text((60, 250), label(it), font=small, fill=(160, 190, 220))
         wrap(d, it["desc"].split("。")[0] + "。", (60, 310), 400, small, (215, 228, 240))
         og.save(out / f"og-{it['slug']}.jpg", quality=86, optimize=True)
 
-    # サイト全体の X のカード
+    # サイト全体の X のカード（トップの並びの最初の4つ）
     og = blueprint(1200, 630)
     d = ImageDraw.Draw(og)
     d.text((60, 70), NAME, font=big, fill=(240, 246, 252))
-    d.text((62, 160), "仕事のあとに、AI と作っているゲームと道具と計算シート", font=mid, fill=(170, 200, 228))
-    for i, slug in enumerate([it["slug"] for it in ITEMS if public(it)][:4]):
+    d.text((62, 160), "AI の仮想会社『CC カンパニー』で、遊べるものを作っています", font=mid, fill=(170, 200, 228))
+    for i, slug in enumerate([it["slug"] for it in ordered() if it["slug"] in thumbs][:4]):
         pic = thumbs[slug].resize((256, 192), Image.LANCZOS)
         x = 60 + i * 276
         og.paste(pic, (x, 300))
@@ -211,7 +287,6 @@ def source(it: dict) -> str:
     """作品の元のファイル。複数のファイルに分かれた作品は、その作品の1ファイル版を作る道具でまとめる。"""
     if not it.get("bundle"):
         return (WORKS / it["src"] / "index.html").read_text(encoding="utf-8")
-    import subprocess
     tmp = HERE / "drafts" / f"{it['slug']}.bundled.html"
     subprocess.run([sys.executable, str(WORKS / it["src"] / "build_artifact.py"), str(tmp)], check=True,
                    stdout=subprocess.DEVNULL)
@@ -219,7 +294,7 @@ def source(it: dict) -> str:
 
 
 def build_pages() -> None:
-    for it in [i for i in ITEMS if public(i)]:
+    for it in ITEMS:
         src = source(it)
         head = SKELETON.format(
             desc=html.escape(it["desc"]), name=html.escape(NAME), title=html.escape(it["title"]),
@@ -229,102 +304,145 @@ def build_pages() -> None:
         (out / "index.html").write_text(head + src.rstrip() + "\n</body>\n</html>\n", encoding="utf-8")
 
 
+def card(it: dict, no: int, big: bool) -> str:
+    e = html.escape
+    key = STATES[it["state"]]
+    tag = [f"No.{no:02d}", it["kind"]]
+    upd = ""
+    if it["state"] == "途中":
+        d = updated(it)
+        upd = "・".join(p for p in [it.get("ver", ""), f"{md(d)} 更新" if d else ""] if p)
+        upd = f'<span class="upd">{e(upd)}</span>' if upd else ""
+    elif it.get("ver"):
+        tag.append(it["ver"])
+    if it.get("time"):
+        tag.append(it["time"])
+    ext = ' <span class="ext">↗</span>' if it.get("url") else ""
+    go = '<span class="go">遊ぶ →</span>' if big else ""
+    lazy = "" if big else ' loading="lazy"'
+    return (f'      <a class="card st-{key}" href="{e(href(it))}"><span class="pic"><img src="img/{it["slug"]}.jpg" '
+            f'alt="{e(it["alt"])}" width="800" height="600"{lazy}><span class="st">{it["state"]}</span></span>\n'
+            f'        <div class="body"><span class="tag">{e(" ／ ".join(tag))}</span>{upd}<h4>{e(it["title"])}{ext}</h4>'
+            f'<p>{e(it["desc"])}</p>{go}</div></a>')
+
+
 def build_top() -> None:
-    """トップページ（index.html）を _top.html から作る。非公開の作品のカードを除き、番号と点数を数え直す。"""
+    """トップページ（index.html）を _top.html から作る。棚・カード・点数・日付・今週の変化を入れる。"""
     t = TOP.read_bytes().decode("utf-8")
-    CARD = 'class="card"'
-    hidden = {href(it) for it in ITEMS + EXTERNAL if not public(it)}
-    drop = lambda m: "" if m.group(1) in hidden else m.group(0)
-    t = re.sub(r'\n  <article class="feature">\s*<a class="pic" href="([^"]+)".*?</article>\n', drop, t, flags=re.S)
-    t = re.sub(r'\n      <a class="card" href="([^"]+)">.*?</div></a>', drop, t, flags=re.S)
-    # カードが無くなった棚は、棚ごと消す
-    t = re.sub(r'\n\n  <section [^>]*>(?:(?!</section>).)*?<div class="grid">\s*</div>\s*</section>', "", t, flags=re.S)
-    # 棚ごとの点数・全体の点数・No. を数え直す
-    t = re.sub(r'<section [^>]*>(?:(?!</section>).)*?</section>',
-               lambda m: re.sub(r'<span class="tag">\d+ 点</span>', f'<span class="tag">{m.group(0).count(CARD)} 点</span>',
-                                m.group(0), count=1), t, flags=re.S)
-    total = t.count('class="card"') + t.count('class="feature"')
-    t = re.sub(r"WORKS / \d+ 点", f"WORKS / {total} 点", t, count=1)
-    n = iter(range(1, 1000))
-    t = re.sub(r"No\.\d{2}", lambda m: f"No.{next(n):02d}", t)
+    n = 0
+    parts = []
+    for sid, head, items, big in shelves():
+        if not items:
+            continue
+        cards = []
+        for it in items:
+            n += 1
+            cards.append(card(it, n, big))
+        parts.append(f'  <section aria-labelledby="{sid}">\n'
+                     f'    <div class="shelf-head"><h2 id="{sid}">{head}</h2><span class="tag">{len(items)} 点</span></div>\n'
+                     f'    <div class="grid{" big" if big else ""}">\n' + "\n".join(cards) + "\n    </div>\n  </section>\n")
+    # 今週の変化: 直近7日に作品フォルダの git が更新された作品（新しい順に最大3つ）
+    recent = []
+    for it in ordered():
+        d = updated(it)
+        if d and 0 <= (TODAY - d).days < 7:
+            recent.append((d, it))
+    recent.sort(key=lambda x: x[0], reverse=True)
+    news = ""
+    if recent:
+        spans = "".join(f"<span>{md(d)} {html.escape(' '.join(p for p in [it['title'], it.get('ver', '')] if p))}</span>"
+                        for d, it in recent[:3])
+        news = f'    <p class="news"><b>今週の変化</b>{spans}</p>\n'
+    t = (t.replace("@@TAG@@", f"WORKS / {n} 点 / {TODAY.isoformat()} 更新")
+          .replace("@@NEWS@@", news).replace("@@SHELVES@@", "\n".join(parts)))
     (HERE / "index.html").write_bytes(t.encode("utf-8"))
 
 
-def hide_private() -> None:
-    """非公開の作品の、前に作った写し・サムネイル・カード画像を消す（公開のサイトから外す）。"""
-    import shutil
-    for it in ITEMS + EXTERNAL:
-        if public(it):
-            continue
-        d = HERE / it["slug"]
-        if d.is_dir() and not it.get("url"):
-            if {p.name for p in d.iterdir()} <= {"index.html"}:
-                shutil.rmtree(d)
-            else:
-                print(f"⚠ {d.name}/ に index.html 以外のファイルがあるので消さない（手で確かめる）")
-        for p in (HERE / "img" / f"{it['slug']}.jpg", HERE / "img" / f"og-{it['slug']}.jpg"):
-            p.unlink(missing_ok=True)
+def png_text_chunks(b: bytes) -> list[str]:
+    """PNG の文字の情報（tEXt/iTXt/zTXt）の塊の名前を返す。"""
+    if not b.startswith(b"\x89PNG\r\n\x1a\n"):
+        return []
+    out, i = [], 8
+    while i + 8 <= len(b):
+        n, kind = int.from_bytes(b[i:i + 4], "big"), b[i + 4:i + 8]
+        if kind in (b"tEXt", b"iTXt", b"zTXt"):
+            out.append(kind.decode())
+        if kind == b"IEND":
+            break
+        i += 12 + n
+    return out
 
 
-def update_links() -> None:
-    """links.md の表の「状態」を合わせる: 非公開 → 「非公開」、公開に戻した → 「公開待ち」（広報部が確かめて「公開中」にする）。"""
-    by_link = {(it.get("url") or f"{SITE}/{it['slug']}/"): it for it in ITEMS + EXTERNAL}
-    raw = LINKS_MD.read_bytes().decode("utf-8")
-    lines = raw.split("\n")
-    for k, line in enumerate(lines):
-        cells = line.split("|")
-        if not line.startswith("|") or len(cells) < 6 or cells[4].strip() not in by_link:
-            continue
-        it, st = by_link[cells[4].strip()], cells[2].strip()
-        new = ("非公開" if st in ("公開中", "公開待ち") else st) if not public(it) else ("公開待ち" if st == "非公開" else st)
-        if new != st:
-            cells[2] = f" {new} "
-            lines[k] = "|".join(cells)
-            print(f"links.md: {it['title']} の状態 {st} → {new}")
-    if "\n".join(lines) != raw:
-        LINKS_MD.write_bytes("\n".join(lines).encode("utf-8"))
+def image_problems(b: bytes, where: str) -> list[str]:
+    from PIL import Image
+    bad = []
+    try:
+        if Image.open(io.BytesIO(b)).getexif():
+            bad.append(f"{where}: 画像に撮影情報（Exif）が残っている")
+    except Exception:
+        pass
+    if png_text_chunks(b):
+        bad.append(f"{where}: PNG に文字の情報（{'・'.join(sorted(set(png_text_chunks(b))))}）が残っている")
+    return bad
 
 
 def check() -> int:
     words = pii_words()
-    files = [p for p in HERE.rglob("*") if p.is_file() and ".git" not in p.parts and "drafts" not in p.parts]
-    texts = [p for p in files if p.suffix in {".html", ".md", ".py", ".txt", ".json", ".css", ".js"}]
-    bad = []
-    for p in texts:
-        t = p.read_text(encoding="utf-8")
+
+    def has_word(t: str) -> bool:
         for w in words:
             # 英字の言葉は単語として一致したときだけ（canonical などの一部に当たらないように）
             pat = rf"(?<![A-Za-z]){re.escape(w)}(?![A-Za-z])" if w.isascii() else re.escape(w)
             if re.search(pat, t, re.I):
-                bad.append(f"{p.relative_to(HERE)}: 個人の情報の言葉が見つかった")
+                return True
+        return False
+
+    bad = list(PROBLEMS)
+    files = [p for p in HERE.rglob("*") if p.is_file() and ".git" not in p.parts and "__pycache__" not in p.parts
+             and p.relative_to(HERE).parts[0] != "drafts"]  # 一番上の drafts/ は .gitignore で上がらない
+    texts = [p for p in files if p.suffix in {".html", ".md", ".py", ".txt", ".json", ".css", ".js"}]
+    for p in files:
+        rel = p.relative_to(HERE)
+        if "drafts" in rel.parts:
+            bad.append(f"{rel}: 写しに drafts/ のファイルが混じっている")
+        if p.suffix.lower() == ".stl":
+            bad.append(f"{rel}: STL のファイルが混じっている")
+    for p in texts:
+        rel = p.relative_to(HERE)
+        t = p.read_text(encoding="utf-8")
+        if has_word(t):
+            bad.append(f"{rel}: 個人の情報の言葉が見つかった")
+        if p.suffix == ".html":
+            if any(has_word(c) for c in re.findall(r"<!--(.*?)-->", t, re.S)):
+                bad.append(f"{rel}: HTML のコメントに個人の情報の言葉がある")
+            for m in re.finditer(r"""(?:href|src)\s*=\s*["']([^"']*)["']""", t):
+                if re.search(r"\.stl(?:[?#]|$)|(?:^|/)drafts/", m.group(1), re.I):
+                    bad.append(f"{rel}: drafts/ か .stl へのリンク（{m.group(1)[:60]}）")
+            for m in re.finditer(r"data:image/(?:png|jpe?g);base64,([A-Za-z0-9+/=]+)", t):
+                bad += image_problems(base64.b64decode(m.group(1)), f"{rel}（埋め込みの画像）")
         for m in re.finditer(r"https?://([a-zA-Z0-9.-]+)", t):
             host = m.group(1)
             if host in ALLOWED_HOSTS:
                 continue
             if host in LINK_ONLY_HOSTS and re.search(r'<a href="$', t[max(0, m.start() - 9):m.start()]):
                 continue
-            bad.append(f"{p.relative_to(HERE)}: 外への読み込み {host}")
-    # 画像のファイルに写真の情報（Exif）が残っていないか
-    from PIL import Image
+            bad.append(f"{rel}: 外への読み込み {host}")
+    # 画像のファイルに撮影情報（Exif）・PNG の文字の情報が残っていないか
     for p in files:
         if p.suffix.lower() in {".jpg", ".jpeg", ".png"}:
-            if Image.open(p).getexif():
-                bad.append(f"{p.relative_to(HERE)}: 画像に Exif が残っている")
-    # 公開・非公開の切り替えが、トップと置いてあるファイルに合っているか
+            bad += image_problems(p.read_bytes(), str(p.relative_to(HERE)))
+    # トップのカードと置いてあるファイルが ITEMS に合っているか（ITEMS から外した作品の写し・画像が残っていないか）
     top = (HERE / "index.html").read_text(encoding="utf-8")
     for it in ITEMS + EXTERNAL:
-        here = f'href="{href(it)}"' in top
-        if public(it) and not here:
-            bad.append(f"index.html: 公開の {it['title']} のカードが無い（_top.html に足す）")
-        if not public(it):
-            if here:
-                bad.append(f"index.html: 非公開の {it['title']} のカードが残っている")
-            left = [HERE / "img" / f"{it['slug']}.jpg", HERE / "img" / f"og-{it['slug']}.jpg"]
-            if not it.get("url"):
-                left.append(HERE / it["slug"])
-            for p in left:
-                if p.exists():
-                    bad.append(f"{p.relative_to(HERE)}: 非公開の {it['title']} のファイルが残っている")
+        if it.get("state") and f'href="{href(it)}"' not in top:
+            bad.append(f"index.html: {it['title']} のカードが無い")
+    slugs = {it["slug"] for it in ITEMS + EXTERNAL}
+    for d in HERE.iterdir():
+        if d.is_dir() and d.name not in {".git", "drafts", "img", "__pycache__"} and d.name not in {it["slug"] for it in ITEMS}:
+            bad.append(f"{d.name}/: ITEMS に無い作品の写しが残っている（消す）")
+    for p in (HERE / "img").glob("*"):
+        if p.stem.removeprefix("og-") not in slugs | {"site"}:
+            bad.append(f"img/{p.name}: ITEMS に無い作品の画像が残っている（消す）")
     print(f"点検: ファイル {len(files)} 個（文字 {len(texts)}）・言葉 {len(words)} 個")
     for b in bad:
         print("❌", b)
@@ -337,13 +455,16 @@ def main() -> int:
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--pages", action="store_true", help="画像は作らず、ページだけ作る（画面を撮る前）")
     a = ap.parse_args()
+    read_states()
     if not a.check:
         if not a.pages:
             make_images()
         build_pages()
         build_top()
-        hide_private()
-        update_links()
+    by = {}
+    for it in ITEMS + EXTERNAL:
+        by.setdefault(it.get("state") or "?", []).append(it["title"])
+    print("状態: " + " ／ ".join(f"{k} {len(v)}" for k, v in by.items()))
     return check()
 
 

@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>frickey の工房</title>
-<meta name="description" content="仕事のあとに、AI と一緒に作っているゲームと道具と計算シート。ブラウザだけで動きます。">
+<meta name="description" content="AI の仮想会社『CC カンパニー』で作っている、ブラウザで遊べるゲームと道具と小物。">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="frickey の工房">
 <meta property="og:title" content="frickey の工房">
-<meta property="og:description" content="仕事のあとに、AI と一緒に作っているゲームと道具と計算シート。ブラウザだけで動きます。">
+<meta property="og:description" content="AI の仮想会社『CC カンパニー』で作っている、ブラウザで遊べるゲームと道具と小物。">
 <meta property="og:url" content="https://frickey104.github.io/">
 <meta property="og:image" content="https://frickey104.github.io/img/og-site.jpg">
 <meta name="twitter:card" content="summary_large_image">
@@ -16,10 +16,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
-/* 機械屋の作業机: 明るい方は方眼紙、暗い方は青焼き。作品は部品の札（番号・種類・版）を付けて棚に並べる。冒頭に注目作1枚、あとは同じ大きさのカード */
+/* 機械屋の作業机: 明るい方は方眼紙、暗い方は青焼き。作品は札（番号・種類・版）と、左上の状態のラベル（完成・途中・止めた）を付けて棚に並べる */
 :root{
   --bg:#f3f6f7; --grid:#dfe7ec; --grid2:#c9d6de; --card:#ffffff; --ink:#15283b; --sub:#52667a; --line:#cfdae2;
   --accent:#1d6aa8; --accentInk:#ffffff; --stamp:#c2412d; --shadow:0 1px 0 #cfdae2, 0 8px 24px -16px #15283b55;
+  --done:#2f8a4c; --doneInk:#ffffff; --wip:#f2c230; --wipInk:#3a2c00; --stop:#8a96a3; --stopInk:#ffffff;
   --display:"Dela Gothic One","Hiragino Sans","Yu Gothic",sans-serif;
   --body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
   --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
@@ -27,10 +28,12 @@
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0f2740; --grid:#17344f; --grid2:#21476a; --card:#132f4c; --ink:#e7eff7; --sub:#9fb6cc; --line:#2a5277;
-  --accent:#7cc0f5; --accentInk:#0b1d30; --stamp:#ff8a6b; --shadow:0 1px 0 #21476a, 0 10px 28px -18px #000; color-scheme:dark}}
+  --accent:#7cc0f5; --accentInk:#0b1d30; --stamp:#ff8a6b; --shadow:0 1px 0 #21476a, 0 10px 28px -18px #000;
+  --done:#5cc47d; --doneInk:#06240f; --wip:#f5cf55; --wipInk:#3a2c00; --stop:#7b8794; --stopInk:#0b1d30; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0f2740; --grid:#17344f; --grid2:#21476a; --card:#132f4c; --ink:#e7eff7; --sub:#9fb6cc; --line:#2a5277;
-  --accent:#7cc0f5; --accentInk:#0b1d30; --stamp:#ff8a6b; --shadow:0 1px 0 #21476a, 0 10px 28px -18px #000; color-scheme:dark}
+  --accent:#7cc0f5; --accentInk:#0b1d30; --stamp:#ff8a6b; --shadow:0 1px 0 #21476a, 0 10px 28px -18px #000;
+  --done:#5cc47d; --doneInk:#06240f; --wip:#f5cf55; --wipInk:#3a2c00; --stop:#7b8794; --stopInk:#0b1d30; color-scheme:dark}
 *{box-sizing:inherit}
 body{margin:0;color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.75;background:var(--bg)}
 html{min-height:100%;background-color:var(--bg);
@@ -49,44 +52,47 @@ header{display:flex;flex-direction:column;gap:10px;max-width:40em}
 h1{font-family:var(--display);font-weight:400;font-size:clamp(2.2rem,7vw,3.6rem);line-height:1.15;margin:0;letter-spacing:.02em;text-wrap:balance}
 .lead{margin:0;font-size:1.05rem;color:var(--sub)}
 .lead b{color:var(--ink);font-weight:700}
-
-/* 注目作 */
-.feature{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden;box-shadow:var(--shadow)}
-.feature .pic{position:relative;display:block;background:#0b0c14}
-.feature img{display:block;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
-.stamp{position:absolute;top:14px;left:14px;font-family:var(--body);font-weight:700;font-size:.78rem;color:var(--stamp);border:2px solid var(--stamp);border-radius:4px;padding:2px 8px;background:color-mix(in srgb,var(--card) 88%,transparent);transform:rotate(-4deg);letter-spacing:.08em}
-.feature .txt{padding:26px 26px 24px;display:flex;flex-direction:column;gap:12px;min-width:0}
-h2{font-family:var(--display);font-weight:400;font-size:1.9rem;line-height:1.2;margin:0}
-.desc{margin:0;color:var(--ink)}
-.go{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;margin-top:auto;font-weight:700;text-decoration:none;background:var(--accent);color:var(--accentInk);padding:10px 18px;border-radius:4px;border:1px solid var(--accent)}
-.go:hover{filter:brightness(1.08)}
-a:focus-visible,.go:focus-visible{outline:3px solid var(--stamp);outline-offset:3px}
+.news{margin:0;font-size:.92rem;color:var(--sub);border-left:3px solid var(--stamp);padding-left:10px}
+.news b{color:var(--ink);margin-right:.6em}
+.news span+span::before{content:"／";margin:0 .4em;color:var(--line)}
 
 /* 棚 */
 section{display:flex;flex-direction:column;gap:16px}
 .shelf-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:6px}
-h3{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0}
+h2,h3{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
+.grid.big{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
 .card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden;text-decoration:none;box-shadow:var(--shadow);transition:transform .15s ease}
 .card:hover{transform:translateY(-2px)}
+.card .pic{position:relative;display:block}
 .card img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-bottom:1px solid var(--line);background:#0b0c14}
-.card .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.card .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;min-width:0;flex:1}
 .card h4{margin:0;font-size:1.1rem;font-weight:700}
+.big .card h4{font-family:var(--display);font-weight:400;font-size:1.5rem;line-height:1.25}
 .card p{margin:0;font-size:.92rem;color:var(--sub)}
+.go{align-self:flex-start;margin-top:auto;font-weight:700;background:var(--accent);color:var(--accentInk);padding:8px 16px;border-radius:4px}
 .ext{font-family:var(--mono);font-size:.8rem}
+a:focus-visible{outline:3px solid var(--stamp);outline-offset:3px}
+
+/* 状態のラベル（左上に1つ） */
+.st{position:absolute;top:10px;left:10px;font-family:var(--body);font-weight:700;font-size:.78rem;line-height:1;padding:6px 10px;border-radius:999px;letter-spacing:.06em;box-shadow:0 1px 3px #0005}
+.st-done .st{background:var(--done);color:var(--doneInk)}
+.st-wip .st{background:var(--wip);color:var(--wipInk)}
+.st-stop .st{background:var(--stop);color:var(--stopInk)}
+.upd{font-family:var(--mono);font-size:.76rem;color:var(--ink);font-variant-numeric:tabular-nums}
+.st-stop{opacity:.72}
+.st-stop img{filter:grayscale(1)}
 
 /* 作り方 */
-.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin:0;padding:0;list-style:none;counter-reset:h}
+.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin:0;padding:0;list-style:none}
 .how li{border-top:1px solid var(--line);padding-top:10px;min-width:0}
 .how b{display:block;font-weight:700;margin-bottom:2px}
 .how span{color:var(--sub);font-size:.92rem}
 footer{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:14px}
 
 @media (max-width:720px){
-  .feature{grid-template-columns:1fr}
-  .feature .pic{aspect-ratio:4/3}
-  .feature .txt{padding:18px 18px 20px}
   .wrap{gap:36px;padding-block:28px 44px}
+  .grid.big{grid-template-columns:1fr}
 }
 @media (prefers-reduced-motion:reduce){.card{transition:none}.card:hover{transform:none}}
 </style>
@@ -94,58 +100,66 @@ footer{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-
 <body>
 <div class="wrap">
   <header>
-    <span class="tag">WORKS / 12 点 / 2026-10-26 更新</span>
+    <span class="tag">WORKS / 14 点 / 2026-10-28 更新</span>
     <h1>frickey の工房</h1>
-    <p class="lead">仕事のあとに、AI（Claude Code）と一緒に作っている<b>ゲームと道具と計算シート</b>。どれもブラウザだけで動きます。作りかけのものは、版を書いて出しています。</p>
+    <p class="lead">AI の仮想会社『CC カンパニー』で、<b>遊べるもの</b>を作っています。</p>
+    <p class="news"><b>今週の変化</b><span>10/28 板ぜり 試作2版</span><span>10/28 ブローチの見本</span><span>10/27 誓いの世界 試作4版</span></p>
   </header>
-
-  <article class="feature">
-    <a class="pic" href="chikai/" aria-label="誓いの世界を遊ぶ"><img src="img/chikai.jpg" alt="誓いの世界の場面。夜の書記の部屋で、ろうそくの灯る机と本棚、白いひげの師匠" width="800" height="600"><span class="stamp">いま作っている</span></a>
-    <div class="txt">
-      <span class="tag">No.01 ／ RPG ／ 試作4版 ／ 30分</span>
-      <h2>誓いの世界</h2>
-      <p class="desc">王の書記の見習いが、霧の奥の長へ王の手紙を届ける三日間の旅。剣では戦わず、相手の事情を見抜いて進みます。</p>
-      <a class="go" href="chikai/">遊ぶ →</a>
+  <section aria-labelledby="play">
+    <div class="shelf-head"><h2 id="play">すぐ遊べる</h2><span class="tag">3 点</span></div>
+    <div class="grid big">
+      <a class="card st-done" href="chikai/"><span class="pic"><img src="img/chikai.jpg" alt="誓いの世界の場面。夜の書記の部屋で、ろうそくの灯る机と本棚、白いひげの師匠" width="800" height="600"><span class="st">完成</span></span>
+        <div class="body"><span class="tag">No.01 ／ RPG ／ 試作4版 ／ 30分</span><h4>誓いの世界</h4><p>王の書記の見習いが、霧の奥の長へ王の手紙を届ける三日間の旅。剣では戦わず、相手の事情を見抜いて進みます。</p><span class="go">遊ぶ →</span></div></a>
+      <a class="card st-done" href="shuna/"><span class="pic"><img src="img/shuna.jpg" alt="シュナをさがしての画面。灯りに照らされた地下室と、4枚のカード" width="800" height="600"><span class="st">完成</span></span>
+        <div class="body"><span class="tag">No.02 ／ カードの RPG・1人 ／ 試作3版 ／ 5分</span><h4>シュナをさがして</h4><p>迷子の犬シュナを探して、トランプ44枚の地下室を灯りひとつで降りていく。ルールは Scoundrel（Zach Gage・Kurt Bieg）が手本です。</p><span class="go">遊ぶ →</span></div></a>
+      <a class="card st-done" href="michifusagi/"><span class="pic"><img src="img/michifusagi.jpg" alt="みちふさぎの9×9の盤と、向かい合う紅と藍のコマ" width="800" height="600"><span class="st">完成</span></span>
+        <div class="body"><span class="tag">No.03 ／ ボードゲーム・2人</span><h4>みちふさぎ</h4><p>壁を置いて相手の道をふさぎ、先に向こう側へ着いた方が勝ち。市販の「コリドール」が手本です。CPU とも対戦できます。</p><span class="go">遊ぶ →</span></div></a>
     </div>
-  </article>
+  </section>
 
-  <section aria-labelledby="games">
-    <div class="shelf-head"><h3 id="games">ゲーム</h3><span class="tag">7 点</span></div>
+  <section aria-labelledby="done">
+    <div class="shelf-head"><h2 id="done">ほかの完成品</h2><span class="tag">5 点</span></div>
     <div class="grid">
-      <a class="card" href="oshidashi/"><img src="img/oshidashi.jpg" alt="おしだしの盤。5×5のマスと、まわりの矢印" width="800" height="600" loading="lazy">
-        <div class="body"><span class="tag">No.02 ／ ボードゲーム・2人 ／ 試作2版</span><h4>おしだし</h4><p>盤の外から石を入れて、列ごと押し出す。4つ並べるか、相手の石を3つ落としたら勝ち。CPU とも対戦できます。</p></div></a>
-      <a class="card" href="shuna/"><img src="img/shuna.jpg" alt="シュナをさがしての画面。灯りに照らされた地下室と、4枚のカード" width="800" height="600" loading="lazy">
-        <div class="body"><span class="tag">No.03 ／ カードの RPG・1人 ／ 試作3版 ／ 5分</span><h4>シュナをさがして</h4><p>迷子の犬シュナを探して、トランプ44枚の地下室を灯りひとつで降りていく。ルールは Scoundrel（Zach Gage・Kurt Bieg）が手本です。</p></div></a>
-      <a class="card" href="yoake/"><img src="img/yoake.jpg" alt="夜明けの塔のタイトル画面。主人公と犬のドット絵" width="800" height="600" loading="lazy">
+      <a class="card st-done" href="yoake/"><span class="pic"><img src="img/yoake.jpg" alt="夜明けの塔のタイトル画面。主人公と犬のドット絵" width="800" height="600" loading="lazy"><span class="st">完成</span></span>
         <div class="body"><span class="tag">No.04 ／ RPG ／ 試作1版 ／ 10〜15分</span><h4>夜明けの塔</h4><p>歩いて、出会って、コマンドで戦う。王道の RPG を小さくした1本道。犬のシュナがついてきます。</p></div></a>
-      <a class="card" href="kadotsunagi/"><img src="img/kadotsunagi.jpg" alt="かどつなぎの14×14の盤と、紅と藍の開始の印" width="800" height="600" loading="lazy">
+      <a class="card st-done" href="kadotsunagi/"><span class="pic"><img src="img/kadotsunagi.jpg" alt="かどつなぎの14×14の盤と、紅と藍の開始の印" width="800" height="600" loading="lazy"><span class="st">完成</span></span>
         <div class="body"><span class="tag">No.05 ／ ボードゲーム・2人</span><h4>かどつなぎ</h4><p>1〜5マスの駒を、自分の駒と角だけでつなげて置いていく陣取り。1回だけ相手の駒を消して置ける「消す権利」つき。市販の「ブロックス」（2人用）が手本です。</p></div></a>
-      <a class="card" href="michifusagi/"><img src="img/michifusagi.jpg" alt="みちふさぎの9×9の盤と、向かい合う紅と藍のコマ" width="800" height="600" loading="lazy">
-        <div class="body"><span class="tag">No.06 ／ ボードゲーム・2人</span><h4>みちふさぎ</h4><p>壁を置いて相手の道をふさぎ、先に向こう側へ着いた方が勝ち。市販の「コリドール」が手本です。</p></div></a>
-      <a class="card" href="hex/"><img src="img/hex.jpg" alt="ヘックスの六角形の盤。上下が藍、左右が山吹の辺" width="800" height="600" loading="lazy">
-        <div class="body"><span class="tag">No.07 ／ ボードゲーム・2人 ／ 試し</span><h4>ヘックス</h4><p>六角形の盤で、自分の色の辺と辺を石でつないだら勝ち。昔からある公開のゲームを作ってみました。</p></div></a>
-      <a class="card" href="tewatashi/"><img src="img/tewatashi.jpg" alt="てわたしの画面。4×4の丸いマスと、相手に渡す駒を選ぶ案内" width="800" height="600" loading="lazy">
-        <div class="body"><span class="tag">No.08 ／ ボードゲーム・2人 ／ 試し</span><h4>てわたし</h4><p>置く駒を相手が選んで渡してくる2人対戦。クアルトと同じ型を、自分なりに作ってみた試しです。</p></div></a>
+      <a class="card st-done" href="stl-viewer/"><span class="pic"><img src="img/stl-viewer.jpg" alt="STL ビューアに表示したドーナツ形の3Dモデル" width="800" height="600" loading="lazy"><span class="st">完成</span></span>
+        <div class="body"><span class="tag">No.06 ／ 道具</span><h4>STL ビューア</h4><p>3D の形のファイル（STL）を回して見るだけの道具。ファイルは端末の中で読むだけで、どこにも送りません。</p></div></a>
+      <a class="card st-done" href="vcm-calc/"><span class="pic"><img src="img/vcm-calc.jpg" alt="VCM 効き方計算の断面図。上下のヨーク、N極とS極の磁石、コイル" width="800" height="600" loading="lazy"><span class="st">完成</span></span>
+        <div class="body"><span class="tag">No.07 ／ 計算シート</span><h4>VCM 効き方計算</h4><p>可動コイル型の VCM で、寸法・磁石・コイルを変えたら推力が何%変わるかを、幅つきで出します。断面図と解説つき。</p></div></a>
+      <a class="card st-done" href="https://frickey104.github.io/experiments/"><span class="pic"><img src="img/experiments.jpg" alt="実験室の作品「風の地形」。暗い青の中を流れる細い光の筋" width="800" height="600" loading="lazy"><span class="st">完成</span></span>
+        <div class="body"><span class="tag">No.08 ／ アート</span><h4>実験室 <span class="ext">↗</span></h4><p>触った跡が作品に残り、次の動きを変える。ブラウザで動く実験の記録です。</p></div></a>
     </div>
   </section>
 
-  <section aria-labelledby="tools">
-    <div class="shelf-head"><h3 id="tools">道具と計算シート</h3><span class="tag">3 点</span></div>
+  <section aria-labelledby="wip">
+    <div class="shelf-head"><h2 id="wip">作りかけの棚</h2><span class="tag">4 点</span></div>
     <div class="grid">
-      <a class="card" href="stl-viewer/"><img src="img/stl-viewer.jpg" alt="STL ビューアに表示したドーナツ形の3Dモデル" width="800" height="600" loading="lazy">
-        <div class="body"><span class="tag">No.09 ／ 道具</span><h4>STL ビューア</h4><p>3D の形のファイル（STL）を回して見るだけの道具。ファイルは端末の中で読むだけで、どこにも送りません。</p></div></a>
-      <a class="card" href="vcm-calc/"><img src="img/vcm-calc.jpg" alt="VCM 効き方計算の断面図。上下のヨーク、N極とS極の磁石、コイル" width="800" height="600" loading="lazy">
-        <div class="body"><span class="tag">No.10 ／ 計算シート</span><h4>VCM 効き方計算</h4><p>可動コイル型の VCM で、寸法・磁石・コイルを変えたら推力が何%変わるかを、幅つきで出します。断面図と解説つき。</p></div></a>
-      <a class="card" href="force-balance/"><img src="img/force-balance.jpg" alt="力のつり合い計算の入力画面。部品の質量と重心、つり合いの確認の表示" width="800" height="600" loading="lazy">
-        <div class="body"><span class="tag">No.11 ／ 計算シート ／ 試作</span><h4>力のつり合い計算</h4><p>部品1つについて、触れているところが受ける力をつり合いの式から求めます。接触の種類を選ぶと、力の向きが決まります。</p></div></a>
+      <a class="card st-wip" href="itazeri/"><span class="pic"><img src="img/itazeri.jpg" alt="板ぜりの盤。1から9の価格の段と、真ん中の株価5" width="800" height="600" loading="lazy"><span class="st">途中</span></span>
+        <div class="body"><span class="tag">No.09 ／ ボードゲーム・2人</span><span class="upd">試作2版・10/28 更新</span><h4>板ぜり</h4><p>株の板取引を参考にした2人対戦。伏せた壁とハッタリ札で、株価という前線を押し合います。CPU とも対戦できます。</p></div></a>
+      <a class="card st-wip" href="oshidashi/"><span class="pic"><img src="img/oshidashi.jpg" alt="おしだしの盤。5×5のマスと、まわりの矢印" width="800" height="600" loading="lazy"><span class="st">途中</span></span>
+        <div class="body"><span class="tag">No.10 ／ ボードゲーム・2人</span><span class="upd">試作2版・10/22 更新</span><h4>おしだし</h4><p>盤の外から石を入れて、列ごと押し出す。4つ並べるか、相手の石を3つ落としたら勝ち。CPU とも対戦できます。</p></div></a>
+      <a class="card st-wip" href="hex/"><span class="pic"><img src="img/hex.jpg" alt="ヘックスの六角形の盤。上下が藍、左右が山吹の辺" width="800" height="600" loading="lazy"><span class="st">途中</span></span>
+        <div class="body"><span class="tag">No.11 ／ ボードゲーム・2人</span><span class="upd">試し・10/22 更新</span><h4>ヘックス</h4><p>六角形の盤で、自分の色の辺と辺を石でつないだら勝ち。昔からある公開のゲームを作ってみました。</p></div></a>
+      <a class="card st-wip" href="tewatashi/"><span class="pic"><img src="img/tewatashi.jpg" alt="てわたしの画面。4×4の丸いマスと、相手に渡す駒を選ぶ案内" width="800" height="600" loading="lazy"><span class="st">途中</span></span>
+        <div class="body"><span class="tag">No.12 ／ ボードゲーム・2人</span><span class="upd">試し・10/22 更新</span><h4>てわたし</h4><p>置く駒を相手が選んで渡してくる2人対戦。クアルトと同じ型を、自分なりに作ってみた試しです。</p></div></a>
     </div>
   </section>
 
-  <section aria-labelledby="art">
-    <div class="shelf-head"><h3 id="art">アート</h3><span class="tag">1 点</span></div>
+  <section aria-labelledby="things">
+    <div class="shelf-head"><h2 id="things">つくったもの</h2><span class="tag">1 点</span></div>
     <div class="grid">
-      <a class="card" href="https://frickey104.github.io/experiments/"><img src="img/experiments.jpg" alt="実験室の作品「風の地形」。暗い青の中を流れる細い光の筋" width="800" height="600" loading="lazy">
-        <div class="body"><span class="tag">No.12 ／ アート</span><h4>実験室 <span class="ext">↗</span></h4><p>触った跡が作品に残り、次の動きを変える。ブラウザで動く実験の記録です。</p></div></a>
+      <a class="card st-wip" href="brooch/"><span class="pic"><img src="img/brooch.jpg" alt="ブローチの見本の絵。花のブローチと、白目のシュナウザーの顔" width="800" height="600" loading="lazy"><span class="st">途中</span></span>
+        <div class="body"><span class="tag">No.13 ／ 3D プリントの小物</span><span class="upd">10/28 更新</span><h4>ブローチの見本</h4><p>3D プリンタで刷るブローチの見本の絵。花と、シュナウザーの顔やへそ天の姿。大きさと材料つき。</p></div></a>
+    </div>
+  </section>
+
+  <section aria-labelledby="stopped">
+    <div class="shelf-head"><h2 id="stopped">止めたもの</h2><span class="tag">1 点</span></div>
+    <div class="grid">
+      <a class="card st-stop" href="force-balance/"><span class="pic"><img src="img/force-balance.jpg" alt="力のつり合い計算の入力画面。部品の質量と重心、つり合いの確認の表示" width="800" height="600" loading="lazy"><span class="st">止めた</span></span>
+        <div class="body"><span class="tag">No.14 ／ 計算シート ／ 試作</span><h4>力のつり合い計算</h4><p>部品1つについて、触れているところが受ける力をつり合いの式から求めます。接触の種類を選ぶと、力の向きが決まります。</p></div></a>
     </div>
   </section>
 
@@ -154,7 +168,7 @@ footer{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-
     <ul class="how">
       <li><b>1つのファイルで作る</b><span>画面も計算も説明も、1つの HTML に入れています。開けばそのまま動きます。</span></li>
       <li><b>何も送らない</b><span>ログインも登録もありません。遊んだ記録は、その端末の中だけに残ります。</span></li>
-      <li><b>作りかけも出す</b><span>「試作3版」のように版を書いています。遊んでもらった感想で、次の版を直します。</span></li>
+      <li><b>作りかけも出す</b><span>左上の札が、完成（緑）・途中（黄）・止めた（灰）。途中のものは「試作2版」のように版と更新日を書いています。</span></li>
     </ul>
   </section>
 

@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="株の板取引を参考にした2人対戦。伏せた壁とハッタリ札で、株価という前線を押し合います。CPU とも対戦できます。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="frickey の工房">
+<meta property="og:title" content="板ぜり">
+<meta property="og:description" content="株の板取引を参考にした2人対戦。伏せた壁とハッタリ札で、株価という前線を押し合います。CPU とも対戦できます。">
+<meta property="og:url" content="https://frickey104.github.io/itazeri/">
+<meta property="og:image" content="https://frickey104.github.io/img/og-itazeri.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+.fk-bar{all:initial;display:flex;align-items:center;justify-content:space-between;gap:12px;box-sizing:border-box;width:100%;min-height:34px;padding:6px max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px));background:#16283c;color:#e9eef4;font:600 13px/1.3 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",sans-serif;position:relative;z-index:2147483647}
+.fk-bar a{all:initial;color:#e9eef4;font:inherit;cursor:pointer;text-decoration:none}
+.fk-bar a:hover,.fk-bar a:focus-visible{text-decoration:underline;outline:none}
+.fk-bar span{all:initial;color:#9fb3c8;font:500 12px/1.3 ui-monospace,Consolas,monospace}
+</style>
+</head>
+<body>
+<nav class="fk-bar" aria-label="作品集"><a href="../">← frickey の工房</a><span>ボードゲーム・2人 / 試作2版</span></nav>
+<title>板ぜり</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;700&family=IBM+Plex+Mono:wght@500;700&display=swap">
+<style>
+/* 板（気配の表）を縦に置き、まん中の値段の列を株価の前線が上下する。左が下チーム（売り板）・右が上チーム（買い板） */
+:root{
+  --bg:#eef1f4; --panel:#ffffff; --ink:#1b2430; --sub:#5d6b7c; --line:#d5dce4;
+  --buy:#c8372f; --buy-soft:#f6dedb; --sell:#17798a; --sell-soft:#d6ecef;
+  --front:#e2a21b; --front-soft:#fbefd2;
+  --f-display:"Dela Gothic One","Hiragino Kaku Gothic StdN",sans-serif;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12171d; --panel:#1b222b; --ink:#e7ecf2; --sub:#94a2b3; --line:#2c3642;
+  --buy:#ff6a5f; --buy-soft:#3a2120; --sell:#4cc3d6; --sell-soft:#173138;
+  --front:#f2b53a; --front-soft:#3a2f17; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171d; --panel:#1b222b; --ink:#e7ecf2; --sub:#94a2b3; --line:#2c3642;
+  --buy:#ff6a5f; --buy-soft:#3a2120; --sell:#4cc3d6; --sell-soft:#173138;
+  --front:#f2b53a; --front-soft:#3a2f17; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 32px}
+.wrap{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+h1{font-family:var(--f-display);font-weight:400;font-size:30px;margin:0;letter-spacing:.04em}
+.ver{font-size:12px;color:var(--sub);margin-left:6px;font-family:var(--f-body)}
+.mode{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:8px 12px}
+button:focus-visible{outline:3px solid var(--front);outline-offset:2px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.chip{font-size:13px;padding:6px 10px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pl{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.pl.sell{border-top:4px solid var(--sell)} .pl.buy{border-top:4px solid var(--buy)}
+.pl.turn{box-shadow:0 0 0 2px var(--front)}
+.pl .who{font-weight:700;font-size:13px;color:var(--sub)}
+.pl .stat{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:15px}
+.pl .stat .cards{font-family:var(--f-body);font-size:13px;color:var(--sub)}
+.coins{letter-spacing:2px}
+.pl .goal{font-size:12px;color:var(--sub)}
+.board{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.bhead,.row{display:grid;grid-template-columns:1fr 76px 1fr}
+.bhead{font-size:12px;color:var(--sub);font-weight:700;letter-spacing:.08em;border-bottom:1px solid var(--line)}
+.bhead div{padding:6px 10px} .bhead div:first-child{text-align:right} .bhead div:nth-child(2){text-align:center}
+.bhead small{font-weight:400;letter-spacing:0}
+.row{border-bottom:1px solid var(--line);min-height:44px;transition:background .3s}
+.row:last-child{border-bottom:0}
+.row.above .cell.b,.row.above .price{background:var(--buy-soft)}
+.row.below .cell.s,.row.below .price{background:var(--sell-soft)}
+.cell{display:flex;align-items:center;padding:4px 8px;min-height:44px}
+.cell.s{justify-content:flex-end} .cell.b{justify-content:flex-start}
+.price{display:flex;align-items:center;justify-content:center;font-family:var(--f-num);font-weight:700;font-size:18px;
+  font-variant-numeric:tabular-nums;border-inline:1px solid var(--line);position:relative}
+.row.goal .price{flex-direction:column;line-height:1.1}
+.row.goal .price::after{content:attr(data-goal);position:static;font-size:9px;font-family:var(--f-body);color:var(--sub);letter-spacing:.05em}
+.row.now .price{background:var(--front);color:#1b1407}
+.row.now .cell{background:var(--front-soft)}
+.row.path .price{box-shadow:inset 0 0 0 2px var(--front)}
+.row.path .price::before{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:2px dotted var(--front)}
+.row.stop .price{box-shadow:inset 0 0 0 3px var(--front)}
+.slot{width:100%;min-height:36px;border-radius:6px;border:1px dashed transparent;background:transparent;padding:0;display:flex;align-items:center;justify-content:center;font-size:13px}
+.slot.can{border-color:var(--line);color:var(--sub)}
+.slot.can:hover{border-color:var(--ink)}
+.card{width:100%;min-height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:700;font-size:13px;color:#fff;transition:transform .2s}
+.card.sell{background:var(--sell)} .card.buy{background:var(--buy)}
+.card.back{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.18) 0 6px,transparent 6px 12px)}
+.card.fake{opacity:.72;border:2px dashed rgba(255,255,255,.85)}
+.ghost{width:100%;min-height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.ghost.eaten{color:var(--ink);background:var(--front-soft);animation:eat .7s ease-out forwards}
+.ghost.broke{color:var(--sub);border:2px dashed var(--sub);animation:shatter .7s ease-out forwards}
+@keyframes eat{0%{transform:scale(1)}40%{transform:scale(1.12)}100%{transform:scale(.9);opacity:.35}}
+@keyframes shatter{0%{transform:rotate(0)}25%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}100%{transform:scale(.6);opacity:0}}
+.actions{display:flex;flex-direction:column;gap:8px}
+.choose{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.choose button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.push{font-weight:700;font-size:16px;padding:12px}
+.push.buy{background:var(--buy);border-color:var(--buy);color:#fff}
+.push.sell{background:var(--sell);border-color:var(--sell);color:#fff}
+.msg{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:48px}
+.msg strong{font-weight:700}
+.hint{font-size:13px;color:var(--sub)}
+details{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+summary{cursor:pointer;font-weight:700}
+details ol,details ul{padding-left:1.3em;margin:.4em 0} details li{margin:.2em 0}
+.cover{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:20;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));text-align:center}
+.cover[hidden]{display:none}
+.cover h2{font-family:var(--f-display);font-weight:400;margin:0;font-size:24px}
+.log{font-size:12px;color:var(--sub);font-family:var(--f-body);max-height:6.5em;overflow:auto;white-space:pre-line}
+@media (prefers-reduced-motion:reduce){.card,.ghost.eaten,.ghost.broke,.row{animation:none;transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>板ぜり<span class="ver">試作2版</span></h1>
+    <div class="mode" role="group" aria-label="遊び方">
+      <button class="chip" id="m-cpu-buy" aria-pressed="true">CPU と（上チーム）</button>
+      <button class="chip" id="m-cpu-sell" aria-pressed="false">CPU と（下チーム）</button>
+      <button class="chip" id="m-two" aria-pressed="false">2人で1台</button>
+    </div>
+  </header>
+
+  <div class="players">
+    <div class="pl sell" id="p-sell"><span class="who" id="n-sell">下チーム</span><span class="stat" id="s-sell"></span><span class="goal">株価を 1（底）へ</span></div>
+    <div class="pl buy" id="p-buy"><span class="who" id="n-buy">上チーム</span><span class="stat" id="s-buy"></span><span class="goal">株価を 9（天井）へ</span></div>
+  </div>
+
+  <div class="board" id="board" aria-label="板">
+    <div class="bhead"><div>下チーム <small>売り板</small></div><div>株価</div><div>上チーム <small>買い板</small></div></div>
+    <div id="rows"></div>
+  </div>
+
+  <div class="msg" id="msg" aria-live="polite"></div>
+
+  <div class="actions" id="actions">
+    <div class="choose" role="group" aria-label="置く札">
+      <button id="pick-real" aria-pressed="true">壁を置く</button>
+      <button id="pick-fake" aria-pressed="false">ハッタリ札を置く</button>
+    </div>
+    <div class="hint" id="hint"></div>
+    <button class="push" id="push">押す（資金 1）</button>
+    <button id="pass" hidden>パス（できることがない）</button>
+    <button id="restart">最初から</button>
+  </div>
+
+  <details>
+    <summary>ルール（1分）</summary>
+    <ol>
+      <li>株価は 5 から。<b>上チーム</b>は 9（天井）、<b>下チーム</b>は 1（底）に株価を届けたら勝ち。</li>
+      <li>2人とも資金 3、札は壁 3 枚・ハッタリ札 2 枚。はじめに上→下の順で1枚ずつ置いてから、上チームの番で始まる。</li>
+      <li>手番には、どちらか1つをする。
+        <ul>
+          <li><b>置く</b>：自分の側の空いた段に札を1枚、伏せて置く（上チームは株価より下、下チームは上。1 と 9 には置けない）。</li>
+          <li><b>押す</b>：資金を 1 捨てて、株価を相手の側へ進める。相手の札に当たるまで止まらない（点線が「ここまで進むかも」）。
+            <br>ハッタリ札なら<b>割れる</b>（札は消え、そのまま進み続ける。捨てた 1 は戻る）。
+            <br>壁なら<b>食う</b>（壁は消え、株価はその段で止まる）。株価と同じ段の札にも当たる。</li>
+        </ul>
+      </li>
+      <li>両者の資金がなくなるか、2人続けてパスしたら終わり。株価が 5 より上なら上チーム、下なら下チームの勝ち。5 なら資金の多い方、同じなら後手の下チーム。</li>
+    </ol>
+    <p class="hint">架空の値段と札だけのゲームです。現実の売買の参考にはなりません。ハッタリ札は株の「見せ板」がもとで、現実の市場では禁止されている行為です。このゲームの中だけのはったりです。</p>
+  </details>
+  <div class="log" id="log" aria-label="記録"></div>
+</div>
+
+<div class="cover" id="cover" hidden>
+  <h2 id="cover-title">次は下チーム</h2>
+  <p class="hint">相手に画面を見られないように渡してから押してください。</p>
+  <button class="push" id="cover-go">自分の番を始める</button>
+</div>
+
+<script>
+// ===== ルール（画面と切り離した純粋な関数）・試作2版 =====
+const TOP=9, BOT=1, START=5, SETUP=2;
+let MONEY={buy:3, sell:3}; // 両者同じ。少ない資金をどこで使うかが勝負
+const SIDE={buy:{dir:+1,goal:TOP,label:"上チーム"}, sell:{dir:-1,goal:BOT,label:"下チーム"}};
+const other=s=>s==="buy"?"sell":"buy";
+
+function newGame(){
+  return {price:START, turn:"buy", moves:0, passes:0, over:null,
+    money:{buy:MONEY.buy,sell:MONEY.sell}, hand:{buy:{real:3,fake:2},sell:{real:3,fake:2}},
+    cards:{}, // 段 → {side, kind:"real"|"fake"}
+    revealed:{buy:{real:0,fake:0},sell:{real:0,fake:0}}};
+}
+const inSetup=g=>g.moves<SETUP;
+function canPlaceAt(g,side,lv){
+  if(lv<=BOT||lv>=TOP||g.cards[lv]) return false;
+  return side==="buy" ? lv<g.price : lv>g.price;
+}
+function placeable(g,side){const r=[];for(let lv=BOT+1;lv<TOP;lv++) if(canPlaceAt(g,side,lv)) r.push(lv);return r;}
+function hasCards(g,side){const h=g.hand[side];return h.real+h.fake>0;}
+function canPlace(g,side){return hasCards(g,side)&&placeable(g,side).length>0;}
+function canPush(g,side){return !inSetup(g)&&g.money[side]>=1;}
+// side が押すとき、行く手にある相手の札の段（近い順・株価と同じ段も含む）
+function guards(g,side){const opp=other(side),d=SIDE[side].dir,r=[];
+  for(let lv=g.price; lv!==SIDE[side].goal; lv+=d) if(g.cards[lv]&&g.cards[lv].side===opp) r.push(lv); return r;}
+// side が押したら、次に当たる段（なければゴール）
+function nextStop(g,side){const gs=guards(g,side);return gs.length?gs[0]:SIDE[side].goal;}
+function checkEnd(g){
+  if(!g.over && g.money.buy===0 && g.money.sell===0) g.over={winner:judge(g),why:"money"};
+}
+function place(g,side,lv,kind){
+  if(g.over||g.turn!==side) throw "手番ではない";
+  if(!canPlaceAt(g,side,lv)) throw "そこには置けない";
+  if(g.hand[side][kind]<1) throw "その札がない";
+  g.hand[side][kind]--; g.cards[lv]={side,kind}; g.passes=0; g.moves++;
+  g.turn=other(side); checkEnd(g); return {type:"place",side,lv};
+}
+// 押す：資金1を捨て、相手の札に当たるまで株価が進む。
+// ハッタリ札は割れて進み続け、払った1は戻る。本物の壁は食われて消え、株価はその段で止まる
+function push(g,side){
+  if(g.over||g.turn!==side) throw "手番ではない";
+  if(!canPush(g,side)) throw inSetup(g)?"はじめは置くだけ":"資金がない";
+  const opp=other(side), d=SIDE[side].dir, from=g.price, path=[];
+  g.money[side]--; g.passes=0; g.moves++;
+  let lv=from-d, end="goal", refund=false;
+  while(true){
+    const n=lv+d;
+    if(n===SIDE[side].goal){ g.price=n; g.over={winner:side,why:"goal"}; break; }
+    const c=g.cards[n];
+    if(c&&c.side===opp){ delete g.cards[n]; g.revealed[opp][c.kind]++; path.push({lv:n,kind:c.kind});
+      if(c.kind==="fake"){ refund=true; }
+      else { g.price=n; end="blocked"; break; } }
+    lv=n;
+  }
+  if(refund) g.money[side]++;
+  if(!g.over){ g.turn=opp; checkEnd(g); }
+  return {type:"push",side,from,to:g.price,path,end,refund};
+}
+function pass(g,side){
+  if(g.over||g.turn!==side) throw "手番ではない";
+  if(canPlace(g,side)||canPush(g,side)) throw "まだ打てる手がある";
+  g.passes++; g.moves++;
+  if(g.passes>=2){ g.over={winner:judge(g),why:"stall"}; return {type:"end"}; }
+  g.turn=other(side); return {type:"pass",side};
+}
+// 株価が5より上なら上チーム・下なら下チーム。5なら資金の多い方、同じなら後手の下チーム
+function judge(g){
+  if(g.price>START) return "buy"; if(g.price<START) return "sell";
+  if(g.money.buy!==g.money.sell) return g.money.buy>g.money.sell?"buy":"sell";
+  return "sell";
+}
+
+// ===== CPU（知っていることだけで決める） =====
+function cpuMove(g,side,rnd=Math.random){
+  const opp=other(side), myGuards=guards(g,opp).length, ahead=guards(g,side).length;
+  const pick=()=>{const h=g.hand[side]; if(!h.fake) return "real"; if(!h.real) return "fake"; return rnd()<0.6?"real":"fake";};
+  const near=()=>placeable(g,side).sort((a,b)=>Math.abs(a-g.price)-Math.abs(b-g.price))[0];
+  if(canPush(g,side)&&ahead===0) return {act:"push"};                 // 行く手に札がなければ押し切れる
+  if(canPlace(g,side)&&(myGuards===0||inSetup(g)))                     // 守りの札がないなら置く
+    return {act:"place",lv:near(),kind:(myGuards===0&&g.hand[side].real)?"real":pick()};
+  // 相手の伏せ札が本物である見込み（めくれていない本物の数 ÷ めくれていない札の数）
+  const rl=3-g.revealed[opp].real, fl=2-g.revealed[opp].fake, pReal=rl/Math.max(1,rl+fl);
+  if(canPlace(g,side)&&myGuards<2&&rnd()<0.5) return {act:"place",lv:near(),kind:pick()};
+  if(canPush(g,side)&&rnd()>pReal*0.6) return {act:"push"};
+  if(canPlace(g,side)) return {act:"place",lv:near(),kind:pick()};
+  if(canPush(g,side)) return {act:"push"};
+  return {act:"pass"};
+}
+
+
+// ===== 自己試験（URL の末尾に #test） =====
+function selfTest(){
+  const out=[]; const ok=(c,m)=>out.push((c?"✅ ":"❌ ")+m);
+  const setup=(g,b,s)=>{place(g,"buy",b[0],b[1]);place(g,"sell",s[0],s[1]);};
+  let g=newGame(); let t=false; try{push(g,"buy")}catch(e){t=true} ok(t,"はじめの1枚ずつは置くだけ");
+  g=newGame(); ok(g.money.buy===3&&g.money.sell===3&&g.hand.buy.real===3&&g.hand.sell.fake===2,"資金も札も両者同じ（資金3・壁3・ハッタリ2）");
+  g=newGame(); setup(g,[3,"real"],[7,"real"]); push(g,"buy");
+  ok(g.price===7&&!g.cards[7]&&g.money.buy===2&&g.money.sell===3,"7 の壁に当たると壁は食われて消え、株価は 7 で止まる。払った1は捨てる（相手に渡らない）");
+  g=newGame(); setup(g,[3,"real"],[7,"fake"]); push(g,"buy");
+  ok(g.over&&g.over.winner==="buy"&&g.price===9,"ハッタリ札は割れて進み続け、ほかに札がなければ天井で勝ち");
+  g=newGame(); setup(g,[3,"real"],[6,"fake"]); g.cards[8]={side:"sell",kind:"real"}; push(g,"buy");
+  ok(g.price===8&&g.money.buy===3&&!g.cards[6]&&!g.cards[8],"ハッタリを割ったら払った1は戻る（その先の 8 の壁で止まる）");
+  g=newGame(); setup(g,[4,"real"],[6,"real"]); g.turn="sell"; push(g,"sell");
+  ok(g.price===4&&!g.cards[4]&&g.money.sell===2,"下チームが押す：4 の壁を食って 4 で止まる");
+  push(g,"buy"); ok(g.price===6&&!g.cards[6],"上チームが押し返す：6 の壁を食って 6 で止まる");
+  g=newGame(); setup(g,[4,"real"],[6,"real"]); g.price=6; g.turn="buy"; push(g,"buy");
+  ok(g.price===6&&!g.cards[6]&&!g.over,"株価と同じ段の札にも当たる（食って動かない）");
+  g=newGame(); ok(!canPlaceAt(g,"buy",6)&&canPlaceAt(g,"buy",4)&&!canPlaceAt(g,"buy",1),"上チームは株価より下にだけ置ける・1 と 9 には置けない");
+  g=newGame(); setup(g,[4,"real"],[6,"real"]); g.money={buy:1,sell:0}; push(g,"buy");
+  ok(g.over&&g.over.why==="money"&&g.over.winner==="buy","両者の資金が0になったら終わり（株価6なので上チームの勝ち）");
+  g=newGame(); g.moves=2; g.money={buy:0,sell:0}; g.hand={buy:{real:0,fake:0},sell:{real:0,fake:0}}; g.over=null; pass(g,"buy"); pass(g,"sell");
+  ok(g.over&&g.over.winner==="sell","株価5・資金も同じなら後手の下チームの勝ち");
+  let finished=0, wins={buy:0,sell:0}, err=0;
+  for(let i=0;i<2000;i++){ const h=newGame(); let n=0;
+    try{ while(!h.over&&n<300){ const s=h.turn, m=cpuMove(h,s); if(m.act==="push") push(h,s); else if(m.act==="place") place(h,s,m.lv,m.kind); else pass(h,s); n++; } }catch(e){err++}
+    if(h.over){finished++; wins[h.over.winner]++;} }
+  ok(finished===2000&&err===0,`CPU どうし 2000 局がすべて終局（上 ${wins.buy}・下 ${wins.sell}）`);
+  return out;
+}
+
+// ===== 画面 =====
+let G=newGame(), mode="cpu-buy", pickKind="real", view="buy", hits=[];
+const $=id=>document.getElementById(id);
+const human=()=>mode==="two"?["buy","sell"]:[mode==="cpu-buy"?"buy":"sell"];
+const isHuman=s=>human().includes(s);
+const logLines=[];
+function addLog(t){logLines.unshift(t); $("log").textContent=logLines.slice(0,40).join("\n");}
+const coins=n=>"●".repeat(n)+"○".repeat(Math.max(0,3-n));
+
+function render(){
+  const me=mode==="two"?G.turn:human()[0];
+  if(mode!=="two") view=me; else if(!G.over) view=G.turn;
+  const myTurn=!G.over&&isHuman(G.turn)&&G.turn===view, t=G.turn;
+  // 押したらどこまで進むかの予測（自分の番で押せるときだけ）
+  let pathLv=new Set(), stopLv=null;
+  if(myTurn&&canPush(G,t)){ stopLv=nextStop(G,t); const d=t==="buy"?1:-1;
+    for(let lv=G.price+d; d>0?lv<stopLv:lv>stopLv; lv+=d) pathLv.add(lv); }
+  const rows=$("rows"); rows.innerHTML="";
+  for(let lv=TOP;lv>=BOT;lv--){
+    const row=document.createElement("div");
+    row.className="row"+(lv===G.price?" now":"")+(lv===TOP||lv===BOT?" goal":"")+(lv>G.price?" above":"")+(lv<G.price?" below":"")
+      +(pathLv.has(lv)?" path":"")+(lv===stopLv?" stop":"");
+    const c=G.cards[lv], hit=hits.find(h=>h.lv===lv);
+    for(const col of ["sell","price","buy"]){
+      if(col==="price"){ const p=document.createElement("div"); p.className="price"; p.textContent=lv;
+        if(lv===TOP) p.dataset.goal="天井"; if(lv===BOT) p.dataset.goal="底"; row.appendChild(p); continue; }
+      const cell=document.createElement("div"); cell.className="cell "+(col==="sell"?"s":"b");
+      if(c && c.side===col){
+        const showFace=(col===view)||G.over;
+        const d=document.createElement("div");
+        d.className="card "+col+(showFace?(c.kind==="fake"?" fake":""):" back");
+        d.textContent=showFace?(c.kind==="real"?"壁":"ハッタリ"):"？";
+        d.setAttribute("aria-label",showFace?(c.kind==="real"?"壁":"ハッタリ札"):"伏せた札");
+        cell.appendChild(d);
+      } else if(hit && hit.side===col){
+        const d=document.createElement("div"); d.className="ghost "+(hit.kind==="real"?"eaten":"broke");
+        d.textContent=hit.kind==="real"?"食った！":"ハッタリ！"; cell.appendChild(d);
+      } else if(myTurn && col===t && hasCards(G,t) && canPlaceAt(G,t,lv) && G.hand[t][pickKind]>0){
+        const b=document.createElement("button"); b.className="slot can"; b.textContent="ここに置く";
+        b.setAttribute("aria-label",`${lv} に置く`); b.onclick=()=>humanPlace(lv); cell.appendChild(b);
+      }
+      row.appendChild(cell);
+    }
+    rows.appendChild(row);
+  }
+  hits=[];
+  for(const s of ["buy","sell"]){
+    const h=G.hand[s], show=(s===view)||G.over;
+    $("s-"+s).innerHTML=`資金 <span class="coins" aria-label="資金 ${G.money[s]}">${coins(G.money[s])}</span><br><span class="cards">札 ${show?`壁${h.real}・ハッタリ${h.fake}`:h.real+h.fake+"枚"}</span>`;
+    $("p-"+s).classList.toggle("turn",!G.over&&G.turn===s);
+    $("n-"+s).textContent=SIDE[s].label+(mode==="two"?"":(isHuman(s)?"（あなた）":"（CPU）"));
+  }
+  $("push").className="push "+t; $("push").disabled=!myTurn||!canPush(G,t);
+  $("push").textContent=`押す（資金 1 → 株価を${t==="buy"?"上":"下"}へ）`;
+  $("pick-real").disabled=!myTurn||G.hand[t].real<1; $("pick-fake").disabled=!myTurn||G.hand[t].fake<1;
+  if(myTurn&&G.hand[t][pickKind]<1) pickKind=G.hand[t].real?"real":"fake";
+  $("pick-real").setAttribute("aria-pressed",pickKind==="real"); $("pick-fake").setAttribute("aria-pressed",pickKind==="fake");
+  $("pass").hidden=!(myTurn&&!canPlace(G,t)&&!canPush(G,t));
+  const side=t==="buy"?"株価より下":"株価より上";
+  $("hint").textContent=!myTurn?"":inSetup(G)?`はじめは置くだけ。板の「ここに置く」を押す（${side}）。`:
+    (canPlace(G,t)?`置くなら板の「ここに置く」（${side}）。押すと点線の先、${stopLv===SIDE[t].goal?(t==="buy"?"天井":"底")+"まで届く":stopLv+" の札まで進む"}。`:"置ける段か札がありません。");
+  if(G.over){ const w=G.over.winner;
+    const why=G.over.why==="goal"?(w==="buy"?"天井":"底"):"株価 "+G.price+"・資金 上"+G.money.buy+"／下"+G.money.sell;
+    $("msg").innerHTML=`<strong>${SIDE[w].label}の勝ち</strong>（${why}）。伏せていた札も見せています。`; }
+  else if(!myTurn && mode!=="two") $("msg").textContent=`${SIDE[t].label}（CPU）が考えています…`;
+}
+function say(res){
+  const who=SIDE[res.side]?.label||"";
+  let t;
+  if(res.type==="place") t=`${who}が ${res.lv} に札を伏せて置いた`;
+  else if(res.type==="push"){
+    const opp=other(res.side);
+    hits=res.path.map(p=>({...p,side:opp}));
+    const fakes=res.path.filter(p=>p.kind==="fake").map(p=>p.lv), real=res.path.find(p=>p.kind==="real");
+    t=`${who}が押した（${res.from}→）`+(fakes.length?` ${fakes.join("・")} はハッタリ！割って進み、資金 1 が戻った。`:"")+
+      (real?` ${real.lv} の壁を食って株価 ${res.to} で止まった`:` 株価 ${res.to}`);
+  } else if(res.type==="pass") t=`${who}はパス`; else t="2人ともパスで終わり";
+  $("msg").textContent=t; addLog(t);
+}
+function afterMove(){
+  render();
+  if(G.over){ addLog(`— ${SIDE[G.over.winner].label}の勝ち —`); return; }
+  if(mode==="two"){ $("cover-title").textContent=`次は${SIDE[G.turn].label}`; $("cover").hidden=false; return; }
+  if(!isHuman(G.turn)) setTimeout(cpuTurn,750);
+}
+function cpuTurn(){
+  if(G.over||isHuman(G.turn)) return;
+  const s=G.turn, m=cpuMove(G,s);
+  const res=m.act==="push"?push(G,s):m.act==="place"?place(G,s,m.lv,m.kind):pass(G,s);
+  say(res); afterMove();
+}
+function humanPlace(lv){ try{ say(place(G,G.turn,lv,pickKind)); afterMove(); }catch(e){ $("msg").textContent=String(e); } }
+$("push").onclick=()=>{ try{ say(push(G,G.turn)); afterMove(); }catch(e){ $("msg").textContent=String(e); } };
+$("pass").onclick=()=>{ try{ say(pass(G,G.turn)); afterMove(); }catch(e){ $("msg").textContent=String(e); } };
+$("pick-real").onclick=()=>{pickKind="real";render();};
+$("pick-fake").onclick=()=>{pickKind="fake";render();};
+$("cover-go").onclick=()=>{ $("cover").hidden=true; view=G.turn; render(); $("msg").textContent=`${SIDE[G.turn].label}の番です。`; };
+function start(m){
+  mode=m||mode; G=newGame(); pickKind="real"; hits=[]; logLines.length=0; $("log").textContent="";
+  for(const id of ["m-cpu-buy","m-cpu-sell","m-two"]) $(id).setAttribute("aria-pressed",id==="m-"+mode);
+  view=mode==="cpu-sell"?"sell":"buy";
+  $("cover").hidden=true;
+  $("msg").textContent= mode==="two" ? "はじめに1枚ずつ置きます。上チームから。相手に札を見られないように。" : (isHuman("buy")?"あなたは上チーム。はじめに守りの札を1枚置いてください。":"あなたは下チーム。上チーム（CPU）が先に置きます。");
+  render(); if(!isHuman(G.turn)) setTimeout(cpuTurn,750);
+}
+$("m-cpu-buy").onclick=()=>start("cpu-buy"); $("m-cpu-sell").onclick=()=>start("cpu-sell"); $("m-two").onclick=()=>start("two");
+$("restart").onclick=()=>start();
+window.claude?.hot?.snapshot?.(()=>({G,mode,view,logLines}));
+const boot=(d)=>{ if(d&&d.G&&d.G.money&&d.G.money.buy<=3){G=d.G;mode=d.mode;view=d.view;logLines.push(...(d.logLines||[]));$("log").textContent=logLines.join("\n");render();if(!G.over&&mode!=="two"&&!isHuman(G.turn))setTimeout(cpuTurn,750);} else start("cpu-buy");
+  if(location.hash==="#test"){ const r=selfTest(); $("msg").textContent=r.join(" / "); console.log(r.join("\n")); } };
+window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+</script>
+</body>
+</html>
