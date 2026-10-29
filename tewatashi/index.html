@@ -24,6 +24,9 @@ img{max-width:100%}
 </head>
 <body>
 <nav class="fk-bar" aria-label="作品集"><a href="../">← frickey の工房</a><span>ボードゲーム・2人 / 試し</span></nav>
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>てわたし</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -42,10 +45,10 @@ img{max-width:100%}
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#10181c; --panel:#172227; --ink:#e3ebee; --muted:#93a4ab; --line:#2b3a41;
-  --board:#1b3340; --cell:#24475a; --cell-hi:#2f5b70; --edge:#00000055; color-scheme:dark}}
+  --board:#1b3340; --cell:#24475a; --cell-hi:#2f5b70; --edge:#ffffff59; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#10181c; --panel:#172227; --ink:#e3ebee; --muted:#93a4ab; --line:#2b3a41;
-  --board:#1b3340; --cell:#24475a; --cell-hi:#2f5b70; --edge:#00000055; color-scheme:dark}
+  --board:#1b3340; --cell:#24475a; --cell-hi:#2f5b70; --edge:#ffffff59; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6}
 .wrap{max-width:560px;margin:0 auto;padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
@@ -69,7 +72,7 @@ button:focus-visible,select:focus-visible,.cell:focus-visible,.pc:focus-visible{
 .cell.win{box-shadow:0 0 0 4px var(--win) inset}
 .cell svg{width:86%;height:86%}
 .pool-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.pool-head h2{font-size:.8rem;letter-spacing:.12em;color:var(--muted);margin:0;font-weight:700}
+.pool-head h2{font-size:.8rem;letter-spacing:.12em;color:var(--muted);margin:0;font-weight:700;white-space:nowrap;flex:none}
 .pool{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px}
 .pc{aspect-ratio:1;border:1px solid transparent;border-radius:8px;background:transparent;padding:2px;display:grid;place-items:center}
 .pc svg{width:100%;height:100%}
