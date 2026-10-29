@@ -9,7 +9,7 @@
 - drafts/shots/<slug>.jpg の画面の写真から、サムネイル（img/<slug>.jpg）と X のカード画像（img/og-<slug>.jpg）を作る
 - 作品の状態（完成・途中・止めた）は works/README.md の表の「フォルダ」「状態」の列から読む（状態の頭の語）
 - トップページ index.html は _top.html（手で書く元・カードは書かない）に、棚とカードを入れて作る
-  並び: 自己紹介と今週の変化 → すぐ遊べる（完成・pick）→ ほかの完成品 → 作りかけの棚（途中）→ つくったもの（物）→ 止めたもの
+  並び: 自己紹介と今週の変化 → ゲーム → 道具 → 物（棚は作品の種類。完成・途中・止めたは各カードの左上の札で見せる。棚の中は新しく手を入れた順）
 - 点検: 公開するファイルすべてで、個人の情報の言葉が0件（HTML のコメントも）・外への読み込みが Google Fonts だけ・
   画像に撮影情報（Exif）や PNG の文字の情報（tEXt/iTXt/zTXt）が無い・drafts/ のファイルや .stl が混じっていない
   （言葉の一覧は .company/pr/links.md の冒頭と同じ。ここには書かない＝このファイルも公開されるため）
@@ -37,64 +37,60 @@ TOP = HERE / "_top.html"  # トップページの元（手で書く。_ で始�
 TODAY = dt.date.today()
 
 # 載せる作品（順番＝棚の中での並び）。載せない作品は書かない。
-# pick=True: 完成のうち「すぐ遊べる」に大きく出す（2〜3本）／ thing=True: つくったもの（物）の棚に出す
+# shelf: 載せる棚（game＝ゲーム／tool＝道具／thing＝物）
 ITEMS = [
-    dict(slug="chikai", src="2026-10-24_chikai-no-sekai", title="誓いの世界", kind="RPG", ver="試作4版", time="30分",
-         crop=(34, 122, 766, 560), pick=True,
+    dict(slug="chikai", shelf="game", src="2026-10-24_chikai-no-sekai", title="誓いの世界", kind="RPG", ver="試作4版", time="30分",
+         crop=(34, 122, 766, 560),
          alt="誓いの世界の場面。夜の書記の部屋で、ろうそくの灯る机と本棚、白いひげの師匠",
          desc="王の書記の見習いが、霧の奥の長へ王の手紙を届ける三日間の旅。剣では戦わず、相手の事情を見抜いて進みます。"),
-    dict(slug="shuna", src="2026-10-23_shuna-cards", title="シュナをさがして", kind="カードの RPG・1人", ver="試作3版", time="5分",
-         crop=(28, 336, 746, 875), pick=True,
+    dict(slug="shuna", shelf="game", src="2026-10-23_shuna-cards", title="シュナをさがして", kind="カードの RPG・1人", ver="試作3版", time="5分",
+         crop=(28, 336, 746, 875),
          alt="シュナをさがしての画面。灯りに照らされた地下室と、4枚のカード",
          desc="迷子の犬シュナを探して、トランプ44枚の地下室を灯りひとつで降りていく。ルールは Scoundrel（Zach Gage・Kurt Bieg）が手本です。"),
-    dict(slug="michifusagi", src="2026-10-22_michifusagi", title="みちふさぎ", kind="ボードゲーム・2人", ver="", time="",
-         crop=(28, 370, 746, 908), pick=True,
+    dict(slug="michifusagi", shelf="game", src="2026-10-22_michifusagi", title="みちふさぎ", kind="ボードゲーム・2人", ver="", time="",
+         crop=(28, 370, 746, 908),
          alt="みちふさぎの9×9の盤と、向かい合う紅と藍のコマ",
          desc="壁を置いて相手の道をふさぎ、先に向こう側へ着いた方が勝ち。市販の「コリドール」が手本です。CPU とも対戦できます。"),
-    dict(slug="yoake", src="2026-10-23_yoake-quest", title="夜明けの塔", kind="RPG", ver="試作1版", time="10〜15分",
+    dict(slug="yoake", shelf="game", src="2026-10-23_yoake-quest", title="夜明けの塔", kind="RPG", ver="試作1版", time="10〜15分",
          crop=(40, 130, 736, 652),
          alt="夜明けの塔のタイトル画面。主人公と犬のドット絵",
          desc="歩いて、出会って、コマンドで戦う。王道の RPG を小さくした1本道。犬のシュナがついてきます。"),
-    dict(slug="kadotsunagi", src="2026-10-22_kadotsunagi", title="かどつなぎ", kind="ボードゲーム・2人", ver="", time="",
+    dict(slug="kadotsunagi", shelf="game", src="2026-10-22_kadotsunagi", title="かどつなぎ", kind="ボードゲーム・2人", ver="", time="",
          crop=(28, 300, 746, 838),
          alt="かどつなぎの14×14の盤と、紅と藍の開始の印",
          desc="1〜5マスの駒を、自分の駒と角だけでつなげて置いていく陣取り。1回だけ相手の駒を消して置ける「消す権利」つき。市販の「ブロックス」（2人用）が手本です。"),
-    dict(slug="stl-viewer", src="2026-10-23_stl-viewer", title="STL ビューア", kind="道具", ver="", time="",
+    dict(slug="stl-viewer", shelf="tool", src="2026-10-23_stl-viewer", title="STL ビューア", kind="道具", ver="", time="",
          crop=(0, 400, 800, 1000),
          alt="STL ビューアに表示したドーナツ形の3Dモデル",
          desc="3D の形のファイル（STL）を回して見るだけの道具。ファイルは端末の中で読むだけで、どこにも送りません。"),
-    dict(slug="vcm-calc", src="2026-10-12_vcm-calc", title="VCM 効き方計算", kind="計算シート", ver="", time="",
+    dict(slug="vcm-calc", shelf="tool", src="2026-10-12_vcm-calc", title="VCM 効き方計算", kind="計算シート", ver="", time="",
          crop=(150, 440, 730, 875),
          alt="VCM 効き方計算の断面図。上下のヨーク、N極とS極の磁石、コイル",
          desc="可動コイル型の VCM で、寸法・磁石・コイルを変えたら推力が何%変わるかを、幅つきで出します。断面図と解説つき。"),
-    dict(slug="itazeri", src="2026-10-28_itazeri", title="板ぜり", kind="ボードゲーム・2人", ver="", time="",
+    dict(slug="itazeri", shelf="game", src="2026-10-28_itazeri", title="板ぜり", kind="ボードゲーム・2人", ver="", time="",
          crop=(160, 250, 640, 610),
          alt="板ぜりの盤。1から9の価格の段と、真ん中の株価5",
          desc="株の板取引を参考にした2人対戦。伏せた壁とハッタリ札で、株価という前線を押し合います。CPU とも対戦できます。"),
-    dict(slug="oshidashi", src="2026-10-21_board-game", title="おしだし", kind="ボードゲーム・2人", ver="", time="",
+    dict(slug="oshidashi", shelf="game", src="2026-10-21_board-game", title="おしだし", kind="ボードゲーム・2人", ver="", time="",
          crop=(0, 350, 768, 926),
          alt="おしだしの盤。5×5のマスと、まわりの矢印",
          desc="盤の外から石を入れて、列ごと押し出す。4つ並べるか、相手の石を落としたら勝ち（先手は3つ・後手は2つ）。CPU とも対戦できます。"),
-    dict(slug="hex", src="2026-10-23_hex", title="ヘックス", kind="ボードゲーム・2人", ver="", time="",
+    dict(slug="hex", shelf="game", src="2026-10-23_hex", title="ヘックス", kind="ボードゲーム・2人", ver="", time="",
          crop=(40, 450, 720, 960),
          alt="ヘックスの六角形の盤。上下が藍、左右が山吹の辺",
          desc="六角形の盤で、自分の色の辺と辺を石でつないだら勝ち。昔からある公開のゲームを作ってみました。"),
-    dict(slug="tewatashi", src="2026-10-23_tewatashi", title="てわたし", kind="ボードゲーム・2人", ver="", time="",
+    dict(slug="tewatashi", shelf="game", src="2026-10-23_tewatashi", title="てわたし", kind="ボードゲーム・2人", ver="", time="",
          crop=(0, 20, 768, 596),
          alt="てわたしの画面。4×4の丸いマスと、相手に渡す駒を選ぶ案内",
          desc="置く駒を相手が選んで渡してくる2人対戦。クアルトと同じ型を、自分なりに作ってみた試しです。"),
     dict(slug="brooch", src="2026-10-27_fashion-items", title="ブローチの見本", kind="3D プリントの小物", ver="", time="",
-         crop=(16, 166, 784, 742), thing=True,
+         crop=(16, 166, 784, 742), shelf="thing",
          alt="ブローチの見本の絵。花のブローチと、白目のシュナウザーの顔",
          desc="3D プリンタで刷るブローチの見本の絵。花と、シュナウザーの顔やへそ天の姿。大きさと材料つき。"),
-    dict(slug="force-balance", src="2026-10-12_force-balance", title="力のつり合い計算", kind="計算シート", ver="試作", time="",
-         crop=(0, 20, 768, 596), bundle=True,
-         alt="力のつり合い計算の入力画面。部品の質量と重心、つり合いの確認の表示",
-         desc="部品1つについて、触れているところが受ける力をつり合いの式から求めます。接触の種類を選ぶと、力の向きが決まります。"),
 ]
 # 外にあるもの（写さない・リンクだけ）
 EXTERNAL = [
-    dict(slug="experiments", src="2026-08-18_experiments", title="実験室", kind="アート", url=f"{SITE}/experiments/",
+    dict(slug="experiments", shelf="tool", src="2026-08-18_experiments", title="実験室", kind="アート", url=f"{SITE}/experiments/",
          crop=(0, 100, 800, 700),
          alt="実験室の作品「風の地形」。暗い青の中を流れる細い光の筋",
          desc="触った跡が作品に残り、次の動きを変える。ブラウザで動く実験の記録です。"),
@@ -188,17 +184,12 @@ def md(d: dt.date) -> str:
 
 
 def shelves() -> list[tuple[str, str, list[dict], bool]]:
-    """（id, 見出し, 作品, 大きいカードか）の並び。"""
+    """（id, 見出し, 作品, 大きいカードか）の並び。棚は種類で分け、中は新しく手を入れた順。"""
     allw = [i for i in ITEMS + EXTERNAL if i.get("state")]
-    things = [i for i in allw if i.get("thing")]
-    rest = [i for i in allw if not i.get("thing")]
-    return [
-        ("play", "すぐ遊べる", [i for i in rest if i["state"] == "完成" and i.get("pick")], True),
-        ("done", "ほかの完成品", [i for i in rest if i["state"] == "完成" and not i.get("pick")], False),
-        ("wip", "作りかけの棚", [i for i in rest if i["state"] == "途中"], False),
-        ("things", "つくったもの", things, False),
-        ("stopped", "止めたもの", [i for i in rest if i["state"] == "止めた"], False),
-    ]
+    def newest(items: list[dict]) -> list[dict]:
+        return sorted(items, key=lambda it: updated(it) or dt.date.min, reverse=True)
+    return [(sid, head, newest([i for i in allw if i.get("shelf") == sid]), False)
+            for sid, head in (("game", "ゲーム"), ("tool", "道具"), ("thing", "物"))]
 
 
 def ordered() -> list[dict]:
