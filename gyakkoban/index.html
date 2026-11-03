@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="回転扉をくぐると時間が逆に流れ、さっきまでの自分が逆再生で動き出す。2面だけの試作のパズルです。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="frickey の工房">
+<meta property="og:title" content="逆行盤">
+<meta property="og:description" content="回転扉をくぐると時間が逆に流れ、さっきまでの自分が逆再生で動き出す。2面だけの試作のパズルです。">
+<meta property="og:url" content="https://frickey104.github.io/gyakkoban/">
+<meta property="og:image" content="https://frickey104.github.io/img/og-gyakkoban.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+.fk-bar{all:initial;display:flex;align-items:center;justify-content:space-between;gap:12px;box-sizing:border-box;width:100%;min-height:34px;padding:6px max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px));background:#16283c;color:#e9eef4;font:600 13px/1.3 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",sans-serif;position:relative;z-index:2147483647}
+.fk-bar a{all:initial;color:#e9eef4;font:inherit;cursor:pointer;text-decoration:none}
+.fk-bar a:hover,.fk-bar a:focus-visible{text-decoration:underline;outline:none}
+.fk-bar span{all:initial;color:#9fb3c8;font:500 12px/1.3 ui-monospace,Consolas,monospace}
+</style>
+</head>
+<body>
+<nav class="fk-bar" aria-label="作品集"><a href="../">← frickey の工房</a><span>パズル・1人 / 試作4版</span></nav>
+<title>逆行盤</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700&family=Share+Tech+Mono&display=swap">
+<style>
+/* Layout: one column, the board is the hero; time readout above, controls below. Single dark world (a lab at night). */
+:root {
+  --bg: #0c0f15;
+  --panel: #151a23;
+  --line: #262e3b;
+  --fg: #e7ebf2;
+  --muted: #8b95a7;
+  --red: #ff5b4f;      /* forward time (順行) */
+  --blue: #4fb0ff;     /* inverted time (逆行) */
+  --gold: #e9c46a;     /* switch */
+  --wall: #1d2430;
+  --floor: #10141c;
+  --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --font-num: "Share Tech Mono", ui-monospace, "Consolas", monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 24px;
+}
+body.inv { --tint: rgba(79,176,255,.07); }
+.wrap { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1 { font-size: 22px; margin: 0; letter-spacing: .08em; text-wrap: balance; }
+h1 span { color: var(--red); }
+h1 span + span { color: var(--blue); }
+.tabs { display: flex; gap: 6px; }
+.tabs button { font: inherit; font-size: 13px; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+.tabs button[aria-current="true"] { color: var(--fg); border-color: var(--fg); }
+.intro { margin: 0; color: var(--muted); font-size: 14px; min-height: 3.2em; }
+.hud { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.clock { font-family: var(--font-num); font-size: 30px; letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+.clock .dir { font-size: 16px; margin-left: 8px; font-family: var(--font-body); font-weight: 700; }
+.fwd .clock .dir { color: var(--red); }
+.inv .clock .dir { color: var(--blue); }
+.meter { display: flex; gap: 4px; align-items: center; font-size: 12px; color: var(--muted); }
+.meter i { width: 10px; height: 10px; border-radius: 2px; background: var(--blue); display: inline-block; }
+.meter i.used { background: var(--line); }
+.board-wrap { position: relative; display: flex; justify-content: center; }
+.board { display: grid; gap: 2px; background: var(--bg); padding: 2px; border-radius: 8px; background: var(--line); max-width: 100%; }
+.inv .board { box-shadow: 0 0 0 2px var(--blue), 0 0 40px rgba(79,176,255,.25); }
+.fwd .board { box-shadow: 0 0 0 1px var(--line); }
+.cell { width: var(--cs); height: var(--cs); background: var(--floor); position: relative; border-radius: 3px; }
+.cell.wall { background: var(--wall); }
+.cell.plate::after { content: ""; position: absolute; inset: 22%; border: 2px solid var(--gold); border-radius: 50%; }
+.cell.plate.on::after { background: var(--gold); }
+.cell.door { background: repeating-linear-gradient(45deg, #3a2a1e 0 6px, #2a1f17 6px 12px); }
+.cell.door.open { background: var(--floor); outline: 1px dashed var(--gold); outline-offset: -4px; }
+.cell.exit::after { content: "出口"; position: absolute; inset: 0; display: grid; place-items: center; font-size: calc(var(--cs) * .28); color: var(--fg); border: 2px solid var(--fg); border-radius: 3px; }
+.cell.turn { background: radial-gradient(circle, var(--red) 0 28%, transparent 30%), var(--floor); }
+.cell.turn::after { content: ""; position: absolute; inset: 12%; border: 2px solid var(--red); border-radius: 50%; }
+.cell.bexit { background: radial-gradient(circle, rgba(79,176,255,.35) 0 30%, transparent 32%), var(--floor); }
+.tok { position: absolute; inset: 16%; border-radius: 50%; transition: transform .12s ease; z-index: 1; }
+.tok.me-f { background: var(--red); box-shadow: 0 0 12px var(--red); }
+.tok.me-i { background: var(--blue); box-shadow: 0 0 12px var(--blue); }
+.tok.ghost { background: transparent; border: 3px solid var(--red); opacity: .85; }
+.tok.shadow { background: #000; border: 2px solid var(--muted); opacity: .9; }
+.tok.shadow.sleep { opacity: .35; }
+.timeline { display: flex; gap: 2px; overflow-x: auto; padding-bottom: 2px; }
+.timeline b { flex: 0 0 auto; width: 14px; height: 18px; border-radius: 2px; background: var(--panel); font-size: 9px; line-height: 18px; text-align: center; color: var(--muted); font-family: var(--font-num); font-weight: 400; }
+.timeline b.p { background: rgba(233,196,106,.35); color: var(--fg); }
+.timeline b.now { outline: 2px solid var(--fg); }
+.inv .timeline b.now { outline-color: var(--blue); }
+.timeline b.door { box-shadow: inset 0 0 0 2px var(--gold); color: var(--fg); }
+.timeline b.pr { background: rgba(79,176,255,.45); color: var(--fg); }
+.tok.future { inset: 8%; background: rgba(79,176,255,.55); border: 3px solid var(--blue); box-shadow: 0 0 12px var(--blue); }
+.cell.door.promise { outline: 2px dashed var(--blue); outline-offset: -4px; }
+.plan { margin: 0; font-size: 14px; color: var(--muted); }
+.plan.ok { color: var(--gold); }
+.legend { margin: 0; font-size: 12px; color: var(--muted); }
+.demo { font: inherit; font-size: 13px; color: var(--gold); background: transparent; border: 1px solid var(--gold); border-radius: 6px; padding: 6px 12px; cursor: pointer; min-height: 36px; }
+.demo:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.status.demo-cap { color: var(--gold); }
+.status { min-height: 1.6em; font-size: 14px; }
+.status.warn { color: var(--gold); }
+.controls { display: grid; grid-template-columns: repeat(3, 56px) 1fr; grid-template-rows: repeat(2, 48px); gap: 6px; align-items: stretch; }
+.controls button { font: inherit; font-size: 18px; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; cursor: pointer; touch-action: manipulation; }
+.controls button:active { background: var(--line); }
+.controls button:focus-visible, .tabs button:focus-visible, .overlay button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.controls .side { display: flex; flex-direction: column; gap: 6px; grid-column: 4; grid-row: 1 / 3; }
+.controls .side button { flex: 1; font-size: 14px; }
+.keys { font-size: 12px; color: var(--muted); margin: 0; }
+.overlay { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(12,15,21,.82); border-radius: 8px; text-align: center; padding: 16px; }
+.overlay p { margin: 0 0 12px; font-size: 16px; }
+.overlay button { font: inherit; color: var(--bg); background: var(--fg); border: 0; border-radius: 6px; padding: 8px 16px; cursor: pointer; }
+.glitch { animation: glitch .45s steps(2) 2; }
+@keyframes glitch { 0% { transform: translate(0,0); filter: none; } 25% { transform: translate(-4px,2px); filter: hue-rotate(90deg) saturate(3); } 50% { transform: translate(3px,-2px); filter: invert(1); } 75% { transform: translate(-2px,-1px); filter: hue-rotate(-90deg); } 100% { transform: none; filter: none; } }
+.flip { animation: flip .6s ease; }
+@keyframes flip { 0% { filter: none; } 40% { filter: invert(1) hue-rotate(180deg); } 100% { filter: none; } }
+@media (prefers-reduced-motion: reduce) { .glitch, .flip { animation: none; } .tok { transition: none; } }
+footer { font-size: 12px; color: var(--muted); }
+</style>
+
+<div class="wrap fwd" id="app">
+  <header>
+    <h1><span>逆</span><span>行</span>盤</h1>
+    <nav class="tabs" id="tabs" aria-label="面をえらぶ"></nav>
+  </header>
+  <p class="intro" id="intro"></p>
+  <div><button class="demo" id="bDemo" type="button">▶ 見本を見る（正解を1手ずつ）</button></div>
+  <div class="hud">
+    <div class="clock" id="clock" aria-live="polite"></div>
+    <div class="meter" id="meter"></div>
+  </div>
+  <div class="timeline" id="timeline" aria-hidden="true"></div>
+  <p class="plan" id="plan" aria-live="polite" hidden></p>
+  <div class="board-wrap">
+    <div class="board" id="board" role="grid" aria-label="盤面"></div>
+    <div class="overlay" id="overlay" hidden><div><p id="ovText"></p><button id="ovBtn" type="button"></button> <button id="ovDemo" type="button" hidden>見本を見る</button> <button id="ovReplay" type="button" hidden>通しで見る</button></div></div>
+  </div>
+  <p class="legend" id="legend"></p>
+  <div class="status" id="status" role="status"></div>
+  <div class="controls">
+    <span></span><button id="bU" type="button" aria-label="上へ">↑</button><span></span>
+    <div class="side"><button id="bW" type="button">1手 待つ</button><button id="bR" type="button">やり直す</button></div>
+    <button id="bL" type="button" aria-label="左へ">←</button><button id="bD" type="button" aria-label="下へ">↓</button><button id="bRt" type="button" aria-label="右へ">→</button>
+  </div>
+  <p class="keys">キーボード: 矢印かWASDで動く／スペースで1手待つ／Rでやり直す。1手ごとに、世界の時刻が1つ進む（逆行中は1つ戻る）。</p>
+  <footer id="foot">試作 v4（2026-11-02・テネットの決まりで作り直し: 回転ドア・約束・通しの再生）。種:「時間の順行と逆行・過去の自分の残像で解くゲーム」。</footer>
+</div>
+
+<script>
+// 逆行盤 v4: テネットの決まり（回転ドアで時間の向きが反転・過去の自分は巻き戻って見える・過去の自分に触れると消滅・起きたことは起きた）
+const LEVELS = [
+  {
+    id: 'turnstile', name: '1 回転ドア', oxygen: 8, plan: 'door',
+    map: [
+      '###########',
+      '#S.....P..#',
+      '#########.#',
+      '#E.D....BT#',
+      '###########',
+    ],
+    intro: '回転ドアをくぐると時間が逆に流れ、扉は「過去の自分がスイッチに乗っている時刻」だけ開く。だから回転ドアに入る前に、スイッチの上で待っておこう。',
+    hint: 'スイッチの上で1手待ってから回転ドアへ。上の「扉を通る時刻」に、あなたがスイッチの上にいれば通れる。',
+    stuck: 'この先、扉を通れる時刻はもう来ない。',
+    legend: '赤い丸＝順行のあなた　青い丸＝逆行のあなた　赤い輪＝過去の自分（巻き戻って動く）　赤い円＝回転ドア　金の輪＝スイッチ　縞＝扉（点線なら次の1手で通れる）　目盛りの金色＝スイッチにいた時刻　逆行中の息は8手',
+    solution: 'RRRRRRWRRDDLLLLLLL',
+    steps: [
+      '右へ。順行のあいだ、あなたが時刻ごとにどこにいたかが記録される（上の目盛り）。',
+      '右へ。',
+      '右へ。',
+      '右へ。',
+      '右へ。',
+      'スイッチに乗った（時刻6）。上の1行はまだ「通れない」。',
+      'ここで1手待つ。スイッチの上にいた時刻が2つになり、上の1行が「通れる」に変わった。',
+      '回転ドアへ向かう。',
+      '回転ドアへ向かう。',
+      '回転ドアへ向かう。',
+      '回転ドアをくぐる。ここから時間が逆に流れ、赤い輪（さっきまでの自分）が巻き戻って動く。',
+      '逆行中。1手ごとに時刻が1つ戻る。',
+      '左へ。',
+      '左へ。',
+      '時刻7。次の1手は時刻6＝過去の自分がスイッチの上にいた時刻なので、扉が点線になった。',
+      '過去の自分がスイッチを踏んでいる時刻に、扉を通る。',
+      '左へ。',
+      '出口へ。',
+    ],
+  },
+  {
+    id: 'promise', name: '2 約束', oxygen: 9, plan: 'promise', promise: true,
+    map: [
+      '#############',
+      '#S.....D...T#',
+      '###########B#',
+      '###E....P...#',
+      '#############',
+    ],
+    intro: '誰もいない扉は「未来の自分が開ける」と約束すれば通れる。回転ドアをくぐったら、今度はあなたがその未来の自分。約束の時刻に、スイッチの上にいよう。',
+    hint: '扉を通ったら、待たずに回転ドアへ。逆行したら、約束の時刻にスイッチの上にいること。順行で待つほど、逆行の息が足りなくなる。',
+    stuck: 'この先、約束を守って出口に着く道はもう無い。',
+    legend: '赤い丸＝順行のあなた　青い丸＝逆行のあなた　赤い輪＝過去の自分　青い輪＝約束した未来の自分　赤い円＝回転ドア　金の輪＝スイッチ　青い点線の扉＝約束すれば通れる　目盛りの青＝約束の時刻　逆行中の息は9手',
+    solution: 'RRRRRRRRRRDLLLLLLLL',
+    steps: [
+      '右へ。この扉のスイッチは下の通路にあって、順行のあなたは押さえられない。',
+      '右へ。',
+      '右へ。',
+      '右へ。',
+      '右へ。扉の前に着いた。',
+      '扉に入る。誰もいないけれど「未来の自分が開ける」と約束して通る。下のスイッチに、青い自分が見えた（時刻6）。',
+      '右へ。',
+      '右へ。',
+      '右へ。ここで待つと、あとで逆行の息が足りなくなる。',
+      '回転ドアをくぐる。時間が逆に流れる。今度はあなたが、あの青い自分になる。',
+      '下へ。逆行中。1手ごとに時刻が1つ戻る。',
+      '左へ。',
+      '左へ。',
+      'スイッチに乗った。時刻6＝約束の時刻。上では過去のあなたが扉を通っている。約束を守った。',
+      '左へ。',
+      '左へ。',
+      '左へ。',
+      '左へ。',
+      '出口へ。',
+    ],
+  },
+];
+
+const DIRS = { U: [0, -1], D: [0, 1], L: [-1, 0], R: [1, 0], W: [0, 0] };
+const eq = (a, b) => !!a && !!b && a[0] === b[0] && a[1] === b[1];
+
+function parse(level) {
+  const g = level.map.map(r => r.split(''));
+  const find = ch => { for (let y = 0; y < g.length; y++) for (let x = 0; x < g[y].length; x++) if (g[y][x] === ch) return [x, y]; return null; };
+  return { g, S: find('S'), P: find('P'), D: find('D'), E: find('E'), T: find('T'), B: find('B') };
+}
+
+function makeGame(level) {
+  const m = parse(level);
+  const tile = p => (m.g[p[1]] && m.g[p[1]][p[0]]) || '#';
+  // f[t]: 順行のあなたが時刻 t にいた場所／g[t]: 逆行のあなたが時刻 t にいた場所／prom: 約束（時刻 t に未来のあなたがスイッチの上にいる）
+  const s = { level, m, pos: m.S.slice(), over: null, msg: '', mode: 'fwd', t: 0, f: [m.S.slice()], g: [], invSteps: 0, T0: null, prom: [] };
+
+  s.ghostPos = () => (s.mode === 'inv' ? s.f[s.t] : null);
+  s.promAt = t => s.prom.find(p => p.t === t) || null;
+  s.pending = nt => s.prom.filter(p => p.t < nt); // まだ来ていない約束の時刻（逆行ではこれから通る）
+  // 扉の見た目と判定は、どちらもこれを使う（次の1手の時刻で、扉が開いているか）
+  s.doorState = () => {
+    if (s.mode === 'fwd') return level.promise ? 'promise' : 'closed';
+    if (level.promise) return s.promAt(s.t) ? 'open' : 'closed'; // 約束の時刻は、過去のあなたが扉を通っている
+    return eq(s.f[s.t - 1], m.P) ? 'open' : 'closed';
+  };
+  s.doorOpenNext = () => s.doorState() !== 'closed';
+
+  // 盤面の最短手数（通れないマスを除く）
+  const dist = (from, to, blocked) => {
+    const seen = new Set([from.join()]); let q = [from], d = 0;
+    while (q.length) {
+      const nq = [];
+      for (const p of q) {
+        if (eq(p, to)) return d;
+        for (const k of 'UDLR') {
+          const n = [p[0] + DIRS[k][0], p[1] + DIRS[k][1]];
+          if (seen.has(n.join()) || (!eq(n, to) && blocked.includes(tile(n)))) continue;
+          seen.add(n.join()); nq.push(n);
+        }
+      }
+      q = nq; d++;
+    }
+    return null;
+  };
+  s.dist = dist;
+  // 1面: このまま進むと、逆行して扉に入るのは時刻いくつか
+  s.doorTime = () => {
+    if (s.mode === 'fwd') {
+      const k = dist(s.pos, m.T, ['#', 'B', 'D']), j = dist(m.B, m.D, ['#', 'T']);
+      return k == null || j == null ? null : s.t + k - j;
+    }
+    if (s.pos[0] <= m.D[0]) return null;
+    const j = dist(s.pos, m.D, ['#', 'T']);
+    return j == null ? null : s.t - j;
+  };
+  // 2面: このまま回転ドアへ向かうと、逆行してスイッチに着くのは時刻いくつか
+  s.plateTime = () => {
+    const k = dist(s.pos, m.T, ['#', 'B']), j = dist(m.B, m.P, ['#', 'T', 'D']);
+    return k == null || j == null ? null : s.t + k - j;
+  };
+
+  // 逆行の1手（step と canWin で共通）。返り値: null＝動けない／{np, nt, end, msg}
+  const invMove = (p, t, n, a) => {
+    const np = [p[0] + DIRS[a][0], p[1] + DIRS[a][1]], ch = tile(np), nt = t - 1;
+    if (ch === '#' || ch === 'T') return { bump: ch === 'T' ? '回転ドアは、この試作では一方通行。' : 'そこは壁。' };
+    if (ch === 'D' && !eq(s.f[nt], m.P)) return { bump: '扉は閉じている。この時刻、過去の自分はスイッチの上にいない。' };
+    if (ch === 'E' && s.pending(nt).length) return { bump: 'まだ守っていない約束がある（時刻 ' + s.pending(nt).map(x => x.t).join('・') + '）。' };
+    if (eq(np, s.f[nt])) return { np, nt, end: 'lose', msg: '過去の自分に触れて、消滅した。', paradox: true };
+    const pr = s.promAt(nt);
+    if (pr && !eq(np, m.P)) return { np, nt, end: 'lose', msg: '約束の時刻 ' + nt + ' に、スイッチの上にいなかった。時間が崩れた。', paradox: true };
+    if (ch === 'E') return { np, nt, end: 'win', msg: '時間の向きを2回またいで、出口に着いた。' };
+    if (n + 1 >= level.oxygen) return { np, nt, end: 'lose', msg: '息が続かなかった。' };
+    if (nt <= 0) return { np, nt, end: 'lose', msg: '時間の始まりまで戻ってしまった。' };
+    return { np, nt, end: null };
+  };
+  // 逆行中に、まだ勝てる道が残っているか
+  s.canWin = () => {
+    const memo = new Map();
+    const go = (p, t, n) => {
+      const key = p.join() + '|' + t + '|' + n;
+      if (memo.has(key)) return memo.get(key);
+      memo.set(key, false);
+      for (const a of 'UDLRW') {
+        const r = invMove(p, t, n, a);
+        if (r.bump || r.end === 'lose') continue;
+        if (r.end === 'win' || go(r.np, r.nt, n + 1)) { memo.set(key, true); return true; }
+      }
+      return false;
+    };
+    return go(s.pos, s.t, s.invSteps);
+  };
+
+  s.step = (a) => {
+    if (s.over) return 'over';
+    const d = DIRS[a];
+    const np = [s.pos[0] + d[0], s.pos[1] + d[1]];
+    const ch = tile(np);
+    s.msg = '';
+    if (s.mode === 'fwd') {
+      if (ch === '#' || ch === 'B' || ch === 'E') { s.msg = 'そこには行けない。'; return 'bump'; }
+      let made = false;
+      if (ch === 'D') {
+        if (!level.promise) { s.msg = '扉は閉じている。スイッチの上に誰かが要る。'; return 'bump'; }
+        if (!s.promAt(s.t + 1)) { s.prom.push({ t: s.t + 1 }); made = true; }
+      }
+      s.t += 1; s.pos = np; s.f[s.t] = np;
+      if (made) s.msg = '約束した：時刻 ' + s.t + ' に、未来のあなたがスイッチの上にいる。';
+      if (ch === 'T') {
+        s.mode = 'inv'; s.T0 = s.t; s.pos = m.B.slice(); s.g[s.t] = s.pos.slice();
+        if (!s.canWin()) { s.over = 'lose'; s.msg = '回転ドアをくぐった。でも、' + level.stuck; return 'lose'; }
+        s.msg = '回転ドアをくぐった。ここから、あなたの時間は逆に流れる。'; return 'flip';
+      }
+      return made ? 'promise' : 'ok';
+    }
+    const r = invMove(s.pos, s.t, s.invSteps, a);
+    if (r.bump) { s.msg = r.bump; return 'bump'; }
+    s.t = r.nt; s.pos = r.np; s.g[r.nt] = r.np.slice(); s.invSteps += 1;
+    if (r.end) { s.over = r.end; s.msg = r.msg; s.paradox = !!r.paradox; return r.end; }
+    if (s.promAt(s.t)) s.msg = '約束の時刻 ' + s.t + '。スイッチの上にいる。約束を守った。';
+    if (!s.canWin()) { s.over = 'lose'; s.msg = level.stuck; return 'lose'; }
+    return 'ok';
+  };
+  return s;
+}
+
+// ---------- view ----------
+const $ = id => document.getElementById(id);
+let li = 0, game = null;
+let demo = null;   // 見本の再生 { i, cap, timer }
+let replay = null; // クリアのあとの通しの再生 { t, timer }
+
+function cellSize(cols) {
+  const avail = document.querySelector('.board-wrap').clientWidth || 300;
+  return Math.max(16, Math.min(52, Math.floor((avail - 4 - (cols - 1) * 2) / cols)));
+}
+
+function render(fx) {
+  const L = LEVELS[li], m = game.m, app = $('app');
+  const inv = game.mode === 'inv' && !replay;
+  app.classList.toggle('inv', inv); app.classList.toggle('fwd', !inv);
+  document.body.classList.toggle('inv', inv);
+  $('intro').textContent = L.intro;
+  $('legend').textContent = L.legend;
+  const now = replay ? replay.t : game.t;
+
+  // clock
+  $('clock').innerHTML = '時刻 ' + String(now).padStart(2, '0') + '<span class="dir">' + (replay ? '▶ 通しで再生' : inv ? '◀ 逆行' : '▶ 順行') + '</span>';
+  const mt = $('meter'); mt.innerHTML = '';
+  if (inv) {
+    const lab = document.createElement('span'); lab.textContent = '息'; mt.appendChild(lab);
+    for (let i = 0; i < L.oxygen; i++) { const b = document.createElement('i'); if (i < game.invSteps) b.className = 'used'; mt.appendChild(b); }
+  }
+
+  // timeline と、この先の見通し（1行）
+  const tl = $('timeline'); tl.innerHTML = '';
+  const plan = $('plan'); plan.textContent = ''; plan.hidden = true; plan.classList.remove('ok');
+  const max = game.T0 != null ? game.T0 : game.t;
+  let dt = null;
+  if (!game.over && !replay && L.plan === 'door') dt = game.doorTime();
+  for (let t = 0; t <= max; t++) {
+    const b = document.createElement('b');
+    b.textContent = t;
+    if (eq(game.f[t], m.P)) b.classList.add('p');
+    if (game.promAt(t)) b.classList.add('pr');
+    if (t === now) b.classList.add('now');
+    if (t === dt) b.classList.add('door');
+    tl.appendChild(b);
+  }
+  if (!game.over && !replay) {
+    let text = '', ok = false;
+    if (L.plan === 'door' && dt != null) {
+      const who = inv ? '過去の自分' : 'あなた';
+      const there = dt < 0 ? null : dt > game.t ? undefined : eq(game.f[dt], m.P);
+      text = (inv ? 'このまま扉へ向かうと' : 'このまま回転ドアへ向かうと、逆行して') + '扉を通るのは 時刻 ' + dt + '。'
+        + (there === null ? 'そんな時刻はない（もっと前に進んでから）。' : there === undefined ? 'その時刻はまだ来ていない。'
+          : 'その時刻、' + who + 'はスイッチの上に' + (there ? 'いる → 通れる' : 'いない → 通れない') + '。');
+      ok = there === true;
+    }
+    if (L.plan === 'promise') {
+      const pr = game.prom[0];
+      if (!pr && !inv) text = 'この扉のスイッチは、順行のあなたには届かない。扉に入ると「未来の自分が開ける」と約束になる。';
+      else if (pr && !inv) {
+        const x = game.plateTime();
+        text = '約束：時刻 ' + pr.t + ' に、未来のあなたがスイッチの上にいる。このまま回転ドアへ向かうと、逆行してスイッチに着くのは 時刻 ' + x + '。'
+          + (x === pr.t ? 'ちょうど間に合う。' : x > pr.t ? (x - pr.t) + '手、スイッチの上で待つことになる（息を使う）。' : '間に合わない。');
+        ok = x === pr.t;
+      } else if (pr && inv && game.t > pr.t) {
+        const j = game.dist(game.pos, m.P, ['#', 'T', 'D']);
+        text = '約束の時刻 ' + pr.t + ' まで、あと ' + (game.t - pr.t) + '手。スイッチまで ' + j + '手。' + (j <= game.t - pr.t ? '間に合う。' : '間に合わない。');
+        ok = j <= game.t - pr.t;
+      }
+    }
+    if (text) { plan.hidden = false; plan.textContent = text; plan.classList.toggle('ok', ok); }
+  }
+
+  // board
+  const rows = m.g.length, cols = m.g[0].length, cs = cellSize(cols);
+  const board = $('board');
+  board.style.setProperty('--cs', cs + 'px');
+  board.style.gridTemplateColumns = 'repeat(' + cols + ', var(--cs))';
+  board.innerHTML = '';
+  const toks = [];
+  if (replay) {
+    if (game.f[now]) toks.push({ p: game.f[now], c: 'me-f', title: '順行のあなた' });
+    if (game.g[now]) toks.push({ p: game.g[now], c: 'me-i', title: '逆行のあなた' });
+  } else {
+    const gh = game.ghostPos();
+    if (gh) toks.push({ p: gh, c: 'ghost', title: '過去の自分' });
+    if (!inv && game.promAt(game.t)) toks.push({ p: m.P, c: 'future', title: '約束した未来の自分' });
+    toks.push({ p: game.pos, c: inv ? 'me-i' : 'me-f', title: 'あなた' });
+  }
+  const doorCls = replay
+    ? (eq(game.f[now], m.P) || eq(game.g[now], m.P) ? 'open' : '')
+    : ({ open: 'open', promise: 'promise', closed: '' })[game.doorState()];
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+    const ch = m.g[y][x], c = document.createElement('div');
+    c.className = 'cell';
+    c.setAttribute('role', 'gridcell');
+    if (ch === '#') c.classList.add('wall');
+    if (ch === 'P') { c.classList.add('plate'); if (toks.some(k => eq(k.p, [x, y]))) c.classList.add('on'); }
+    if (ch === 'D') { c.classList.add('door'); if (doorCls) c.classList.add(doorCls); }
+    if (ch === 'E') c.classList.add('exit');
+    if (ch === 'T') c.classList.add('turn');
+    if (ch === 'B') c.classList.add('bexit');
+    toks.filter(k => eq(k.p, [x, y])).forEach(k => { const t = document.createElement('div'); t.className = 'tok ' + k.c; t.title = k.title; c.appendChild(t); });
+    board.appendChild(c);
+  }
+  if (fx) { board.classList.remove('glitch', 'flip'); void board.offsetWidth; board.classList.add(fx); }
+
+  // status & overlay
+  const st = $('status');
+  st.textContent = replay ? '時刻0から、順行のあなた（赤）と逆行のあなた（青）を同時に再生している。' : game.msg;
+  st.classList.toggle('warn', !!game.msg && !game.over && !replay);
+  const ov = $('overlay');
+  if (game.over && !replay) {
+    ov.hidden = false;
+    $('ovText').textContent = game.msg + (game.over === 'lose' && L.hint ? '　ヒント：' + L.hint : '')
+      + (game.over === 'win' ? '　「通しで見る」で、2人のあなたを時刻0から同時に再生できる。' : '');
+    $('ovBtn').textContent = game.over === 'win' ? (li < LEVELS.length - 1 ? '次の面へ' : 'もう一度') : 'やり直す';
+    $('ovDemo').hidden = game.over !== 'lose';
+    $('ovReplay').hidden = game.over !== 'win';
+  } else ov.hidden = true;
+
+  // 見本の再生中は、その1手の説明を出す
+  st.classList.toggle('demo-cap', demo != null);
+  if (demo != null && demo.cap) st.textContent = '見本 ' + demo.i + '/' + L.solution.length + '：' + demo.cap;
+  $('bDemo').textContent = demo != null ? '■ 見本を止める' : '▶ 見本を見る（正解を1手ずつ）';
+
+  // tabs
+  const tabs = $('tabs'); tabs.innerHTML = '';
+  LEVELS.forEach((lv, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = lv.name;
+    b.setAttribute('aria-current', i === li ? 'true' : 'false');
+    b.onclick = () => load(i); tabs.appendChild(b);
+  });
+}
+
+function stopDemo() { if (demo) clearTimeout(demo.timer); demo = null; }
+function stopReplay() { if (replay) clearTimeout(replay.timer); replay = null; }
+function load(i) { stopDemo(); stopReplay(); li = i; game = makeGame(LEVELS[i]); render(); }
+
+function act(a, fromDemo) {
+  if ((demo && !fromDemo) || replay) return; // 再生中は手で動かさない
+  const r = game.step(a);
+  render(r === 'lose' ? 'glitch' : r === 'flip' ? 'flip' : null);
+}
+
+function startDemo() {
+  stopReplay();
+  const L = LEVELS[li];
+  game = makeGame(L); demo = { i: 0, cap: '最初の位置から、正解を1手ずつ動かす。', timer: null }; render();
+  const next = () => {
+    if (!demo) return;
+    if (demo.i >= L.solution.length || game.over) { demo = null; render(); return; }
+    demo.cap = L.steps[demo.i]; demo.i += 1;
+    act(L.solution[demo.i - 1], true);
+    demo.timer = setTimeout(next, 1700);
+  };
+  demo.timer = setTimeout(next, 1700);
+}
+
+// クリアのあと: 時刻0から、順行と逆行の2人のあなたを同時に再生する
+function startReplay() {
+  stopDemo();
+  replay = { t: 0, timer: null }; render();
+  const next = () => {
+    if (!replay) return;
+    if (replay.t >= game.T0) { replay = null; render(); return; }
+    replay.t += 1; render();
+    replay.timer = setTimeout(next, 700);
+  };
+  replay.timer = setTimeout(next, 900);
+}
+
+$('bDemo').onclick = () => { if (demo) { stopDemo(); render(); } else startDemo(); };
+$('ovDemo').onclick = () => startDemo();
+$('ovReplay').onclick = () => startReplay();
+$('ovBtn').onclick = () => {
+  if (game.over === 'win' && li < LEVELS.length - 1) load(li + 1); else load(li);
+};
+$('bU').onclick = () => act('U'); $('bD').onclick = () => act('D');
+$('bL').onclick = () => act('L'); $('bRt').onclick = () => act('R');
+$('bW').onclick = () => act('W'); $('bR').onclick = () => load(li);
+document.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  const map = { arrowup: 'U', w: 'U', arrowdown: 'D', s: 'D', arrowleft: 'L', a: 'L', arrowright: 'R', d: 'R', ' ': 'W' };
+  if (k === 'r') { load(li); e.preventDefault(); return; }
+  if (k === 'enter' && game.over && !replay) { $('ovBtn').click(); e.preventDefault(); return; }
+  if (map[k]) { act(map[k]); e.preventDefault(); }
+});
+window.addEventListener('resize', () => render());
+
+// ---------- self test (open with #selftest) ----------
+function selftest() {
+  const out = [];
+  const play = (lv, seq) => { const g = makeGame(lv); let r; for (const a of seq) { r = g.step(a); if (g.over) break; } return g; };
+  // 正解で勝てる・見本の説明の数＝手数・正解の途中で止まらない
+  LEVELS.forEach(lv => {
+    const g = makeGame(lv);
+    const okSteps = lv.steps.length === lv.solution.length && [...lv.solution].every((a, i) => { const r = g.step(a); return r !== 'bump' && (i === lv.solution.length - 1 ? r === 'win' : r !== 'lose'); });
+    out.push(lv.id + ':' + (g.over === 'win' && okSteps ? 'OK' : 'NG(' + g.msg + ')'));
+  });
+  const [L1, L2] = LEVELS;
+  // 1面: 待たずに入ると、くぐった時点で「もう来ない」
+  const a1 = play(L1, 'RRRRRRRRDDLLLLL');
+  out.push('t1-nowait:' + (a1.over === 'lose' && /もう来ない/.test(a1.msg) ? 'OK' : 'NG'));
+  // 1面: 扉の見た目＝判定（待つ位置を変えた打ち方すべて）
+  let bad = 0;
+  for (let w = 0; w <= 6; w++) for (let w2 = 0; w2 <= 2; w2++) {
+    const g = makeGame(L1);
+    for (const a of 'R'.repeat(w) + 'W'.repeat(w2) + 'R'.repeat(6 - w) + 'RRDD' + 'LLLLLLL') {
+      if (g.over) break;
+      const p = [g.pos[0] + DIRS[a][0], g.pos[1] + DIRS[a][1]];
+      const into = eq(p, g.m.D) && g.mode === 'inv', shown = g.doorOpenNext();
+      const r = g.step(a);
+      if (into && shown !== (r !== 'bump')) bad++;
+    }
+  }
+  out.push('t1-door-shown:' + (bad === 0 ? 'OK' : 'NG(' + bad + ')'));
+  // 2面: 扉に入ると約束ができ、その時刻に青い自分がスイッチに見える
+  const b1 = play(L2, 'RRRRRR');
+  out.push('t2-promise:' + (b1.prom.length === 1 && b1.prom[0].t === 6 && eq(b1.f[6], b1.m.D) ? 'OK' : 'NG'));
+  // 2面: 扉を通ったあとに待つと、息が足りず、くぐった時点で「もう無い」
+  const b2 = play(L2, 'RRRRRRWRRRR');
+  out.push('t2-wait-after:' + (b2.over === 'lose' && /もう無い/.test(b2.msg) ? 'OK' : 'NG(' + b2.msg + ')'));
+  // 2面: 扉の前で待つのは大丈夫（約束の時刻も同じだけずれる）
+  const b3 = play(L2, 'RRRRRWRRRRRDLLLLLLLL');
+  out.push('t2-wait-before:' + (b3.over === 'win' ? 'OK' : 'NG(' + b3.msg + ')'));
+  // 2面: 約束を破ると負け（スイッチを通り過ぎる道は「もう無い」で止まる）
+  const b4 = play(L2, 'RRRRRRRRRRDLLW');
+  out.push('t2-break:' + (b4.over === 'lose' && /崩れた/.test(b4.msg) ? 'OK' : 'NG(' + b4.msg + ')'));
+  // 2面: 約束を守る前に出口へは行けない
+  const g5 = makeGame(L2); for (const a of 'RRRRRRRRRRD') g5.step(a);
+  out.push('t2-exit-locked:' + (g5.pending(8).length === 1 && g5.pending(6).length === 0 ? 'OK' : 'NG'));
+  // 2面: 通しの再生用に、約束の時刻に2人がそろっている（赤は扉・青はスイッチ）
+  const b6 = play(L2, L2.solution);
+  out.push('t2-reveal:' + (eq(b6.f[6], b6.m.D) && eq(b6.g[6], b6.m.P) ? 'OK' : 'NG'));
+  // 2面: 扉の前で待つ数(0〜3)×扉のあとで待つ数(0〜3)の16通り。勝てるのは「扉のあとで待たない」4通りだけのはず
+  const winsBy = [];
+  for (let wb = 0; wb <= 3; wb++) for (let wa = 0; wa <= 3; wa++) {
+    const g = play(L2, 'RRRRR' + 'W'.repeat(wb) + 'R' + 'W'.repeat(wa) + 'RRRR');
+    if (!g.over && g.mode === 'inv' && g.canWin()) winsBy.push(wb + '-' + wa);
+  }
+  out.push('t2-choices:' + (winsBy.join() === '0-0,1-0,2-0,3-0' ? 'OK' : 'NG(' + winsBy.join() + ')'));
+  return out.join(' ');
+}
+window.__selftest = selftest;
+if (location.hash === '#selftest') { const r = selftest(); console.log('SELFTEST', r); $('foot').textContent = 'SELFTEST ' + r; }
+
+load(0);
+</script>
+</body>
+</html>

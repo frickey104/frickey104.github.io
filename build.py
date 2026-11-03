@@ -87,6 +87,19 @@ ITEMS = [
          crop=(16, 166, 784, 742), shelf="thing",
          alt="ブローチの見本の記事。花と、白目の横目で座るシュナウザーの見本",
          desc="3D プリンタで刷るブローチの見本と作り方。花・白目の横目のシュナウザー・イチョウ・どんぐりの4つ。AI の絵を 3D にして整えました。"),
+    # 2026-11-03 オーナー「4つとも載せていい」
+    dict(slug="sakasa", shelf="game", src="2026-11-03_tenet-rpg", title="さかさまの三日間", kind="RPG", ver="v1.2", time="45〜60分",
+         crop=(0, 0, 800, 600),
+         alt="さかさまの三日間のタイトル画面。夕暮れの塔と、父と娘のうしろ姿",
+         desc="三日目に塔の門をくぐると、三日間をさかさに生き直す。映画『テネット』を手本にした、ドラクエ風の RPG です。結末は3つ。"),
+    dict(slug="gyakkoban", shelf="game", src="2026-10-30_tenet-grid", title="逆行盤", kind="パズル・1人", ver="試作4版", time="",
+         crop=(0, 0, 800, 600),
+         alt="逆行盤の盤面。回転ドアとスイッチと出口のあるマス目",
+         desc="回転扉をくぐると時間が逆に流れ、さっきまでの自分が逆再生で動き出す。2面だけの試作のパズルです。"),
+    dict(slug="kon", shelf="game", src="2026-10-29_meta-game", entry="drafts/c1.html", title="コン 30秒の先へ", kind="ふたりで協力するアクション", ver="第1章", time="5〜10分",
+         crop=(0, 0, 800, 600),
+         alt="コンのタイトル画面。昔の携帯ゲーム機の形の画面に「コン」の文字と小さなコン",
+         desc="跳べるあなたと、跳べないけれどせまい所を通れる相棒のコン。手をつなぎ、投げて、呼んで、5つの部屋を二人で抜けます。"),
     # 実験室はページが5つに分かれている（pages の全部を写す・2026-11-03 に GitHub の別の置き場からここへ移した）
     dict(slug="experiments", shelf="tool", src="2026-08-18_experiments", title="実験室", kind="アート",
          pages=["index.html", "wind-terrain.html", "erosion.html", "shatter.html", "drawsound.html"],
@@ -94,8 +107,13 @@ ITEMS = [
          alt="実験室の作品「風の地形」。暗い青の中を流れる細い光の筋",
          desc="触った跡が作品に残り、次の動きを変える。ブラウザで動く実験の記録です。"),
 ]
-# 外にあるもの（写さない・リンクだけ）。2026-11-03 から無し（実験室は作品集の中に写す）
-EXTERNAL = []
+# 外にあるもの（写さない・リンクだけ）。実験室は 2026-11-03 から作品集の中に写す
+EXTERNAL = [
+    dict(slug="teian-loop", shelf="tool", src="2026-11-03_cc-company-public", title="teian-loop（提案ループ）", kind="Claude Code のプラグイン", url=f"{SITE}/teian-loop/",
+         crop=(0, 0, 800, 600),
+         alt="teian-loop の説明のページ。題名と「提案 → 承認 → 実行の仮想組織」",
+         desc="この作品集を作っている AI の仮想会社の仕組みを、誰でも使える形にしたもの。秘書が窓口で、Claude が提案し、あなたが決めます。"),
+]
 
 STATES = {"完成": "done", "途中": "wip", "止めた": "stop"}
 ALLOWED_HOSTS = {"fonts.googleapis.com", "fonts.gstatic.com", "frickey104.github.io", "github.com",
@@ -293,7 +311,8 @@ def build_pages() -> None:
         out = HERE / it["slug"]
         out.mkdir(exist_ok=True)
         for page in it.get("pages", ["index.html"]):  # ページが分かれた作品（実験室）は全部を同じ形で写す
-            (out / page).write_text(head + source(it, page).rstrip() + "\n</body>\n</html>\n", encoding="utf-8")
+            src_page = it.get("entry", "index.html") if page == "index.html" else page  # 入口が別のファイルの作品（コンは c1）
+            (out / page).write_text(head + source(it, src_page).rstrip() + "\n</body>\n</html>\n", encoding="utf-8")
 
 
 def card(it: dict, no: int, big: bool) -> str:
