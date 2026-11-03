@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="触った跡が作品に残り、次の動きを変える。ブラウザで動く実験の記録です。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="frickey の工房">
+<meta property="og:title" content="実験室">
+<meta property="og:description" content="触った跡が作品に残り、次の動きを変える。ブラウザで動く実験の記録です。">
+<meta property="og:url" content="https://frickey104.github.io/experiments/">
+<meta property="og:image" content="https://frickey104.github.io/img/og-experiments.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+.fk-bar{all:initial;display:flex;align-items:center;justify-content:space-between;gap:12px;box-sizing:border-box;width:100%;min-height:34px;padding:6px max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px));background:#16283c;color:#e9eef4;font:600 13px/1.3 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",sans-serif;position:relative;z-index:2147483647}
+.fk-bar a{all:initial;color:#e9eef4;font:inherit;cursor:pointer;text-decoration:none}
+.fk-bar a:hover,.fk-bar a:focus-visible{text-decoration:underline;outline:none}
+.fk-bar span{all:initial;color:#9fb3c8;font:500 12px/1.3 ui-monospace,Consolas,monospace}
+</style>
+</head>
+<body>
+<nav class="fk-bar" aria-label="作品集"><a href="../">← frickey の工房</a><span>アート</span></nav>
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>実験室 — Interactive Experiments</title>
+<meta name="description" content="ブラウザで動く・触れる実験のログ。作品と、そこで転んだ記録。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect width=%27100%27 height=%27100%27 rx=%2722%27 fill=%27%2308080b%27/%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%2726%27 fill=%27%237b6cff%27/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #08080b;
+    --bg-card: #101015;
+    --line: #23232c;
+    --fg: #e8e8ef;
+    --fg-dim: #8a8a99;
+    --fg-faint: #7c7c8a;
+    --accent: #7b6cff;
+    --warn: #d98a3f;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI",
+                 "Noto Sans JP", "Segoe UI", sans-serif;
+    line-height: 1.75;
+    font-feature-settings: "palt";
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: clamp(3rem, 9vw, 6rem) clamp(1.25rem, 5vw, 2rem) 6rem; }
+
+  header { border-bottom: 1px solid var(--line); padding-bottom: 2.5rem; margin-bottom: 3.5rem; }
+  h1 {
+    font-size: clamp(1.9rem, 6vw, 2.6rem);
+    margin: 0 0 .6rem;
+    letter-spacing: .04em;
+    font-weight: 600;
+  }
+  h1 .en { display: block; font-size: .42em; color: var(--fg-faint); letter-spacing: .22em; margin-top: .7em; font-weight: 400; }
+  .lede { color: var(--fg-dim); margin: 0; font-size: .98rem; }
+  .lede strong { color: var(--fg); font-weight: 600; }
+
+  .note {
+    margin-top: 1.8rem; padding: .9rem 1.1rem;
+    border-left: 2px solid var(--accent);
+    background: #0e0e14; color: var(--fg-dim);
+    font-size: .88rem; line-height: 1.7;
+  }
+
+  ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 1.25rem; }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1.5rem clamp(1.1rem, 4vw, 1.7rem);
+    transition: border-color .18s ease, transform .18s ease;
+  }
+  .card:hover, .card:focus-within { border-color: #3a3a4a; transform: translateY(-1px); }
+
+  .num { font-size: .72rem; letter-spacing: .2em; color: var(--fg-faint); font-variant-numeric: tabular-nums; }
+
+  .title { margin: .35rem 0 0; font-size: 1.22rem; font-weight: 600; letter-spacing: .02em; }
+  .title a {
+    color: var(--fg); text-decoration: none;
+    display: inline-block; padding: .35rem 0; margin: -.35rem 0;
+  }
+  .title a:hover { color: var(--accent); }
+  .title a::after { content: " ↗"; font-size: .72em; color: var(--fg-faint); }
+
+  .mech { margin: .5rem 0 0; color: var(--fg-dim); font-size: .9rem; }
+
+  .log { margin: 1.1rem 0 0; padding-top: 1rem; border-top: 1px dashed var(--line); font-size: .85rem; }
+  .log dt {
+    color: var(--warn); font-size: .7rem; letter-spacing: .16em;
+    text-transform: uppercase; margin-bottom: .3rem;
+  }
+  .log dd { margin: 0; color: var(--fg-dim); }
+  .log dd + dt { margin-top: .85rem; }   /* 2件目以降の見出しが前の本文にくっつかないように */
+  .log dd code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .93em; color: #b9b2ff; background: #17171f;
+    padding: .1em .35em; border-radius: 3px;
+  }
+
+  .missing-note {
+    margin: .8rem 0 0; padding: .55rem .75rem;
+    border-left: 2px solid var(--warn);
+    background: #17130d; color: var(--warn);
+    font-size: .8rem; line-height: 1.6;
+  }
+
+  footer {
+    margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--line);
+    color: var(--fg-faint); font-size: .82rem;
+  }
+  footer a { color: var(--fg-dim); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>実験室<span class="en">INTERACTIVE EXPERIMENTS</span></h1>
+  <p class="lede">
+    ブラウザで動く、触れるものをつくっています。<strong>触った跡が作品に残り、次の挙動を変える</strong>——
+    そういう仕掛けが主な関心です。
+  </p>
+  <p class="note">
+    ここに並ぶのは<strong>完成品ではなく実験</strong>です。各項に「試したこと」と「転んだところ」を添えています。
+    うまくいった話より、そちらのほうが残す価値があると思っているからです。
+  </p>
+</header>
+
+<ol role="list">
+
+  <li class="card">
+    <p class="num">実験 #01</p>
+    <h2 class="title"><a href="wind-terrain.html">🌬 風の地形</a></h2>
+    <p class="mech">
+      Perlin ノイズの流れ場を粒子が流れる。マウスの軌跡が「地形」として場に残り、
+      後から来る粒の流れを変える（減衰 0.99994/frame）。
+    </p>
+    <dl class="log">
+      <dt>転んだところ</dt>
+      <dd>
+        <code>setPointerCapture</code> を状態の初期化より先に呼んでいた。例外が飛ぶと線が<strong>無言で</strong>壊れる。
+        「4本描いたのに1本しか記録されない」で発覚。先に状態を作り、捕捉は try/catch に。
+      </dd>
+      <dt>まだ転んでいるところ</dt>
+      <dd>
+        <strong>窓の大きさを変えると、彫った地形が薄くなる。</strong><code>ux/uy</code> をセル添字でコピーしていて
+        「引き継いでいる」つもりだったが、彫った点の明度比を測ると 2.45→1.41 に落ちた。
+        リサイズしなければ同じ時間で 2.40→3.91 と<strong>逆に濃くなる</strong>ので、引き継ぎ切れていない。
+        直していない——リサイズは「作品を保つ操作」なのか「作り直す操作」なのか、まだ決めていないので。
+      </dd>
+    </dl>
+  </li>
+
+  <li class="card">
+    <p class="num">実験 #02</p>
+    <h2 class="title"><a href="erosion.html">🦠 侵食するもの</a></h2>
+    <p class="mech">
+      Gray-Scott 反応拡散を WebGL2 で。RGBA16F の ping-pong で 26 steps/frame。
+      撒いた種が自己増殖して広がり、増えたものは戻らない。模様5種。
+    </p>
+    <dl class="log">
+      <dt>転んだところ</dt>
+      <dd>
+        遅すぎて<strong>静止して見えた</strong>。止まっているのか遅いのか区別できず、点灯画素を数えたら
+        2.5秒で 658→714 と増えていた——動いてはいた。steps 12→26、初期種 5→9 個に。
+        「見た目で止まっている」と「実際に止まっている」は別物だった。
+      </dd>
+    </dl>
+  </li>
+
+  <li class="card">
+    <p class="num">実験 #03</p>
+    <h2 class="title"><a href="shatter.html">💎 割れる</a></h2>
+    <p class="mech">
+      ヴォロノイ図を半平面クリッピング（Sutherland–Hodgman）で実ポリゴンに落とし、
+      破片として剛体落下させる。叩くほど細かく砕ける。
+    </p>
+    <dl class="log">
+      <dt>転んだところ</dt>
+      <dd>
+        隣り合うセルの明度が近すぎて、<strong>面ではなくワイヤーフレームに見えた</strong>。
+        重心のハッシュでセルごとに明度と彩度をばらし、ファセットとして立たせた。
+      </dd>
+      <dt>まだ転んでいるところ</dt>
+      <dd>
+        <strong>窓の大きさを変えると、割った跡が全部消えて別の割れ方になる。</strong>
+        <code>resize()</code> が <code>reset()</code> を呼んでいて、種を撒き直しているため。
+        リサイズ前後の画像相関は 0.07（＝無相関）。4本の中でこれが一番はっきり消える。
+        直していない——「割り直す」のもこの作品らしい、という判断で置いてある。
+      </dd>
+    </dl>
+  </li>
+
+  <li class="card">
+    <p class="num">実験 #04</p>
+    <h2 class="title"><a href="drawsound.html">🔊 描くと鳴る</a></h2>
+    <p class="mech">
+      Web Audio。線1本が1声に対応する（ペンタトニック・合成IRリバーブ）。
+      本数が増えると音量を 1/√n で割り、重ねても飽和しないようにしている。
+    </p>
+    <dl class="log">
+      <dt>転んだところ（4本共通）</dt>
+      <dd>
+        起動時にウィンドウが非表示だと <strong>0×0 で初期化され、以後なにも描かれない</strong>。
+        しかもエラーは出ない。最小サイズを保証し、実サイズがついたら作り直す自己修復を全4本に入れた。
+      </dd>
+      <dt>まだ転んでいるところ</dt>
+      <dd>
+        <strong>窓を狭めると、描いた線が消える。</strong>広げるぶんには無事（点灯画素 32,992→46,130）だが、
+        狭めると 0 になった。線を device px の<strong>絶対座標</strong>で持っているので、
+        新しい画面の外に出たものは戻ってこない。放置すれば線は残る（5秒で 33,788→28,145）ので、
+        消しているのは時間ではなく縮小のほう。直していない。
+      </dd>
+    </dl>
+  </li>
+
+</ol>
+
+<footer>
+  すべて単一 HTML・外部依存ゼロ。ダウンロードしてダブルクリックすれば動きます。
+</footer>
+
+</div>
+<script>
+(function () {
+  // Same-origin existence check: this page has previously been handed out
+  // without its four sibling files, leaving links pointing nowhere.
+  // On click we do a lightweight HEAD check; if it clearly 404s we show an
+  // inline note instead of following a dead link. If the check itself
+  // cannot run (e.g. blocked under file://), we degrade silently and let
+  // the normal link navigation proceed — no false positives.
+  var links = document.querySelectorAll(".card .title a[href]");
+
+  function showMissingNote(link) {
+    var card = link.closest(".card");
+    if (!card || card.querySelector(".missing-note")) { return; }
+    var p = document.createElement("p");
+    p.className = "missing-note";
+    p.setAttribute("role", "status");
+    p.setAttribute("aria-live", "polite");
+    p.textContent = "このファイルが見つかりません。index.html と同じフォルダに4つの作品ファイル一式を置いてください。";
+    card.appendChild(p);
+  }
+
+  links.forEach(function (link) {
+    link.addEventListener("click", function (e) {
+      var href = link.getAttribute("href");
+      if (!href || typeof fetch !== "function") { return; }
+      // 修飾クリック・中クリックは横取りしない（新しいタブで開く操作を壊さないため）
+      if (e.defaultPrevented) { return; }
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { return; }
+      if (typeof e.button === "number" && e.button !== 0) { return; }
+      e.preventDefault();
+      fetch(href, { method: "HEAD", cache: "no-store" })
+        .then(function (res) {
+          if (res.status === 404) {
+            showMissingNote(link);
+          } else {
+            location.href = href;
+          }
+        })
+        .catch(function () {
+          // Check could not run (e.g. file:// blocks cross-document fetch).
+          // Degrade silently — navigate as if nothing happened.
+          location.href = href;
+        });
+    });
+  });
+})();
+</script>
+</body>
+</html>
+</body>
+</html>

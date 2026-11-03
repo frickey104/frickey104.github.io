@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="触った跡が作品に残り、次の動きを変える。ブラウザで動く実験の記録です。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="frickey の工房">
+<meta property="og:title" content="実験室">
+<meta property="og:description" content="触った跡が作品に残り、次の動きを変える。ブラウザで動く実験の記録です。">
+<meta property="og:url" content="https://frickey104.github.io/experiments/">
+<meta property="og:image" content="https://frickey104.github.io/img/og-experiments.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+.fk-bar{all:initial;display:flex;align-items:center;justify-content:space-between;gap:12px;box-sizing:border-box;width:100%;min-height:34px;padding:6px max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px));background:#16283c;color:#e9eef4;font:600 13px/1.3 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",sans-serif;position:relative;z-index:2147483647}
+.fk-bar a{all:initial;color:#e9eef4;font:inherit;cursor:pointer;text-decoration:none}
+.fk-bar a:hover,.fk-bar a:focus-visible{text-decoration:underline;outline:none}
+.fk-bar span{all:initial;color:#9fb3c8;font:500 12px/1.3 ui-monospace,Consolas,monospace}
+</style>
+</head>
+<body>
+<nav class="fk-bar" aria-label="作品集"><a href="../">← frickey の工房</a><span>アート</span></nav>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>侵食するもの — Erosion</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23000000'/><g fill='%2354d6c0'><circle cx='11' cy='11' r='5'/><circle cx='22' cy='14' r='3.2'/><circle cx='14' cy='22' r='3.8'/><circle cx='24' cy='24' r='2.2'/></g></svg>">
+<style>
+  html,body{margin:0;padding:0;height:100%;background:#000;overflow:hidden;
+    font-family:system-ui,-apple-system,"Segoe UI","Yu Gothic UI",sans-serif;}
+  canvas{display:block;width:100vw;height:100vh;cursor:crosshair;
+    touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+  #hint{position:fixed;left:calc(18px + env(safe-area-inset-left));bottom:calc(16px + env(safe-area-inset-bottom));
+    max-width:min(72ch,calc(100vw - 460px));color:#7d879f;font-size:12.5px;line-height:1.9;
+    letter-spacing:.02em;pointer-events:none;transition:opacity 1.2s ease;text-shadow:0 1px 8px #000;}
+  #hint b{color:#d6dcf0;font-weight:600;}
+  #hint.off{opacity:0;}
+  #flash{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);color:#d6dcf0;
+    font-size:14px;letter-spacing:.08em;pointer-events:none;opacity:0;transition:opacity .35s ease;
+    text-shadow:0 2px 12px #000;}
+  #flash.on{opacity:1;}
+  #err{position:fixed;inset:0;display:none;place-items:center;color:#d6dcf0;font-size:15px;
+    line-height:2;text-align:center;padding:24px;z-index:30;pointer-events:none;}
+  /* 戻る導線・画面上の操作ボタン（4本共通） */
+  #back{position:fixed;z-index:10;left:calc(14px + env(safe-area-inset-left));top:calc(12px + env(safe-area-inset-top));
+    display:inline-flex;align-items:center;min-height:44px;box-sizing:border-box;padding:0 16px;
+    border-radius:999px;border:1px solid #2a3050;background:rgba(0,0,0,.62);
+    color:#7d879f;font-size:13px;letter-spacing:.04em;text-decoration:none;
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:color .2s,border-color .2s;}
+  #back:hover,#back:focus-visible{color:#d6dcf0;border-color:#4a5480;}
+  #ctl{position:fixed;z-index:10;right:calc(14px + env(safe-area-inset-right));
+    bottom:calc(14px + env(safe-area-inset-bottom));display:flex;flex-wrap:wrap;justify-content:flex-end;
+    gap:8px;max-width:min(70vw,460px);pointer-events:none;}
+  #ctl button{pointer-events:auto;min-height:44px;min-width:44px;box-sizing:border-box;padding:0 14px;
+    border-radius:999px;border:1px solid #2a3050;background:rgba(0,0,0,.62);
+    color:#7d879f;font:inherit;font-size:13px;letter-spacing:.04em;cursor:pointer;
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:color .2s,border-color .2s;}
+  #ctl button:hover{color:#d6dcf0;border-color:#4a5480;}
+  #ctl button:focus-visible{outline:2px solid #6f7cb8;outline-offset:2px;color:#d6dcf0;}
+  #ctl button[aria-pressed="true"]{color:#d6dcf0;border-color:#6f7cb8;background:rgba(52,62,110,.58);}
+  /* 狭い画面では案内をボタンの上へ逃がす（375px でも重ならない） */
+  @media (max-width:820px){
+    #ctl{left:calc(14px + env(safe-area-inset-left));max-width:none;}
+    #hint{max-width:none;right:calc(18px + env(safe-area-inset-right));
+      bottom:calc(16px + env(safe-area-inset-bottom) + 116px);}
+  }
+</style>
+</head>
+<body>
+<a id="back" href="index.html">← 実験室</a>
+<canvas id="c" role="img" aria-label="侵食するもの。ドラッグやタッチで種を撒くと、自己増殖して画面を侵食していくインタラクティブ作品"></canvas>
+<div id="hint">
+  <b>ドラッグして種を撒く</b> — 撒いたものは自己増殖して広がる。<b>増えたものは戻らない</b><br>
+  <b>1〜5</b> 模様の種類（珊瑚 / 分裂 / 迷路 / 水玉 / うねり） ／ <b>ホイール</b> 色を回す<br>
+  <b>Space</b> 止める ／ <b>C</b> 全部消す ／ <b>S</b> 画像で保存 ／ <b>H</b> この案内
+</div>
+<div id="flash"></div>
+<div id="ctl" role="toolbar" aria-label="操作">
+  <button type="button" id="b-pattern">模様</button>
+  <button type="button" id="b-clear">消す</button>
+  <button type="button" id="b-pause">止める</button>
+  <button type="button" id="b-hue">色</button>
+  <button type="button" id="b-save">保存</button>
+  <button type="button" id="b-hint">案内</button>
+</div>
+<div id="err" role="alert"></div>
+<script>
+(() => {
+'use strict';
+const cv = document.getElementById('c');
+const hintEl = document.getElementById('hint');
+const flashEl = document.getElementById('flash');
+const errEl = document.getElementById('err');
+
+const gl = cv.getContext('webgl2', { antialias:false, preserveDrawingBuffer:true });
+const ctlEl = document.getElementById('ctl');
+function die(msg){
+  errEl.style.display='grid';
+  errEl.innerHTML = msg;
+  cv.style.display='none';
+  if (ctlEl) ctlEl.style.display='none';
+  if (hintEl) hintEl.style.display='none';
+}
+if (!gl){ die('この環境では WebGL2 が使えないため動きません。<br>ほかの作品（風の地形 / 割れる / 描くと鳴る）は Canvas 2D なので動きます。'); return; }
+const extF = gl.getExtension('EXT_color_buffer_float');
+if (!extF){ die('この環境では浮動小数テクスチャへの描画（EXT_color_buffer_float）が使えないため動きません。'); return; }
+
+/* ---------- shader utils ---------- */
+function sh(type, src){
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+  return s;
+}
+function prog(vs, fs){
+  const p = gl.createProgram();
+  gl.attachShader(p, sh(gl.VERTEX_SHADER, vs));
+  gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  return p;
+}
+
+const VS = `#version 300 es
+void main(){
+  vec2 p = vec2((gl_VertexID<<1)&2, gl_VertexID&2);
+  gl_Position = vec4(p*2.0-1.0, 0.0, 1.0);
+}`;
+
+/* Gray-Scott 反応拡散 */
+const FS_SIM = `#version 300 es
+precision highp float;
+uniform sampler2D uPrev;
+uniform vec2  uRes;      // シミュレーション解像度
+uniform float uF;        // feed
+uniform float uK;        // kill
+uniform vec2  uM;        // マウス（テクセル座標）
+uniform vec2  uMPrev;
+uniform float uPaint;    // 0/1
+uniform float uBrush;    // 半径（px）
+out vec4 outC;
+
+vec2 lap(vec2 uv, vec2 px){
+  vec2 s = vec2(0.0);
+  s += texture(uPrev, uv + px*vec2(-1.0,-1.0)).xy * 0.05;
+  s += texture(uPrev, uv + px*vec2( 0.0,-1.0)).xy * 0.20;
+  s += texture(uPrev, uv + px*vec2( 1.0,-1.0)).xy * 0.05;
+  s += texture(uPrev, uv + px*vec2(-1.0, 0.0)).xy * 0.20;
+  s += texture(uPrev, uv                     ).xy * -1.0;
+  s += texture(uPrev, uv + px*vec2( 1.0, 0.0)).xy * 0.20;
+  s += texture(uPrev, uv + px*vec2(-1.0, 1.0)).xy * 0.05;
+  s += texture(uPrev, uv + px*vec2( 0.0, 1.0)).xy * 0.20;
+  s += texture(uPrev, uv + px*vec2( 1.0, 1.0)).xy * 0.05;
+  return s;
+}
+// 線分への距離（撒き跡を途切れさせない）
+float segDist(vec2 p, vec2 a, vec2 b){
+  vec2 pa = p-a, ba = b-a;
+  float h = clamp(dot(pa,ba)/max(dot(ba,ba),1e-6), 0.0, 1.0);
+  return length(pa - ba*h);
+}
+void main(){
+  vec2 px = 1.0/uRes;
+  vec2 uv = gl_FragCoord.xy * px;
+  vec2 ab = texture(uPrev, uv).xy;
+  float a = ab.x, b = ab.y;
+
+  vec2 l = lap(uv, px);
+  float da = 1.0, db = 0.5, dt = 1.0;
+  float na = a + (da*l.x - a*b*b + uF*(1.0-a)) * dt;
+  float nb = b + (db*l.y + a*b*b - (uK+uF)*b) * dt;
+
+  if (uPaint > 0.5){
+    float d = segDist(gl_FragCoord.xy, uMPrev, uM);
+    if (d < uBrush){
+      float w = smoothstep(uBrush, uBrush*0.35, d);
+      nb = mix(nb, 1.0, w);
+      na = mix(na, 0.0, w*0.85);
+    }
+  }
+  outC = vec4(clamp(na,0.0,1.0), clamp(nb,0.0,1.0), 0.0, 1.0);
+}`;
+
+/* 表示：Bの濃度と勾配から陰影をつける */
+const FS_DRAW = `#version 300 es
+precision highp float;
+uniform sampler2D uPrev;
+uniform vec2 uRes;   // シミュ解像度（勾配を取るテクセル幅に使う）
+uniform vec2 uOut;   // 出力＝キャンバス解像度（UV はこちらで割る）
+uniform float uHue;
+out vec4 outC;
+
+vec3 hsl2rgb(float h, float s, float l){
+  vec3 k = mod(vec3(0.0,8.0,4.0) + h*12.0, 12.0);
+  float aa = s*min(l, 1.0-l);
+  return l - aa*clamp(min(k-3.0, 9.0-k), -1.0, 1.0);
+}
+void main(){
+  vec2 px = 1.0/uRes;               // テクセル1つ分（勾配サンプリング用）
+  vec2 uv = gl_FragCoord.xy/uOut;   // 🔴 シミュ解像度ではなくキャンバス解像度で割る
+  float b  = texture(uPrev, uv).y;
+  float bx = texture(uPrev, uv+vec2(px.x,0)).y - texture(uPrev, uv-vec2(px.x,0)).y;
+  float by = texture(uPrev, uv+vec2(0,px.y)).y - texture(uPrev, uv-vec2(0,px.y)).y;
+
+  // 疑似ライティング（模様に厚みを出す）
+  vec3 n = normalize(vec3(-bx*7.0, -by*7.0, 1.0));
+  float lit = clamp(dot(n, normalize(vec3(0.45,0.6,0.75))), 0.0, 1.0);
+
+  float t = smoothstep(0.03, 0.34, b);
+  float h = fract(uHue + t*0.13);
+  vec3 col = hsl2rgb(h, 0.62, 0.06 + t*0.46);
+  col += vec3(0.9,0.95,1.0) * pow(lit, 5.0) * t * 0.55;   // ハイライト
+  col *= 0.35 + 0.65*t;                                    // 未侵食は暗く沈める
+  outC = vec4(col, 1.0);
+}`;
+
+const uni = p => new Proxy({}, { get:(_,k)=>gl.getUniformLocation(p, 'u'+k[0].toUpperCase()+k.slice(1)) });
+// コンテキストが失われるとプログラムも無効になるので、作り直せる形にしておく
+/* リサイズ時に旧解像度の場を新解像度へ引き伸ばして写すためだけの複写シェーダ */
+const FS_COPY = `#version 300 es
+precision highp float;
+uniform sampler2D uPrev;
+uniform vec2 uOut;
+out vec4 outC;
+void main(){ outC = texture(uPrev, gl_FragCoord.xy/uOut); }`;
+
+let pSim=null, pDraw=null, pCopy=null, US=null, UD=null, UC=null;
+function buildPrograms(){
+  pSim  = prog(VS, FS_SIM);
+  pDraw = prog(VS, FS_DRAW);
+  pCopy = prog(VS, FS_COPY);
+  US = uni(pSim); UD = uni(pDraw); UC = uni(pCopy);
+}
+buildPrograms();
+
+/* ---------- 状態 ---------- */
+let W=0,H=0,SW=0,SH=0,DPR=1;
+let tex=[null,null], fb=[null,null], cur=0;
+let probeFb = null;         // 「場が空っぽ」判定用（縮小段を少しだけ読む）
+let lost = false;           // WebGL コンテキスト喪失中
+let hue = 0.58, paused=false;
+const PRESETS = [
+  { f:0.0545, k:0.0620, name:'珊瑚' },
+  { f:0.0367, k:0.0649, name:'分裂' },
+  { f:0.0290, k:0.0570, name:'迷路' },
+  { f:0.0250, k:0.0600, name:'水玉' },
+  { f:0.0780, k:0.0610, name:'うねり' },
+];
+let pi = 0;
+const mouse = { x:0,y:0,px:0,py:0,down:false,has:false };
+
+function mkTex(w,h){
+  const t = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, t);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, w, h, 0, gl.RGBA, gl.HALF_FLOAT, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  const f = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, f);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+  return [t,f];
+}
+
+function clearState(){
+  // A=1, B=0 で埋める
+  const n = SW*SH*4;
+  const data = new Float32Array(n);
+  for (let i=0;i<n;i+=4){ data[i]=1; data[i+1]=0; data[i+3]=1; }
+  for (let i=0;i<2;i++){
+    gl.bindTexture(gl.TEXTURE_2D, tex[i]);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, SW, SH, 0, gl.RGBA, gl.FLOAT, data);
+  }
+}
+
+function resize(){
+  if (lost) return;
+  DPR = Math.min(window.devicePixelRatio||1, 1.5);
+  W = Math.max(2, Math.floor(innerWidth*DPR)); H = Math.max(2, Math.floor(innerHeight*DPR));
+  cv.width=W; cv.height=H;
+  // シミュ解像度は長辺 720 程度に抑える（GPU 負荷と模様の細かさのバランス）
+  const scale = Math.min(1, 720/Math.max(W,H));
+  const nSW = Math.max(64, Math.floor(W*scale));
+  const nSH = Math.max(64, Math.floor(H*scale));
+
+  // 🔴 リサイズで作品を消さない: 旧テクスチャを退避 → 新解像度へ引き伸ばして写す
+  const hadState = !!tex[cur];
+  const oldTex = tex.slice(), oldFb = fb.slice(), oldCur = cur;
+
+  const nt=[], nf=[];
+  for (let i=0;i<2;i++){ const [t,f] = mkTex(nSW,nSH); nt.push(t); nf.push(f); }
+  SW = nSW; SH = nSH; tex = nt; fb = nf; cur = 0;
+
+  if (hadState){
+    gl.useProgram(pCopy);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb[0]);
+    gl.viewport(0,0,SW,SH);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, oldTex[oldCur]);
+    gl.uniform1i(UC.prev, 0);
+    gl.uniform2f(UC.out, SW, SH);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  } else {
+    clearState();
+  }
+
+  for (let i=0;i<2;i++){
+    if (oldTex[i]) { gl.deleteTexture(oldTex[i]); gl.deleteFramebuffer(oldFb[i]); }
+  }
+}
+
+function simStep(){
+  gl.useProgram(pSim);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb[1-cur]);
+  gl.viewport(0,0,SW,SH);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, tex[cur]);
+  gl.uniform1i(US.prev, 0);
+  gl.uniform2f(US.res, SW, SH);
+  gl.uniform1f(US.f, PRESETS[pi].f);
+  gl.uniform1f(US.k, PRESETS[pi].k);
+  const sx = SW/W, sy = SH/H;
+  gl.uniform2f(US.m,     mouse.x*sx, SH - mouse.y*sy);
+  gl.uniform2f(US.mPrev, mouse.px*sx, SH - mouse.py*sy);
+  gl.uniform1f(US.paint, mouse.down ? 1 : 0);
+  gl.uniform1f(US.brush, Math.max(4, 13*sx));
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  cur = 1-cur;
+}
+
+function draw(){
+  gl.useProgram(pDraw);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.viewport(0,0,W,H);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, tex[cur]);
+  gl.uniform1i(UD.prev, 0);
+  gl.uniform2f(UD.res, SW, SH);
+  gl.uniform2f(UD.out, W, H);      // シミュ結果を画面いっぱいに伸ばす
+  gl.uniform1f(UD.hue, hue);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+/* ---------- 場が空っぽかを安く見る ---------- */
+// ミップマップを作り、長辺が 16 程度まで縮んだ段だけを読む（最大 16x16 = 数百px の読み出し）。
+// 最小段（1x1）は 2の冪でないテクスチャだと小さな模様を取りこぼすので使わない
+// （720x405・半径21px の種が 1x1 では 0 に消えることを実測で確認した）。
+// 平均ではなく最大値を見る。生きていれば必ずどこかが立っている
+let probeOK = true;         // 読めない環境では黙って諦める（誤検知させない）
+let probeBuf = null;
+function fieldPeakB(){
+  if (!probeOK || lost || !tex[cur]) return -1;
+  try {
+    gl.bindTexture(gl.TEXTURE_2D, tex[cur]);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    const level = Math.max(0, Math.ceil(Math.log2(Math.max(SW,SH)/16)));
+    const w = Math.max(1, SW>>level), h = Math.max(1, SH>>level);
+    if (!probeFb) probeFb = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, probeFb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex[cur], level);
+    let peak = -1;
+    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE){
+      if (!probeBuf || probeBuf.length < w*h*4) probeBuf = new Float32Array(w*h*4);
+      gl.getError();                                   // 直前の残りを流す
+      gl.readPixels(0,0,w,h,gl.RGBA,gl.FLOAT,probeBuf);
+      if (gl.getError() === gl.NO_ERROR){
+        peak = 0;
+        for (let i=1;i<w*h*4;i+=4) if (probeBuf[i] > peak) peak = probeBuf[i];
+      } else probeOK = false;
+    } else probeOK = false;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return peak;
+  } catch(_){ probeOK = false; return -1; }
+}
+
+let STEPS = 26;   // 1フレームあたりの反応回数＝体感速度に直結
+let last=performance.now(), acc=0, frames=0;
+let lastProbe=0, lastEmptyMsg=0;
+function loop(now){
+  requestAnimationFrame(loop);
+  if (lost) return;
+  // 起動時に枠が非表示だと 0 サイズで初期化されるため、実サイズがついたら作り直す
+  if (Math.max(2,Math.floor(innerWidth*DPR)) !== W || Math.max(2,Math.floor(innerHeight*DPR)) !== H) resize();
+  if (!paused){
+    for (let i=0;i<STEPS;i++) simStep();
+    mouse.px = mouse.x; mouse.py = mouse.y;
+  }
+  draw();
+
+  // 模様を切り替え続けると場が枯れて真っ黒になる。黙って黒いままにせず出口を出す
+  if (!paused && !mouse.down && now - lastProbe > 1500){
+    lastProbe = now;
+    const m = fieldPeakB();
+    if (m >= 0 && m < 1e-4){
+      if (now - lastEmptyMsg > 6000){ lastEmptyMsg = now; flash('種を撒いてください'); }
+    } else lastEmptyMsg = 0;
+  }
+
+  const dt = now-last; last=now; acc+=dt; frames++;
+  if (acc>1000){
+    const fps = frames*1000/acc; acc=0; frames=0;
+    if (fps<40 && STEPS>6) STEPS -= 2;
+    else if (fps>57 && STEPS<44) STEPS += 2;
+  }
+}
+
+/* ---------- 入力 ---------- */
+function pos(e){ const r=cv.getBoundingClientRect(); return [(e.clientX-r.left)*DPR,(e.clientY-r.top)*DPR]; }
+cv.addEventListener('pointermove', e=>{
+  const [x,y]=pos(e);
+  if(!mouse.has){ mouse.px=x; mouse.py=y; mouse.has=true; }
+  mouse.x=x; mouse.y=y;
+});
+cv.addEventListener('pointerdown', e=>{ e.preventDefault();   // タッチのパンに持っていかれないように
+  const [x,y]=pos(e); mouse.x=x;mouse.y=y;mouse.px=x;mouse.py=y;
+  mouse.down=true; mouse.has=true;
+  try { cv.setPointerCapture(e.pointerId); } catch(_){} });
+cv.addEventListener('pointerup', ()=>{ mouse.down=false; });
+cv.addEventListener('pointerleave', ()=>{ mouse.down=false; });
+// OS にジェスチャを奪われても down が立ちっぱなしにならないように
+cv.addEventListener('pointercancel', ()=>{ mouse.down=false; });
+cv.addEventListener('wheel', e=>{ stepHue(e.deltaY>0?1:-1); }, {passive:true});
+
+function flash(m){ flashEl.textContent=m; flashEl.classList.add('on');
+  clearTimeout(flash._t); flash._t=setTimeout(()=>flashEl.classList.remove('on'),900); }
+
+/* ---------- 操作（キーもボタンも同じ関数を通る） ---------- */
+function togglePause(){ paused=!paused; flash(paused?'一時停止':'再開'); }
+function clearField(){ clearState(); flash('全部消した'); }
+function setPattern(i){ pi = i; flash(PRESETS[pi].name); }
+function cyclePattern(){ setPattern((pi+1) % PRESETS.length); }
+function stepHue(dir){ hue = (hue + dir*0.02 + 1) % 1; }   // ホイール1ノッチ分
+function toggleHint(){ hintEl.classList.toggle('off'); }
+function savePNG(){
+  draw();
+  const a=document.createElement('a');
+  a.download='erosion-'+Date.now()+'.png';
+  a.href=cv.toDataURL('image/png'); a.click(); flash('保存した');
+}
+
+addEventListener('keydown', e=>{
+  if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;                        // Ctrl+C で作品を消さない
+  if (e.target && e.target.closest && e.target.closest('#ctl,#back')) return;
+  const k = e.key.toLowerCase();
+  if (k===' '){ e.preventDefault(); togglePause(); }
+  else if (k==='c'){ clearField(); }
+  else if (k==='h'){ toggleHint(); }
+  else if (k>='1' && k<='5'){ setPattern((+k)-1); }
+  else if (k==='s'){ savePNG(); }
+});
+
+/* ---------- 画面上のボタン（押したら blur して Space の再発火を防ぐ） ---------- */
+function bind(id, fn){
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('click', () => { fn(); el.blur(); });
+}
+bind('b-pattern', cyclePattern);
+bind('b-clear',   clearField);
+bind('b-pause',   togglePause);
+bind('b-hue',     () => { stepHue(1); flash('色をずらした'); });
+bind('b-save',    savePNG);
+bind('b-hint',    toggleHint);
+
+/* ---------- コンテキスト喪失（モバイルで裏に回すと落ちる） ---------- */
+cv.addEventListener('webglcontextlost', e=>{
+  e.preventDefault();          // これを呼ばないと復帰イベントが来ない
+  lost = true;
+  tex=[null,null]; fb=[null,null]; probeFb=null;
+});
+cv.addEventListener('webglcontextrestored', ()=>{
+  try {
+    // 拡張は復帰時に無効化されている。取り直さないと RGBA16F の
+    // フレームバッファが不完全になり、例外もなく真っ黒のままになる（実測）
+    if (!gl.getExtension('EXT_color_buffer_float')) throw new Error('EXT_color_buffer_float');
+    buildPrograms();           // プログラムも一緒に失われている
+    probeOK = true; probeBuf = null;
+    lost = false;
+    resize();                  // テクスチャとフレームバッファを作り直す
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb[0]);
+    const okFb = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    if (!okFb) throw new Error('framebuffer');
+    seedInitial();             // 起動時と同じ種を撒き直す
+    flash('描き直した');
+  } catch(err){
+    lost = true;
+    die('描画コンテキストの復帰に失敗しました。<br>ページを再読み込みしてください。');
+  }
+});
+
+addEventListener('resize', ()=>{ clearTimeout(resize._t); resize._t=setTimeout(resize,180); });
+
+/* ---------- 起動 ---------- */
+// 起動時にいくつか種を置いて「最初から生きている」状態にする（復帰時にも同じ道を通る）
+function seedInitial(){
+  const n = 9;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb[cur]);
+  gl.viewport(0,0,SW,SH);
+  gl.useProgram(pSim);
+  for (let i=0;i<n;i++){
+    const x = SW*(0.2+0.6*Math.random()), y = SH*(0.2+0.6*Math.random());
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb[1-cur]);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex[cur]);
+    gl.uniform1i(US.prev,0); gl.uniform2f(US.res,SW,SH);
+    gl.uniform1f(US.f,PRESETS[pi].f); gl.uniform1f(US.k,PRESETS[pi].k);
+    gl.uniform2f(US.m,x,y); gl.uniform2f(US.mPrev,x,y);
+    gl.uniform1f(US.paint,1); gl.uniform1f(US.brush, Math.max(6, SW*0.030));
+    gl.drawArrays(gl.TRIANGLES,0,3);
+    cur = 1-cur;
+  }
+}
+resize();
+seedInitial();
+requestAnimationFrame(loop);
+setTimeout(()=>hintEl.classList.add('off'), 7000);
+})();
+</script>
+</body>
+</html>
+</body>
+</html>

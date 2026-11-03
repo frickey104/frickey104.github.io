@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="触った跡が作品に残り、次の動きを変える。ブラウザで動く実験の記録です。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="frickey の工房">
+<meta property="og:title" content="実験室">
+<meta property="og:description" content="触った跡が作品に残り、次の動きを変える。ブラウザで動く実験の記録です。">
+<meta property="og:url" content="https://frickey104.github.io/experiments/">
+<meta property="og:image" content="https://frickey104.github.io/img/og-experiments.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+.fk-bar{all:initial;display:flex;align-items:center;justify-content:space-between;gap:12px;box-sizing:border-box;width:100%;min-height:34px;padding:6px max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px));background:#16283c;color:#e9eef4;font:600 13px/1.3 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",sans-serif;position:relative;z-index:2147483647}
+.fk-bar a{all:initial;color:#e9eef4;font:inherit;cursor:pointer;text-decoration:none}
+.fk-bar a:hover,.fk-bar a:focus-visible{text-decoration:underline;outline:none}
+.fk-bar span{all:initial;color:#9fb3c8;font:500 12px/1.3 ui-monospace,Consolas,monospace}
+</style>
+</head>
+<body>
+<nav class="fk-bar" aria-label="作品集"><a href="../">← frickey の工房</a><span>アート</span></nav>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>風の地形 — Wind Terrain</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2305060c'/><g fill='none' stroke='%236fb3ff' stroke-width='2.6' stroke-linecap='round'><path d='M4 11h13a4 4 0 1 0-4-4'/><path d='M4 17h18a4 4 0 1 1-4 4'/><path d='M4 23h10'/></g></svg>">
+<style>
+  html,body{margin:0;padding:0;height:100%;background:#05060c;overflow:hidden;
+    font-family:system-ui,-apple-system,"Segoe UI","Yu Gothic UI",sans-serif;}
+  canvas{display:block;width:100vw;height:100vh;cursor:crosshair;
+    touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+  #hint{position:fixed;left:calc(18px + env(safe-area-inset-left));bottom:calc(16px + env(safe-area-inset-bottom));
+    max-width:min(72ch,calc(100vw - 460px));color:#8a93b2;font-size:12.5px;line-height:1.9;
+    letter-spacing:.02em;pointer-events:none;transition:opacity 1.2s ease;text-shadow:0 1px 8px #000;}
+  #hint b{color:#cdd6f4;font-weight:600;}
+  #hint.off{opacity:0;}
+  #flash{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);color:#cdd6f4;
+    font-size:14px;letter-spacing:.08em;pointer-events:none;opacity:0;transition:opacity .35s ease;
+    text-shadow:0 2px 12px #000;}
+  #flash.on{opacity:1;}
+  /* 戻る導線・画面上の操作ボタン（4本共通） */
+  #back{position:fixed;z-index:10;left:calc(14px + env(safe-area-inset-left));top:calc(12px + env(safe-area-inset-top));
+    display:inline-flex;align-items:center;min-height:44px;box-sizing:border-box;padding:0 16px;
+    border-radius:999px;border:1px solid #2a3050;background:rgba(5,6,12,.62);
+    color:#8a93b2;font-size:13px;letter-spacing:.04em;text-decoration:none;
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:color .2s,border-color .2s;}
+  #back:hover,#back:focus-visible{color:#cdd6f4;border-color:#4a5480;}
+  #ctl{position:fixed;z-index:10;right:calc(14px + env(safe-area-inset-right));
+    bottom:calc(14px + env(safe-area-inset-bottom));display:flex;flex-wrap:wrap;justify-content:flex-end;
+    gap:8px;max-width:min(70vw,460px);pointer-events:none;}
+  #ctl button{pointer-events:auto;min-height:44px;min-width:44px;box-sizing:border-box;padding:0 14px;
+    border-radius:999px;border:1px solid #2a3050;background:rgba(5,6,12,.62);
+    color:#8a93b2;font:inherit;font-size:13px;letter-spacing:.04em;cursor:pointer;
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:color .2s,border-color .2s;}
+  #ctl button:hover{color:#cdd6f4;border-color:#4a5480;}
+  #ctl button:focus-visible{outline:2px solid #6f7cb8;outline-offset:2px;color:#cdd6f4;}
+  #ctl button[aria-pressed="true"]{color:#cdd6f4;border-color:#6f7cb8;background:rgba(52,62,110,.58);}
+  /* 狭い画面では案内をボタンの上へ逃がす（375px でも重ならない） */
+  @media (max-width:820px){
+    #ctl{left:calc(14px + env(safe-area-inset-left));max-width:none;}
+    #hint{max-width:none;right:calc(18px + env(safe-area-inset-right));
+      bottom:calc(16px + env(safe-area-inset-bottom) + 116px);}
+  }
+</style>
+</head>
+<body>
+<a id="back" href="index.html">← 実験室</a>
+<canvas id="c" role="img" aria-label="風の地形。マウスやタッチで風を描くと、その跡が地形として残り、後から流れる粒の動きを変えるインタラクティブ作品"></canvas>
+<div id="hint">
+  <b>マウスを動かす</b> — 風を描く。描いた風は地形として残り、後から来る粒の流れを変える<br>
+  <b>ドラッグ</b> 渦をつくる ／ <b>ホイール</b> 色を回す ／ <b>G</b> 地形を見る ／ <b>C</b> 地形を消す<br>
+  <b>Space</b> 止める ／ <b>S</b> 画像で保存 ／ <b>H</b> この案内（画面右下のボタンでも同じ操作ができます）
+</div>
+<div id="flash"></div>
+<div id="ctl" role="toolbar" aria-label="操作">
+  <button type="button" id="b-field">地形</button>
+  <button type="button" id="b-clear">消す</button>
+  <button type="button" id="b-pause">止める</button>
+  <button type="button" id="b-hue">色</button>
+  <button type="button" id="b-save">保存</button>
+  <button type="button" id="b-hint">案内</button>
+</div>
+<script>
+(() => {
+'use strict';
+
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d', { alpha:false });
+const hintEl = document.getElementById('hint');
+const flashEl = document.getElementById('flash');
+
+/* ---------- Perlin noise（依存ゼロ・自前） ---------- */
+const PERM = new Uint8Array(512);
+(function seed(){
+  const p = new Uint8Array(256);
+  for (let i=0;i<256;i++) p[i]=i;
+  let s = 0x9e3779b9;
+  const rnd = () => { s^=s<<13; s^=s>>>17; s^=s<<5; return (s>>>0)/4294967296; };
+  for (let i=255;i>0;i--){ const j=(rnd()*(i+1))|0; const t=p[i]; p[i]=p[j]; p[j]=t; }
+  for (let i=0;i<512;i++) PERM[i]=p[i&255];
+})();
+const fade = t => t*t*t*(t*(t*6-15)+10);
+const lerp = (a,b,t) => a+(b-a)*t;
+function grad2(h,x,y){ const u = (h&1)?x:-x, v = (h&2)?y:-y; return u+v; }
+function perlin(x,y){
+  const X = Math.floor(x)&255, Y = Math.floor(y)&255;
+  x -= Math.floor(x); y -= Math.floor(y);
+  const u = fade(x), v = fade(y);
+  const A = PERM[X]+Y, B = PERM[X+1]+Y;
+  return lerp(
+    lerp(grad2(PERM[A],x,y),     grad2(PERM[B],x-1,y),   u),
+    lerp(grad2(PERM[A+1],x,y-1), grad2(PERM[B+1],x-1,y-1), u),
+    v);
+}
+function fbm(x,y){
+  let a=0.5, f=1, sum=0;
+  for (let i=0;i<3;i++){ sum += a*perlin(x*f, y*f); a*=0.5; f*=2.03; }
+  return sum;
+}
+
+/* ---------- 状態 ---------- */
+const CELL = 16;                 // 流れ場グリッドの1マス（px）
+let W=0, H=0, COLS=0, ROWS=0, DPR=1;
+let ux, uy;                      // ユーザーが描いた風＝「地形」（恒久側）
+let baseA;                       // 環境の流れ（ノイズ由来・ゆっくり変化）
+let particles = null;
+let N = 16000;                   // 粒子数（fps を見て自動調整）
+
+const USER_DECAY   = 0.99994;    // 地形の減衰。1に近いほど長く残る
+const USER_DIFFUSE = 0.022;      // 地形のにじみ。大きいと描いた形がすぐ全体へ溶ける
+const INJECT_R     = 5;          // マウス注入の半径（セル数）
+const FADE_ALPHA   = 0.055;      // 画面の焼き付き残り具合
+
+let hue = 205, paused=false, showField=false, t=0;
+
+const mouse = { x:0, y:0, px:0, py:0, has:false, down:false };
+
+/* ---------- 初期化 ---------- */
+function resize(){
+  DPR = Math.min(window.devicePixelRatio || 1, 1.5);
+  W = Math.max(2, Math.floor(innerWidth  * DPR));
+  H = Math.max(2, Math.floor(innerHeight * DPR));
+  cv.width = W; cv.height = H;
+  COLS = Math.ceil(W/CELL)+1;
+  ROWS = Math.ceil(H/CELL)+1;
+
+  const n = COLS*ROWS;
+  const oux = ux, ouy = uy, oc = COLS;
+  ux = new Float32Array(n);
+  uy = new Float32Array(n);
+  baseA = new Float32Array(n);
+  // リサイズ前の地形をできる範囲で引き継ぐ
+  if (oux) {
+    const rows = Math.min(ROWS, (oux.length/oc)|0);
+    for (let j=0;j<rows;j++) for (let i=0;i<Math.min(COLS,oc);i++){
+      ux[j*COLS+i] = oux[j*oc+i]; uy[j*COLS+i] = ouy[j*oc+i];
+    }
+  }
+  ctx.fillStyle = '#05060c';
+  ctx.fillRect(0,0,W,H);
+
+  // 画面サイズに応じた粒子数
+  const target = Math.round((W*H)/(1920*1080) * 16000);
+  N = Math.max(6000, Math.min(26000, target));
+  initParticles();
+}
+
+function initParticles(){
+  particles = new Float32Array(N*5); // x,y,px,py,life
+  for (let i=0;i<N;i++) respawn(i, true);
+}
+function respawn(i, first){
+  const o = i*5;
+  particles[o]   = Math.random()*W;
+  particles[o+1] = Math.random()*H;
+  particles[o+2] = particles[o];
+  particles[o+3] = particles[o+1];
+  particles[o+4] = (first ? Math.random() : 1) * (120 + Math.random()*220);
+}
+
+/* ---------- 環境の流れを更新（軽いので間引き） ---------- */
+function updateBase(){
+  const sc = 0.0032 * CELL;
+  const tz = t*0.00016;
+  for (let j=0;j<ROWS;j++){
+    for (let i=0;i<COLS;i++){
+      const n = fbm(i*sc + tz*1.7, j*sc - tz);
+      baseA[j*COLS+i] = n * Math.PI * 3.2;
+    }
+  }
+}
+
+/* ---------- 地形（ユーザー風）の減衰とにじみ ---------- */
+const tmpx = () => new Float32Array(COLS*ROWS);
+let bufx=null, bufy=null;
+function relaxUser(){
+  if (!bufx || bufx.length !== ux.length){ bufx = tmpx(); bufy = tmpx(); }
+  const d = USER_DIFFUSE;
+  for (let j=0;j<ROWS;j++){
+    const jm = j>0 ? j-1 : 0, jp = j<ROWS-1 ? j+1 : ROWS-1;
+    for (let i=0;i<COLS;i++){
+      const im = i>0 ? i-1 : 0, ip = i<COLS-1 ? i+1 : COLS-1;
+      const k = j*COLS+i;
+      const ax = (ux[j*COLS+im]+ux[j*COLS+ip]+ux[jm*COLS+i]+ux[jp*COLS+i])*0.25;
+      const ay = (uy[j*COLS+im]+uy[j*COLS+ip]+uy[jm*COLS+i]+uy[jp*COLS+i])*0.25;
+      bufx[k] = (ux[k]*(1-d) + ax*d) * USER_DECAY;
+      bufy[k] = (uy[k]*(1-d) + ay*d) * USER_DECAY;
+    }
+  }
+  const sx=ux, sy=uy; ux=bufx; uy=bufy; bufx=sx; bufy=sy;
+}
+
+/* ---------- マウスの軌跡を地形に刻む ---------- */
+function inject(){
+  if (!mouse.has) return;
+  const dx = mouse.x - mouse.px, dy = mouse.y - mouse.py;
+  const speed = Math.hypot(dx,dy);
+  if (speed < 0.4) { mouse.px = mouse.x; mouse.py = mouse.y; return; }
+
+  const steps = Math.min(24, Math.ceil(speed/CELL)+1);
+  const power = Math.min(2.4, 0.55 + speed*0.012);
+
+  for (let s=0; s<=steps; s++){
+    const t0 = s/steps;
+    const mx = mouse.px + dx*t0, my = mouse.py + dy*t0;
+    const ci = Math.round(mx/CELL), cj = Math.round(my/CELL);
+    for (let j=cj-INJECT_R; j<=cj+INJECT_R; j++){
+      if (j<0||j>=ROWS) continue;
+      for (let i=ci-INJECT_R; i<=ci+INJECT_R; i++){
+        if (i<0||i>=COLS) continue;
+        const dd = Math.hypot(i-ci, j-cj);
+        if (dd > INJECT_R) continue;
+        const w = (1 - dd/INJECT_R) ** 2 * power;
+        const k = j*COLS+i;
+        if (mouse.down){
+          // 渦：軌跡に対して直交方向へ
+          ux[k] += (-dy/(speed||1)) * w * 1.5;
+          uy[k] += ( dx/(speed||1)) * w * 1.5;
+        } else {
+          ux[k] += (dx/(speed||1)) * w;
+          uy[k] += (dy/(speed||1)) * w;
+        }
+      }
+    }
+  }
+  mouse.px = mouse.x; mouse.py = mouse.y;
+}
+
+/* ---------- 描画 ---------- */
+const BUCKETS = 6;
+
+function step(){
+  // 焼き付きを少しずつ落とす
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = `rgba(5,6,12,${FADE_ALPHA})`;
+  ctx.fillRect(0,0,W,H);
+
+  if (showField) drawField();
+
+  const P = [];
+  for (let b=0;b<BUCKETS;b++) P.push(new Path2D());
+
+  for (let i=0;i<N;i++){
+    const o = i*5;
+    let x = particles[o], y = particles[o+1];
+
+    const ci = (x/CELL)|0, cj = (y/CELL)|0;
+    const k = (cj*COLS+ci);
+    const a = baseA[k] || 0;
+
+    // 環境の流れ ＋ 地形（ユーザーが描いた風）
+    let vx = Math.cos(a)*0.85 + (ux[k]||0)*2.6;
+    let vy = Math.sin(a)*0.85 + (uy[k]||0)*2.6;
+
+    const sp = Math.hypot(vx,vy);
+    const max = 3.4;
+    if (sp > max){ vx = vx/sp*max; vy = vy/sp*max; }
+
+    const nx = x + vx, ny = y + vy;
+    particles[o+2] = x; particles[o+3] = y;
+    particles[o]   = nx; particles[o+1] = ny;
+    particles[o+4] -= 1;
+
+    if (nx<-2||nx>W+2||ny<-2||ny>H+2||particles[o+4]<=0){ respawn(i,false); continue; }
+
+    const b = Math.min(BUCKETS-1, (sp/max*BUCKETS)|0);
+    const p = P[b];
+    p.moveTo(x,y); p.lineTo(nx,ny);
+  }
+
+  // 速い粒ほど明るく・色相をずらす
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineWidth = DPR;
+  for (let b=0;b<BUCKETS;b++){
+    const f = b/(BUCKETS-1);
+    const h = (hue + f*54) % 360;
+    const l = 26 + f*44;
+    const alpha = 0.10 + f*0.30;
+    ctx.strokeStyle = `hsla(${h},${72 - f*18}%,${l}%,${alpha})`;
+    ctx.stroke(P[b]);
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+function drawField(){
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineWidth = 1*DPR;
+  ctx.beginPath();
+  for (let j=0;j<ROWS;j+=1){
+    for (let i=0;i<COLS;i+=1){
+      const k=j*COLS+i;
+      const m = Math.hypot(ux[k],uy[k]);
+      if (m < 0.02) continue;
+      const x=i*CELL, y=j*CELL;
+      const s = Math.min(CELL*0.9, m*CELL*1.6);
+      ctx.moveTo(x,y);
+      ctx.lineTo(x+ux[k]/m*s, y+uy[k]/m*s);
+    }
+  }
+  ctx.strokeStyle = `hsla(${(hue+180)%360},80%,60%,0.30)`;
+  ctx.stroke();
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+/* ---------- fps 監視で粒子数を自動調整 ---------- */
+let last = performance.now(), acc = 0, frames = 0, tuned = 0;
+function tune(now){
+  const dt = now - last; last = now;
+  acc += dt; frames++;
+  if (acc > 1200){
+    const fps = frames*1000/acc;
+    acc = 0; frames = 0;
+    if (fps < 45 && N > 6000 && tuned < 6){ N = Math.floor(N*0.78); initParticles(); tuned++; }
+    else if (fps > 58 && N < 26000 && tuned < 6){ N = Math.min(26000, Math.floor(N*1.10)); initParticles(); tuned++; }
+  }
+}
+
+let baseTick = 0;
+function loop(now){
+  requestAnimationFrame(loop);
+  // 起動時に枠が非表示だと 0 サイズで初期化されるため、実サイズがついたら作り直す
+  if (Math.max(2,Math.floor(innerWidth*DPR)) !== W || Math.max(2,Math.floor(innerHeight*DPR)) !== H) resize();
+  if (paused) { last = now; return; }
+  t++;
+  if ((baseTick++ % 3) === 0) updateBase();
+  inject();
+  relaxUser();
+  step();
+  tune(now);
+}
+
+/* ---------- 入力 ---------- */
+function pos(e){
+  const r = cv.getBoundingClientRect();
+  return [ (e.clientX - r.left) * DPR, (e.clientY - r.top) * DPR ];
+}
+cv.addEventListener('pointermove', e => {
+  const [x,y] = pos(e);
+  if (!mouse.has){ mouse.px=x; mouse.py=y; mouse.has=true; }
+  mouse.x=x; mouse.y=y;
+});
+cv.addEventListener('pointerdown', e => { e.preventDefault(); mouse.down=true;
+  try { cv.setPointerCapture(e.pointerId); } catch(_){} });
+cv.addEventListener('pointerup',    () => { mouse.down=false; });
+cv.addEventListener('pointerleave', () => { mouse.down=false; });
+// OS にジェスチャを奪われても down が立ちっぱなしにならないように
+cv.addEventListener('pointercancel',() => { mouse.down=false; });
+cv.addEventListener('wheel', e => { stepHue(e.deltaY>0?1:-1); }, {passive:true});
+
+function flash(msg){
+  flashEl.textContent = msg;
+  flashEl.classList.add('on');
+  clearTimeout(flash._t);
+  flash._t = setTimeout(()=>flashEl.classList.remove('on'), 900);
+}
+
+/* ---------- 操作（キーもボタンも同じ関数を通る） ---------- */
+function togglePause(){ paused = !paused; flash(paused?'一時停止':'再開'); }
+function clearTerrain(){ ux.fill(0); uy.fill(0); flash('地形を消した'); }
+function toggleField(){ showField = !showField; flash(showField?'地形を表示':'地形を隠す'); }
+function stepHue(dir){ hue = (hue + dir*6 + 360) % 360; }   // ホイール1ノッチ分
+function toggleHint(){ hintEl.classList.toggle('off'); }
+function savePNG(){
+  const a = document.createElement('a');
+  a.download = 'wind-terrain-' + Date.now() + '.png';
+  a.href = cv.toDataURL('image/png');
+  a.click();
+  flash('保存した');
+}
+
+addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;                        // Ctrl+C で作品を消さない
+  if (e.target && e.target.closest && e.target.closest('#ctl,#back')) return;
+  const k = e.key.toLowerCase();
+  if (k === ' '){ e.preventDefault(); togglePause(); }
+  else if (k === 'c'){ clearTerrain(); }
+  else if (k === 'g'){ toggleField(); }
+  else if (k === 'h'){ toggleHint(); }
+  else if (k === 's'){ savePNG(); }
+});
+
+/* ---------- 画面上のボタン（押したら blur して Space の再発火を防ぐ） ---------- */
+function bind(id, fn){
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('click', () => { fn(); el.blur(); });
+}
+bind('b-field', toggleField);
+bind('b-clear', clearTerrain);
+bind('b-pause', togglePause);
+bind('b-hue',   () => { stepHue(1); flash('色をずらした'); });
+bind('b-save',  savePNG);
+bind('b-hint',  toggleHint);
+
+addEventListener('resize', () => { clearTimeout(resize._t); resize._t = setTimeout(resize, 160); });
+
+/* ---------- 起動 ---------- */
+resize();
+updateBase();
+requestAnimationFrame(loop);
+setTimeout(()=>hintEl.classList.add('off'), 7000);
+
+})();
+</script>
+</body>
+</html>
+</body>
+</html>

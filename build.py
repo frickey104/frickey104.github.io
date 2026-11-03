@@ -87,14 +87,15 @@ ITEMS = [
          crop=(16, 166, 784, 742), shelf="thing",
          alt="ブローチの見本の記事。花と、白目の横目で座るシュナウザーの見本",
          desc="3D プリンタで刷るブローチの見本と作り方。花・白目の横目のシュナウザー・イチョウ・どんぐりの4つ。AI の絵を 3D にして整えました。"),
-]
-# 外にあるもの（写さない・リンクだけ）
-EXTERNAL = [
-    dict(slug="experiments", shelf="tool", src="2026-08-18_experiments", title="実験室", kind="アート", url=f"{SITE}/experiments/",
+    # 実験室はページが5つに分かれている（pages の全部を写す・2026-11-03 に GitHub の別の置き場からここへ移した）
+    dict(slug="experiments", shelf="tool", src="2026-08-18_experiments", title="実験室", kind="アート",
+         pages=["index.html", "wind-terrain.html", "erosion.html", "shatter.html", "drawsound.html"],
          crop=(0, 100, 800, 700),
          alt="実験室の作品「風の地形」。暗い青の中を流れる細い光の筋",
          desc="触った跡が作品に残り、次の動きを変える。ブラウザで動く実験の記録です。"),
 ]
+# 外にあるもの（写さない・リンクだけ）。2026-11-03 から無し（実験室は作品集の中に写す）
+EXTERNAL = []
 
 STATES = {"完成": "done", "途中": "wip", "止めた": "stop"}
 ALLOWED_HOSTS = {"fonts.googleapis.com", "fonts.gstatic.com", "frickey104.github.io", "github.com",
@@ -274,10 +275,10 @@ def wrap(d, text, xy, width, font, fill):
         d.text((x, y), line, font=font, fill=fill)
 
 
-def source(it: dict) -> str:
+def source(it: dict, page: str = "index.html") -> str:
     """作品の元のファイル。複数のファイルに分かれた作品は、その作品の1ファイル版を作る道具でまとめる。"""
     if not it.get("bundle"):
-        return (WORKS / it["src"] / "index.html").read_text(encoding="utf-8")
+        return (WORKS / it["src"] / page).read_text(encoding="utf-8")
     tmp = HERE / "drafts" / f"{it['slug']}.bundled.html"
     subprocess.run([sys.executable, str(WORKS / it["src"] / "build_artifact.py"), str(tmp)], check=True,
                    stdout=subprocess.DEVNULL)
@@ -286,13 +287,13 @@ def source(it: dict) -> str:
 
 def build_pages() -> None:
     for it in ITEMS:
-        src = source(it)
         head = SKELETON.format(
             desc=html.escape(it["desc"]), name=html.escape(NAME), title=html.escape(it["title"]),
             url=f"{SITE}/{it['slug']}/", img=f"{SITE}/img/og-{it['slug']}.jpg", label=html.escape(label(it)))
         out = HERE / it["slug"]
         out.mkdir(exist_ok=True)
-        (out / "index.html").write_text(head + src.rstrip() + "\n</body>\n</html>\n", encoding="utf-8")
+        for page in it.get("pages", ["index.html"]):  # ページが分かれた作品（実験室）は全部を同じ形で写す
+            (out / page).write_text(head + source(it, page).rstrip() + "\n</body>\n</html>\n", encoding="utf-8")
 
 
 def card(it: dict, no: int, big: bool) -> str:

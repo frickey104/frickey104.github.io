@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="触った跡が作品に残り、次の動きを変える。ブラウザで動く実験の記録です。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="frickey の工房">
+<meta property="og:title" content="実験室">
+<meta property="og:description" content="触った跡が作品に残り、次の動きを変える。ブラウザで動く実験の記録です。">
+<meta property="og:url" content="https://frickey104.github.io/experiments/">
+<meta property="og:image" content="https://frickey104.github.io/img/og-experiments.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+.fk-bar{all:initial;display:flex;align-items:center;justify-content:space-between;gap:12px;box-sizing:border-box;width:100%;min-height:34px;padding:6px max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px));background:#16283c;color:#e9eef4;font:600 13px/1.3 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",sans-serif;position:relative;z-index:2147483647}
+.fk-bar a{all:initial;color:#e9eef4;font:inherit;cursor:pointer;text-decoration:none}
+.fk-bar a:hover,.fk-bar a:focus-visible{text-decoration:underline;outline:none}
+.fk-bar span{all:initial;color:#9fb3c8;font:500 12px/1.3 ui-monospace,Consolas,monospace}
+</style>
+</head>
+<body>
+<nav class="fk-bar" aria-label="作品集"><a href="../">← frickey の工房</a><span>アート</span></nav>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>割れる — Shatter</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2306080d'/><g fill='none' stroke='%2385b8ff' stroke-width='2' stroke-linejoin='round'><path d='M16 3v9l-9 5'/><path d='M16 12l10 4'/><path d='M16 12l-2 12'/><path d='M14 24l9-3'/></g></svg>">
+<style>
+  html,body{margin:0;padding:0;height:100%;background:#06080d;overflow:hidden;
+    font-family:system-ui,-apple-system,"Segoe UI","Yu Gothic UI",sans-serif;}
+  canvas{display:block;width:100vw;height:100vh;cursor:crosshair;
+    touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+  #hint{position:fixed;left:calc(18px + env(safe-area-inset-left));bottom:calc(16px + env(safe-area-inset-bottom));
+    max-width:min(72ch,calc(100vw - 460px));color:#7e8aa3;font-size:12.5px;line-height:1.9;
+    letter-spacing:.02em;pointer-events:none;transition:opacity 1.2s ease;text-shadow:0 1px 8px #000;}
+  #hint b{color:#dbe3f4;font-weight:600;}
+  #hint.off{opacity:0;}
+  #flash{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);color:#dbe3f4;
+    font-size:14px;letter-spacing:.08em;pointer-events:none;opacity:0;transition:opacity .35s ease;
+    text-shadow:0 2px 12px #000;}
+  #flash.on{opacity:1;}
+  /* 戻る導線・画面上の操作ボタン（4本共通） */
+  #back{position:fixed;z-index:10;left:calc(14px + env(safe-area-inset-left));top:calc(12px + env(safe-area-inset-top));
+    display:inline-flex;align-items:center;min-height:44px;box-sizing:border-box;padding:0 16px;
+    border-radius:999px;border:1px solid #2a3050;background:rgba(6,8,13,.62);
+    color:#7e8aa3;font-size:13px;letter-spacing:.04em;text-decoration:none;
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:color .2s,border-color .2s;}
+  #back:hover,#back:focus-visible{color:#dbe3f4;border-color:#4a5480;}
+  #ctl{position:fixed;z-index:10;right:calc(14px + env(safe-area-inset-right));
+    bottom:calc(14px + env(safe-area-inset-bottom));display:flex;flex-wrap:wrap;justify-content:flex-end;
+    gap:8px;max-width:min(70vw,460px);pointer-events:none;}
+  #ctl button{pointer-events:auto;min-height:44px;min-width:44px;box-sizing:border-box;padding:0 14px;
+    border-radius:999px;border:1px solid #2a3050;background:rgba(6,8,13,.62);
+    color:#7e8aa3;font:inherit;font-size:13px;letter-spacing:.04em;cursor:pointer;
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:color .2s,border-color .2s;}
+  #ctl button:hover{color:#dbe3f4;border-color:#4a5480;}
+  #ctl button:focus-visible{outline:2px solid #6f7cb8;outline-offset:2px;color:#dbe3f4;}
+  #ctl button[aria-pressed="true"]{color:#dbe3f4;border-color:#6f7cb8;background:rgba(52,62,110,.58);}
+  /* 狭い画面では案内をボタンの上へ逃がす（375px でも重ならない） */
+  @media (max-width:820px){
+    #ctl{left:calc(14px + env(safe-area-inset-left));max-width:none;}
+    #hint{max-width:none;right:calc(18px + env(safe-area-inset-right));
+      bottom:calc(16px + env(safe-area-inset-bottom) + 116px);}
+  }
+</style>
+</head>
+<body>
+<a id="back" href="index.html">← 実験室</a>
+<canvas id="c" role="img" aria-label="割れる。触れた場所に亀裂が入り、叩くと破片が剥がれて落ちるインタラクティブ作品"></canvas>
+<div id="hint">
+  <b>クリック／ドラッグ</b> — そこに亀裂が入る。打つほど細かく砕ける<br>
+  <b>長押し ／ 右クリック ／ 右下の「叩く」</b> — 叩く。近くの破片が剥がれて落ちる（戻らない）<br>
+  <b>ホイール</b> 色を回す ／ <b>C</b> 元に戻す ／ <b>S</b> 画像で保存 ／ <b>H</b> この案内
+</div>
+<div id="flash"></div>
+<div id="ctl" role="toolbar" aria-label="操作">
+  <button type="button" id="b-strike" aria-pressed="false">叩く</button>
+  <button type="button" id="b-reset">元に戻す</button>
+  <button type="button" id="b-hue">色</button>
+  <button type="button" id="b-save">保存</button>
+  <button type="button" id="b-hint">案内</button>
+</div>
+<script>
+(() => {
+'use strict';
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const hintEl = document.getElementById('hint');
+const flashEl = document.getElementById('flash');
+
+let W=0,H=0,DPR=1;
+let seeds = [];          // {x,y}
+let cells = [];          // {poly:[[x,y]...], cx,cy, seedIdx}
+let shards = [];         // 落下中の破片
+let hue = 205;
+const GRAV = 0.42;
+const MAX_SEEDS = 460;
+
+/* ---------- Sutherland–Hodgman: 半平面でポリゴンを切る ---------- */
+// 直線 a→b の垂直二等分線で、a 側だけを残す
+function clipHalf(poly, ax, ay, bx, by){
+  const mx = (ax+bx)/2, my = (ay+by)/2;
+  const nx = ax-bx, ny = ay-by;              // a 側が正になる法線
+  const side = p => (p[0]-mx)*nx + (p[1]-my)*ny;
+  const out = [];
+  for (let i=0;i<poly.length;i++){
+    const P = poly[i], Q = poly[(i+1)%poly.length];
+    const sp = side(P), sq = side(Q);
+    if (sp >= 0) out.push(P);
+    if ((sp >= 0) !== (sq >= 0)){
+      const t = sp / (sp - sq);
+      out.push([ P[0] + (Q[0]-P[0])*t, P[1] + (Q[1]-P[1])*t ]);
+    }
+  }
+  return out;
+}
+
+function buildCells(){
+  cells = [];
+  const rect = [[0,0],[W,0],[W,H],[0,H]];
+  // 近い種だけで切れば十分（O(n^2) を実用域に落とす）
+  for (let i=0;i<seeds.length;i++){
+    const s = seeds[i];
+    const near = [];
+    for (let j=0;j<seeds.length;j++){
+      if (i===j) continue;
+      const d = (seeds[j].x-s.x)**2 + (seeds[j].y-s.y)**2;
+      near.push([d,j]);
+    }
+    near.sort((a,b)=>a[0]-b[0]);
+    let poly = rect;
+    const lim = Math.min(near.length, 26);
+    for (let n=0;n<lim && poly.length;n++){
+      const j = near[n][1];
+      poly = clipHalf(poly, s.x, s.y, seeds[j].x, seeds[j].y);
+    }
+    if (poly.length < 3) continue;
+    let cx=0, cy=0;
+    for (const p of poly){ cx+=p[0]; cy+=p[1]; }
+    cx/=poly.length; cy/=poly.length;
+    cells.push({ poly, cx, cy });
+  }
+}
+
+/* ---------- 描画 ---------- */
+// セル重心から決まる擬似乱数（同じセルは常に同じ色になる）
+function cellHash(cx, cy){
+  let h = Math.imul(Math.round(cx*7.3)|0, 374761393) ^ Math.imul(Math.round(cy*9.1)|0, 668265263);
+  h = Math.imul(h ^ (h>>>13), 1274126177);
+  return ((h ^ (h>>>16)) >>> 0) / 4294967296;
+}
+function cellStyle(cx, cy, extra){
+  // ①位置による大きなグラデーション ②セルごとのばらつき（ファセット感）
+  const t = (cx/W*0.6 + cy/H*0.4);
+  const r = cellHash(cx, cy);
+  const l = 6 + t*13 + r*17 + (extra||0);        // 隣接セルで明度が飛ぶ
+  const h = (hue + t*46 + (r-0.5)*26) % 360;
+  const s = 30 + r*22;
+  return `hsl(${h} ${s}% ${l}%)`;
+}
+
+function drawPoly(poly, fill, stroke, lw){
+  ctx.beginPath();
+  ctx.moveTo(poly[0][0], poly[0][1]);
+  for (let i=1;i<poly.length;i++) ctx.lineTo(poly[i][0], poly[i][1]);
+  ctx.closePath();
+  if (fill){ ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke){ ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.stroke(); }
+}
+
+function render(){
+  ctx.fillStyle = '#06080d';
+  ctx.fillRect(0,0,W,H);
+
+  // 母材
+  for (const c of cells){
+    drawPoly(c.poly, cellStyle(c.cx,c.cy,0), null, 0);
+  }
+  // 亀裂（細い明線）
+  ctx.lineJoin = 'miter';
+  for (const c of cells){
+    drawPoly(c.poly, null, `hsl(${(hue+30)%360} 70% 62% / 0.32)`, 1*DPR);
+  }
+
+  // 破片
+  for (const s of shards){
+    ctx.save();
+    ctx.translate(s.x, s.y);
+    ctx.rotate(s.rot);
+    ctx.globalAlpha = Math.max(0, Math.min(1, s.life/40));
+    drawPoly(s.poly, cellStyle(s.cx, s.cy, 10), `hsl(${(hue+40)%360} 85% 72% / 0.75)`, 1.2*DPR);
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* ---------- 破壊 ---------- */
+function strike(x, y, radius){
+  const kept = [];
+  let hit = 0;
+  for (const c of cells){
+    const d = Math.hypot(c.cx-x, c.cy-y);
+    if (d < radius){
+      // セル座標を重心基準に移して剛体化
+      const local = c.poly.map(p => [p[0]-c.cx, p[1]-c.cy]);
+      const ang = Math.atan2(c.cy-y, c.cx-x);
+      const push = (1 - d/radius) * 9 + 1.5;
+      shards.push({
+        poly: local, x:c.cx, y:c.cy, cx:c.cx, cy:c.cy,
+        vx: Math.cos(ang)*push*(0.6+Math.random()*0.7),
+        vy: Math.sin(ang)*push*(0.6+Math.random()*0.7) - 3.5,
+        rot: 0, vr: (Math.random()-0.5)*0.26, life: 200
+      });
+      hit++;
+    } else kept.push(c);
+  }
+  if (!hit) return 0;
+  cells = kept;
+  return hit;
+}
+
+function stepShards(){
+  for (let i=shards.length-1;i>=0;i--){
+    const s = shards[i];
+    s.vy += GRAV;
+    s.x += s.vx; s.y += s.vy; s.rot += s.vr;
+    s.vx *= 0.995;
+    s.life--;
+    if (s.y - 200 > H || s.life <= 0) shards.splice(i,1);
+  }
+}
+
+/* ---------- 種を打つ ---------- */
+function plant(x, y, n, spread){
+  for (let i=0;i<n;i++){
+    if (seeds.length >= MAX_SEEDS) break;
+    const a = Math.random()*Math.PI*2;
+    const r = Math.pow(Math.random(), 1.7) * spread;   // 中心ほど密
+    seeds.push({ x: x + Math.cos(a)*r, y: y + Math.sin(a)*r });
+  }
+  buildCells();
+}
+
+/* ---------- 初期化 ---------- */
+function reset(){
+  seeds = [];
+  shards = [];
+  const n = 26;
+  for (let i=0;i<n;i++) seeds.push({ x: Math.random()*W, y: Math.random()*H });
+  buildCells();
+}
+
+function resize(){
+  DPR = Math.min(window.devicePixelRatio||1, 1.5);
+  W = Math.max(2, Math.floor(innerWidth*DPR)); H = Math.max(2, Math.floor(innerHeight*DPR));
+  cv.width=W; cv.height=H;
+  reset();
+}
+
+function loop(){
+  requestAnimationFrame(loop);
+  // 起動時に枠が非表示だと 0 サイズで初期化されるため、実サイズがついたら作り直す
+  if (Math.max(2,Math.floor(innerWidth*DPR)) !== W || Math.max(2,Math.floor(innerHeight*DPR)) !== H) resize();
+  stepShards();
+  render();
+}
+
+/* ---------- 入力 ---------- */
+function pos(e){ const r=cv.getBoundingClientRect(); return [(e.clientX-r.left)*DPR,(e.clientY-r.top)*DPR]; }
+let dragging=false, lastPlant=0;
+let strikeMode=false;                    // タッチ用：タップがそのまま「叩く」になる
+let holdTimer=null, holdX=0, holdY=0;    // 長押し＝叩く（右クリックの代わり）
+
+function doStrike(x, y){
+  const n = strike(x, y, 130*DPR);
+  flash(n ? `${n} 片 剥がれた` : '砕くものがない');
+}
+function cancelHold(){ if (holdTimer){ clearTimeout(holdTimer); holdTimer=null; } }
+
+cv.addEventListener('pointerdown', e=>{
+  if (e.button === 2) return;           // 右は contextmenu 側で処理
+  e.preventDefault();                   // タッチのパンに持っていかれないように
+  const [x,y]=pos(e);
+  try { cv.setPointerCapture(e.pointerId); } catch(_){}
+  if (strikeMode){ doStrike(x,y); return; }
+  dragging = true;
+  plant(x,y, 6, 46*DPR);
+  holdX=x; holdY=y; cancelHold();
+  holdTimer = setTimeout(()=>{ holdTimer=null; dragging=false; doStrike(holdX,holdY); }, 500);
+});
+cv.addEventListener('pointermove', e=>{
+  if (!dragging) return;
+  const [x,y]=pos(e);
+  if (holdTimer && Math.hypot(x-holdX, y-holdY) > 10*DPR) cancelHold();  // 動かしたら長押しは取り消し
+  const now = performance.now();
+  if (now - lastPlant < 28) return;     // 打ちすぎ防止
+  lastPlant = now;
+  plant(x,y, 3, 34*DPR);
+});
+cv.addEventListener('pointerup', ()=>{ cancelHold(); dragging=false; });
+cv.addEventListener('pointerleave', ()=>{ cancelHold(); dragging=false; });
+cv.addEventListener('pointercancel', ()=>{ cancelHold(); dragging=false; });
+
+cv.addEventListener('contextmenu', e=>{
+  e.preventDefault();
+  cancelHold(); dragging=false;
+  const [x,y]=pos(e);
+  doStrike(x,y);
+});
+
+cv.addEventListener('wheel', e=>{ stepHue(e.deltaY>0?1:-1); }, {passive:true});
+
+function flash(m){ flashEl.textContent=m; flashEl.classList.add('on');
+  clearTimeout(flash._t); flash._t=setTimeout(()=>flashEl.classList.remove('on'),900); }
+
+/* ---------- 操作（キーもボタンも同じ関数を通る） ---------- */
+function resetAll(){ reset(); flash('元に戻した'); }
+function stepHue(dir){ hue = (hue + dir*7 + 360) % 360; }   // ホイール1ノッチ分
+function toggleHint(){ hintEl.classList.toggle('off'); }
+function savePNG(){
+  const a=document.createElement('a');
+  a.download='shatter-'+Date.now()+'.png'; a.href=cv.toDataURL('image/png'); a.click(); flash('保存した');
+}
+function toggleStrikeMode(){
+  strikeMode = !strikeMode;
+  const b = document.getElementById('b-strike');
+  if (b) b.setAttribute('aria-pressed', strikeMode ? 'true' : 'false');
+  flash(strikeMode ? '叩くモード：触れた所を叩く' : '叩くモードを解除');
+}
+
+addEventListener('keydown', e=>{
+  if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;                        // Ctrl+C で作品を消さない
+  if (e.target && e.target.closest && e.target.closest('#ctl,#back')) return;
+  const k=e.key.toLowerCase();
+  if (k==='c'){ resetAll(); }
+  else if (k==='h'){ toggleHint(); }
+  else if (k==='s'){ savePNG(); }
+});
+
+/* ---------- 画面上のボタン（押したら blur して Space の再発火を防ぐ） ---------- */
+function bind(id, fn){
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('click', () => { fn(); el.blur(); });
+}
+bind('b-strike', toggleStrikeMode);
+bind('b-reset',  resetAll);
+bind('b-hue',    () => { stepHue(1); flash('色をずらした'); });
+bind('b-save',   savePNG);
+bind('b-hint',   toggleHint);
+addEventListener('resize', ()=>{ clearTimeout(resize._t); resize._t=setTimeout(resize,180); });
+
+resize();
+requestAnimationFrame(loop);
+setTimeout(()=>hintEl.classList.add('off'), 7000);
+})();
+</script>
+</body>
+</html>
+</body>
+</html>
