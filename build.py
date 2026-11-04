@@ -108,12 +108,8 @@ ITEMS = [
          desc="触った跡が作品に残り、次の動きを変える。ブラウザで動く実験の記録です。"),
 ]
 # 外にあるもの（写さない・リンクだけ）。実験室は 2026-11-03 から作品集の中に写す
-EXTERNAL = [
-    dict(slug="teian-loop", shelf="tool", src="2026-11-03_cc-company-public", title="teian-loop（提案ループ）", kind="Claude Code のプラグイン", url=f"{SITE}/teian-loop/",
-         crop=(0, 0, 800, 600),
-         alt="teian-loop の説明のページ。題名と「提案 → 承認 → 実行の仮想組織」",
-         desc="この作品集を作っている AI の仮想会社の仕組みを、誰でも使える形にしたもの。秘書が窓口で、Claude が提案し、あなたが決めます。"),
-]
+# teian-loop は 2026-11-04 に非公開にしたので載せない（オーナー「非公開に進めて OK」）
+EXTERNAL = []
 
 STATES = {"完成": "done", "途中": "wip", "止めた": "stop"}
 ALLOWED_HOSTS = {"fonts.googleapis.com", "fonts.gstatic.com", "frickey104.github.io", "github.com",
@@ -312,7 +308,9 @@ def build_pages() -> None:
         out.mkdir(exist_ok=True)
         for page in it.get("pages", ["index.html"]):  # ページが分かれた作品（実験室）は全部を同じ形で写す
             src_page = it.get("entry", "index.html") if page == "index.html" else page  # 入口が別のファイルの作品（コンは c1）
-            (out / page).write_text(head + source(it, src_page).rstrip() + "\n</body>\n</html>\n", encoding="utf-8")
+            # 元が自分の <!doctype> を持つときは外す（外側の枠の中に2つ目の doctype が入らないように）
+            body = re.sub(r"^\s*<!doctype[^>]*>\s*", "", source(it, src_page), flags=re.I)
+            (out / page).write_text(head + body.rstrip() + "\n</body>\n</html>\n", encoding="utf-8")
 
 
 def card(it: dict, no: int, big: bool) -> str:
